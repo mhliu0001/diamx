@@ -1,0 +1,18 @@
+# XENONnT SR0 ER/NR parameters
+from https://arxiv.org/pdf/2406.13638
+py2 = -delta
+py1 = omega
+py0 = gamma
+py3 = q0
+py4 = q1
+rf0 = q2
+rf1 = q3
+
+from https://arxiv.org/pdf/2303.14729
+g1, g2, field
+
+gas_gain, drift_velocity, p_dpe?
+
+# XENONnT SR1 ER/NR parameters
+g2: must be adjusted to 15.8 (16.9 reported in arXiv:2502.18005) to match Rn220 calibration data.
+gas_gain, g1 from arXiv:2502.18005

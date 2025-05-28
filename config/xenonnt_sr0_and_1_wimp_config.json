@@ -1,0 +1,147 @@
+{
+    "experiments": [
+        {
+            "experiment_name": "xenonnt_sr0",
+            "livetime": 0.2605479452054794,
+            "fiducial_mass": 4.18,
+            "data": "xenonnt_sr0_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(0, 100, 101)",
+                "cs2": "np.logspace(2.6020599913279625, 4.1, 81)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "er",
+                    "rate_nominal": 514.3007360672976,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_neutron",
+                    "rate_nominal": 2.6866456361724502,
+                    "rate_uncertainty": 0.4,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {}
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        },
+        {
+            "experiment_name": "xenonnt_sr1a",
+            "livetime": 0.1824657534246575,
+            "fiducial_mass": 4.00,
+            "data": "xenonnt_sr1a_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(0, 100, 101)",
+                "cs2": "np.logspace(2.6020599913279625, 4.1, 81)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "er_flat",
+                    "rate_nominal": 2356.606606606607,
+                    "rate_uncertainty": 164.41441441441444,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "tritium",
+                    "rate_nominal": 339.78978978978984,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "ar37",
+                    "rate_nominal": 317.8678678678679,
+                    "rate_uncertainty": 32.88288288288289,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_neutron",
+                    "rate_nominal": 2.575825825825826,
+                    "rate_uncertainty": 0.4,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_sr1_ac",
+                    "rate_nominal": 11.6,
+                    "rate_uncertainty": 0.085,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {
+                        "template_path": "xenonnt_sr1b_ac_template_contour_driven.h5",
+                        "hist_name": "cs1-cs2"
+                    }
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        },
+        {
+            "experiment_name": "xenonnt_sr1b",
+            "livetime": 0.3284931506849315,
+            "fiducial_mass": 4.00,
+            "data": "xenonnt_sr1b_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(0, 100, 101)",
+                "cs2": "np.logspace(2.6020599913279625, 4.1, 81)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "er_flat",
+                    "rate_nominal": 459.674728940784,
+                    "rate_uncertainty": 33.48623853211009,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "tritium",
+                    "rate_nominal": 307.46455379482904,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_neutron",
+                    "rate_nominal": 2.1309424520433695,
+                    "rate_uncertainty": 0.4,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_sr1_ac",
+                    "rate_nominal": 11.6,
+                    "rate_uncertainty": 0.085,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {
+                        "template_path": "xenonnt_sr1b_ac_template_contour_driven.h5",
+                        "hist_name": "cs1-cs2"
+                    }
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        }
+    ],
+    "signal": {
+        "signal_name": "wimp",
+        "rate_fit_limits": [0, 1e10],
+        "rate_parameter_interval_bounds": [0, 3000],
+        "parameter_name": "mass",
+        "parameter_range": "list(range(6, 130, 2)) + list(range(150, 380, 10)) + [400, 500, 600, 800, 1000]",
+        "args": {
+            "signal_spectrum_path": "/home/mhliu/Documents/diamx/notebooks/diamx_output/spectrum/wimp_{mass:d}GeV.csv"
+        }
+    }
+}

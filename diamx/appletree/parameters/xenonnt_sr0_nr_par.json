@@ -1,0 +1,284 @@
+{
+    "w": {
+        "prior_type": "norm",
+        "prior_args": {
+            "mean": 0.0137,
+            "std": 0.0002
+        },
+        "allowed_range": [
+            0,
+            1.0
+        ],
+        "init_mean": 0.0137,
+        "init_std": 0.0002,
+        "unit": "keV",
+        "doc": "Mean energy to generate a quanta in liquid xenon"
+    },
+    "fano": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.059
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "Fano factor which describes the fluctuation of num of quanta"
+    },
+    "gas_gain": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 31.3
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "PE/electron",
+        "doc": "Gas gain"
+    },
+    "drift_velocity": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0677
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "cm/us",
+        "doc": "Gas gain"
+    },
+    "field": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 23.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "V/cm",
+        "doc": "Drift field"
+    },
+    "g1": {
+        "prior_type": "norm",
+        "prior_args": {
+            "mean": 0.1515,
+            "std": 0.0014
+        },
+        "allowed_range": [
+            0,
+            1.0
+        ],
+        "init_mean": 0.1515,
+        "init_std": 0.0014,
+        "unit": "PE/photon",
+        "doc": "g1"
+    },
+    "g2": {
+        "prior_type": "norm",
+        "prior_args": {
+            "mean": 16.45,
+            "std": 0.64
+        },
+        "allowed_range": [
+            0,
+            100.0
+        ],
+        "init_mean": 16.45,
+        "init_std": 0.64,
+        "unit": "PE/electron",
+        "doc": "g2"
+    },
+    "p_dpe": {
+        "prior_type": "norm",
+        "prior_args": {
+            "mean": 0.227,
+            "std": 0.024
+        },
+        "allowed_range": [
+            0,
+            1.0
+        ],
+        "init_mean": 0.227,
+        "init_std": 0.024,
+        "unit": "1",
+        "doc": "DPE probability"
+    },
+    "cut_acc_sigma": {
+        "prior_type": "norm",
+        "prior_args": {
+            "mean": 0.0,
+            "std": 1.0
+        },
+        "allowed_range": [
+            -5.0,
+            5.0
+        ],
+        "init_mean": 0.0,
+        "init_std": 1.0,
+        "unit": "1",
+        "doc": "Cut acceptance wrt energy shifter"
+    },
+    "elife_sigma": {
+        "prior_type": "norm",
+        "prior_args": {
+            "mean": 0.0,
+            "std": 0.02
+        },
+        "allowed_range": [
+            -1.0,
+            1.0
+        ],
+        "init_mean": 0.0,
+        "init_std": 0.02,
+        "unit": "1",
+        "doc": "elife shifter"
+    },
+    "s2_threshold": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 125.89254117941675
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "PE",
+        "doc": "S2 threshold"
+    },
+    "s1_recon_eff_sigma": {
+        "prior_type": "norm",
+        "prior_args": {
+            "mean": 0.0,
+            "std": 1.0
+        },
+        "allowed_range": [
+            -5.0,
+            5.0
+        ],
+        "init_mean": 0.0,
+        "init_std": 1.0,
+        "unit": "1",
+        "doc": "S1 3-fold reconstruction efficiency shifter"
+    },
+    "kappa": {
+        "prior_type": "twohalfnorm",
+        "prior_args": {
+            "mu": 0.1394,
+            "sigma_pos": 0.0064,
+            "sigma_neg": 0.0052
+        },
+        "allowed_range": [
+            1e-10,
+            1e10
+        ],
+        "init_mean": 0.1394,
+        "init_std": 0.0058,
+        "unit": "1",
+        "doc": "NEST parameter kappa"
+    },
+    "beta": {
+        "prior_type": "twohalfnorm",
+        "prior_args": {
+            "mu": 239,
+            "sigma_pos": 56,
+            "sigma_neg": 17.6
+        },
+        "allowed_range": [
+            1e-10,
+            1e10
+        ],
+        "init_mean": 239,
+        "init_std": 36.8,
+        "unit": "1",
+        "doc": "NEST parameter beta"
+    },
+    "alpha": {
+        "prior_type": "free",
+        "prior_args": {},
+        "allowed_range": [
+            1e-10,
+            1e10
+        ],
+        "init_mean": 1.24,
+        "init_std": 0.076,
+        "unit": "1",
+        "doc": "NEST parameter alpha"
+    },
+    "zeta": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0472
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "NEST parameter zeta"
+    },
+    "gamma": {
+        "prior_type": "free",
+        "prior_args": {},
+        "allowed_range": [
+            1e-10,
+            1e10
+        ],
+        "init_mean": 0.01385,
+        "init_std": 0.000655,
+        "unit": "1",
+        "doc": "NEST parameter gamma"
+    },
+    "delta": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0620
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "NEST parameter delta"
+    },
+    "eta": {
+        "prior_type": "twohalfnorm",
+        "prior_args": {
+            "mu": 3.3,
+            "sigma_pos": 10.6,
+            "sigma_neg": 1.4
+        },
+        "allowed_range": [
+            1e-10,
+            1e10
+        ],
+        "init_mean": 3.3,
+        "init_std": 6.0,
+        "unit": "1",
+        "doc": "NEST parameter eta"
+    },
+    "lambda": {
+        "prior_type": "twohalfnorm",
+        "prior_args": {
+            "mu": 1.14,
+            "sigma_pos": 0.90,
+            "sigma_neg": 0.18
+        },
+        "allowed_range": [
+            1e-10,
+            1e10
+        ],
+        "init_mean": 1.14,
+        "init_std": 0.54,
+        "unit": "1",
+        "doc": "NEST parameter lambda"
+    },
+    "nr_rate": {
+        "prior_type": "free",
+        "prior_args": {},
+        "allowed_range": [
+            0,
+            10000000000.0
+        ],
+        "init_mean": 12000,
+        "init_std": 100,
+        "unit": "1",
+        "doc": "nr_rate"
+    }
+}

@@ -1,0 +1,69 @@
+{
+    "experiments": [
+        {
+            "experiment_name": "lz_ws2022",
+            "livetime": 0.1643835616438356,
+            "fiducial_mass": 5.5,
+            "data": "lz_ws2022_wimp_data.csv",
+            "roi": {
+                "s1c": "np.linspace(3, 80, 78)",
+                "s2c": "np.logspace(2.7781512503836434, 5, 81)"
+            },
+            "multiprocess_threads": 2,
+            "bkgs": [
+                {
+                    "bkg_name": "beta",
+                    "rate_nominal": 1307.9166666666667,
+                    "rate_uncertainty": 219.0,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "neutrino",
+                    "rate_nominal": 167.29166666666669,
+                    "rate_uncertainty": 9.733333333333334,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xe127",
+                    "rate_nominal": 55.96666666666667,
+                    "rate_uncertainty": 4.866666666666667,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xe124",
+                    "rate_nominal": 30.416666666666668,
+                    "rate_uncertainty": 8.516666666666666,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xe136",
+                    "rate_nominal": 91.85833333333333,
+                    "rate_uncertainty": 14.6,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "ar37",
+                    "rate_nominal": 304.1666666666667,
+                    "rate_fit_limits": [0, 1752.0],
+                    "args": {}
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        }
+    ],
+    "signal": {
+        "signal_name": "wimp",
+        "rate_fit_limits": [0, 1e10],
+        "rate_parameter_interval_bounds": [0, 1e10],
+        "parameter_name": "mass",
+        "parameter_range": "list(range(10, 100, 2)) + list(range(100, 1000, 50)) + [1000, 2500, 5000, 10000]",
+        "args": {
+            "signal_spectrum_path": "/home/mhliu/Documents/diamx/notebooks/diamx_output/spectrum/wimp_{mass:d}GeV.csv"
+        }
+    }
+}

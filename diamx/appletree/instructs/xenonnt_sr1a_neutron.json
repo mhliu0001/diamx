@@ -1,0 +1,25 @@
+{
+    "s1_lce":            "_s1_correction.json",
+    "s1_correction":     "_s1_correction.json",
+    "s2_lce":            "_s2_correction.json",
+    "s2_correction":     "_s2_correction.json",
+    "elife":             "_elife.json",
+    "posrec_reso":       "_posrec_reso.json",
+    "s1_recon_eff": [
+        "xenonnt_sr0_s1_recon_eff_median.json",
+        "xenonnt_sr0_s1_recon_eff_lower.json",
+        "xenonnt_sr0_s1_recon_eff_upper.json",
+        "s1_recon_eff_sigma"
+    ],
+    "cut_acc": [
+        "xenonnt_sr1a_cut_acc_median.json",
+        "xenonnt_sr1a_cut_acc_lower.json",
+        "xenonnt_sr1a_cut_acc_upper.json",
+        "cut_acc_sigma"
+    ],
+    "s1_bias_3f":        "_s1_bias.json",
+    "s1_smear_3f":       "_s1_smearing.json",
+    "s2_bias":           "_s2_bias.json",
+    "s2_smear":          "_s2_smearing.json",
+    "energy_spectrum":   "xenonnt_sr0_neutron_spectrum.json"
+}

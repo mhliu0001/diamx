@@ -1,0 +1,13 @@
+alea-inference
+appletree
+blueice
+importlib_resources
+inference_interface
+jax
+matplotlib
+multihist
+numpy
+pandas
+PyYAML
+scipy
+tqdm

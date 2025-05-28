@@ -1,0 +1,37 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+
+[project]
+name = "diamx"
+version = "0.0.1"
+description="Dark matter Inference of Alternative Models with Xenon-based detectors"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "diamx/LICENSE.alea", "diamx/nest/LICENSE.nest", "diamx/appletree/LICENSE.appletree"]
+authors = [
+  { name = "Minghao Liu", email = "mhliu0001@sina.com" },
+]
+requires-python = ">=3.7"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+]
+
+[project.urls]
+Homepage = "https://github.com/mhliu0001/diamx"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+
+[tool.scikit-build]
+wheel.expand-macos-universal-tags = true
+minimum-version = "build-system.requires"
+
+
+[tool.cibuildwheel]
+build-frontend = "build[uv]"
+test-command = "pytest {project}/tests"

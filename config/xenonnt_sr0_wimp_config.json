@@ -1,0 +1,44 @@
+{
+    "experiments": [
+        {
+            "experiment_name": "xenonnt_sr0",
+            "livetime": 0.2605479452054794,
+            "fiducial_mass": 4.18,
+            "data": "xenonnt_sr0_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(0, 100, 101)",
+                "cs2": "np.logspace(2.6020599913279625, 4.1, 81)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "er",
+                    "rate_nominal": 514.3007360672976,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "neutron",
+                    "rate_nominal": 4.221871713985279,
+                    "rate_uncertainty": 0.5,
+                    "rate_relative_uncertainty": true,
+                    "args": {}
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        }
+    ],
+    "signal": {
+        "signal_name": "wimp",
+        "rate_fit_limits": [0, 1e10],
+        "rate_parameter_interval_bounds": [0, 1e10],
+        "parameter_name": "mass",
+        "parameter_range": "list(range(6, 130, 2)) + list(range(150, 380, 10)) + [400, 500, 600, 800, 1000]",
+        "args": {
+            "signal_spectrum_path": "/home/mhliu/Documents/diamx/notebooks/diamx_output/spectrum/wimp_{mass:d}GeV.csv"
+        }
+    }
+}
