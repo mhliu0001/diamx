@@ -57,11 +57,11 @@ class LZWS2022(Experiment):
             for decay_mode in ["lm", "ll"]:
                 sim_result = lz_model(
                     self.experiment_name,
-                    "ER",
+                    "DEC",
                     0,
                     str(energies[decay_mode]),
                     int(batch_size * branching_ratio[decay_mode]),
-                    1.0,
+                    0.87,
                 )
                 s1c_phd.append(sim_result.s1c_phd)
                 s2c_phd.append(sim_result.s2c_phd)
@@ -71,9 +71,16 @@ class LZWS2022(Experiment):
 
         elif name in ["xe127", "ar37"]:
             # monoenergetic line
-            energies = {"xe127": 5, "ar37": 2.82}
+            energies = {"xe127": 5.2, "ar37": 2.82}
+            int_type = {"xe127": "EC", "ar37": "beta"}
+            quenching_factor = {"xe127": 0.87, "ar37": 1.0}
             sim_result = lz_model(
-                self.experiment_name, "ER", 0, str(energies[name]), batch_size, 1.0
+                self.experiment_name,
+                int_type[name],
+                0,
+                str(energies[name]),
+                batch_size,
+                quenching_factor[name],
             )
             s1c_phd = np.array(sim_result.s1c_phd)
             s2c_phd = np.array(sim_result.s2c_phd)
@@ -210,7 +217,7 @@ class LZWS2022(Experiment):
             key = jax.random.PRNGKey(0)
             key, probability = randgen.uniform(key, 0.0, 1.0, shape=(1000000,))
             sampled_energies = np.array(signal_spectrum_map.apply(probability))
-
+            # print(sampled_energies)
             eff_lower = np.loadtxt(
                 importlib.resources.files(diamx) / "data" / "lz_ws2022_eff_lower.csv",
                 delimiter=",",
