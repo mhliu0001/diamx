@@ -217,7 +217,7 @@ class LZWS2022(Experiment):
             key = jax.random.PRNGKey(0)
             key, probability = randgen.uniform(key, 0.0, 1.0, shape=(1000000,))
             sampled_energies = np.array(signal_spectrum_map.apply(probability))
-            # print(sampled_energies)
+
             eff_lower = np.loadtxt(
                 importlib.resources.files(diamx) / "data" / "lz_ws2022_eff_lower.csv",
                 delimiter=",",
