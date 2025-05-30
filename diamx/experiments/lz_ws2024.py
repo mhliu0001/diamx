@@ -118,9 +118,16 @@ class LZWS2024(Experiment):
 
         elif name in ["xe127_xe125", "ar37"]:
             # monoenergetic line
-            energies = {"xe127_xe125": 5, "ar37": 2.82}
+            energies = {"xe127_xe125": 5.2, "ar37": 2.82}
+            int_type = {"xe127_xe125": "EC", "ar37": "beta"}
+            quenching_factor = {"xe127_xe125": 0.87, "ar37": 1.0}
             sim_result = lz_model(
-                self.experiment_name, "ER", 0, str(energies[name]), batch_size, 1.0
+                self.experiment_name,
+                int_type[name],
+                0,
+                str(energies[name]),
+                batch_size,
+                quenching_factor[name],
             )
             s1c_phd = np.array(sim_result.s1c_phd)
             s2c_phd = np.array(sim_result.s2c_phd)

@@ -7,7 +7,7 @@
 #include "LZ_WS2024.hh"
 
 NEST::INTERACTION_TYPE getNESTType(string type) {
-    if (type == "ER" || type == "DEC" || type == "beta") {
+    if (type == "ER" || type == "DEC" || type == "beta" || type == "EC") {
         return NEST::INTERACTION_TYPE::beta;
     }
     else if (type == "NR") {
@@ -138,7 +138,7 @@ InferenceObservableArray LZModel(
         NEST::NESTresult result;
         yields = n.GetYields(nestType, keV, rho, field, double(massNum),
                              double(atomNum), NRYieldsParam, ERYieldsParam);
-        if (type == "DEC") {
+        if (type == "DEC" || type == "EC") {
             double Nq = yields.ElectronYield + yields.PhotonYield;
             yields.ElectronYield *= dec_quenching_factor;
             yields.PhotonYield = Nq - yields.ElectronYield;
