@@ -675,7 +675,62 @@ class Context(object):
             )
             print()
 
+    def _get_shaped_bkg_template(
+        self, shaped_bkg_config, experiment_instance, shape_parameter_value
+    ):
+        """
+        Internal method to get the shaped background template histogram.
+        This method is used to retrieve the template for a shaped background
+        based on the provided configuration and shape parameter value.
+
+        Parameters
+        ----------
+        shaped_bkg_config : dict
+            The configuration dictionary for the shaped background.
+        experiment_instance : diamx.experiment.Experiment
+            The instance of the experiment for which the shaped background is defined.
+        shape_parameter_value : scalar
+            The value of the shape parameter for the shaped background.
+
+        Returns
+        -------
+        histogram: Histdd
+            The shaped background template histogram for the specified experiment and shape parameter value.
+        """
+        args = copy.deepcopy(shaped_bkg_config.get("args", {}))
+        file_hash = create_hash(experiment_instance.config["roi"], **args)
+        template_file_name = (
+            f"{experiment_instance.experiment_name}_shaped_bkg_{shaped_bkg_config['shaped_bkg_name']}"
+            f"_{file_hash}_{shape_parameter_value:{shaped_bkg_config['formatter']}}.ii.h5"
+        )
+        template_file_path = os.path.join(
+            self.output_path, template_folder, template_file_name
+        )
+        mh = template_to_multihist(
+            template_file_path, hist_name=shaped_bkg_config["shaped_bkg_name"]
+        )
+        return mh
+
     def get_bkg_template(self, experiment_name, bkg_name, shape_parameter_value=None):
+        """
+        Get the background template for a given experiment and background name.
+        It also supports shaped backgrounds by providing a shape parameter value.
+
+        Parameters
+        ----------
+        experiment_name : str
+            The name of the experiment for which to get the background template.
+        bkg_name : str
+            The name of the background for which to get the template.
+        shape_parameter_value : scalar, optional
+            The value of the shape parameter for shaped backgrounds. Required if the background is shaped.
+            Otherwise it should be None.
+
+        Returns
+        -------
+        histogram: Histdd
+            The background template histogram for the specified experiment and background name.
+        """
         experiment_instance = None
         for instance in self.experiment_instances:
             if instance.experiment_name == experiment_name:
@@ -686,17 +741,49 @@ class Context(object):
         if shape_parameter_value is not None:
             for shaped_bkg_config in experiment_instance.config["shaped_bkgs"]:
                 if shaped_bkg_config["shaped_bkg_name"] == bkg_name:
-                    args = copy.deepcopy(shaped_bkg_config.get("args", {}))
-                    file_hash = create_hash(experiment_instance.config["roi"], **args)
-                    template_file_name = (
-                        f"{experiment_instance.experiment_name}_shaped_bkg_{bkg_name}"
-                        f"_{file_hash}_{shape_parameter_value:{shaped_bkg_config['formatter']}}.ii.h5"
+                    # Check whether shape_parameter_value is already in blueice anchors.
+                    # If not, use an interpolated template.
+                    blueice_anchors = np.sort(
+                        generate_bin_array(shaped_bkg_config["shape_parameter_range"])
                     )
-                    template_file_path = os.path.join(
-                        self.output_path, template_folder, template_file_name
-                    )
-                    mh = template_to_multihist(template_file_path, hist_name=bkg_name)
-                    # mh.plot()
+                    if shape_parameter_value in blueice_anchors:
+                        mh = self._get_shaped_bkg_template(
+                            shaped_bkg_config,
+                            experiment_instance,
+                            shape_parameter_value,
+                        )
+                    else:
+                        idx_left = (
+                            np.searchsorted(
+                                blueice_anchors, shape_parameter_value, side="right"
+                            )
+                            - 1
+                        )
+                        if idx_left < 0 or idx_left >= len(blueice_anchors) - 1:
+                            raise ValueError(
+                                f"Shape parameter value {shape_parameter_value} is out of bounds for bkg {bkg_name}."
+                            )
+                        shape_parameter_value_left = blueice_anchors[idx_left]
+                        shape_parameter_value_right = blueice_anchors[idx_left + 1]
+                        weight_left = (
+                            shape_parameter_value_right - shape_parameter_value
+                        ) / (blueice_anchors[idx_left + 1] - shape_parameter_value_left)
+                        weight_right = 1 - weight_left
+
+                        mh = (
+                            self._get_shaped_bkg_template(
+                                shaped_bkg_config,
+                                experiment_instance,
+                                shape_parameter_value_left,
+                            )
+                            * weight_left
+                            + self._get_shaped_bkg_template(
+                                shaped_bkg_config,
+                                experiment_instance,
+                                shape_parameter_value_right,
+                            )
+                            * weight_right
+                        )
                     return mh
             raise ValueError(
                 f"Shaped bkg {bkg_name} not found for experiment {experiment_name}."
@@ -717,47 +804,111 @@ class Context(object):
                 return mh
         raise ValueError(f"Bkg {bkg_name} not found for experiment {experiment_name}.")
 
-    def plot_bkg_template(
+    def get_best_fit_bkg_mh(
         self,
         experiment_name,
-        bkg_name,
-        shape_parameter_value=None,
-        mode=["histogram", "contour"],
-        histogram_kwargs={},
-        contour_kwargs={},
+        signal_parameter_value,
+        bkg_to_include=None,
+        stabilize_fit=True,
     ):
-        mh = self.get_bkg_template(experiment_name, bkg_name, shape_parameter_value)
-        H = mh.histogram
-        xcenters, ycenters = mh.bin_centers()
-        xedges, yedges = mh.bin_edges
-        X, Y = np.meshgrid(xcenters, ycenters, indexing="ij")
-        total = H.sum()
-        H_flat = H.flatten()
+        """
+        Get the total best-fit background model histogram for a given experiment and signal parameter value.
+        This method aggregates the background templates for the specified experiment and signal parameter value,
+        optionally filtering by a list of background names to include.
 
-        # Sort the flattened histogram in descending order (highest density first)
-        inds = np.argsort(H_flat)[::-1]
-        H_sorted = H_flat[inds]
-        H_cumsum = np.cumsum(H_sorted) / total
+        Parameters
+        ----------
+        experiment_name : str
+            The name of the experiment for which to get the background model.
+        signal_parameter_value : float
+            The value of the signal parameter to use for the background model when fitting.
+        bkg_to_include : list of str, optional
+            List of background names to include in the total background model. If None, all backgrounds are included.
+            If provided, only the backgrounds with names in this list will be included in the total model.
 
-        # Define a function to determine the contour level corresponding to a given fraction
-        def get_contour_level(fraction):
-            idx = np.searchsorted(H_cumsum, fraction)
-            return H_sorted[idx]
+        Returns
+        -------
+        histogram: Histdd
+            The total background model histogram for the specified experiment and signal parameter value.
+        """
+        if stabilize_fit:
+            stabilized_parameter = (
+                f"{self.config['signal']['signal_name']}_rate_multiplier"
+            )
+        else:
+            stabilized_parameter = None
 
-        level68 = get_contour_level(0.68)
-        level95 = get_contour_level(0.95)
+        bkg_mh = None
+        exp_id = None
+        for idx, experiment in enumerate(self.experiment_instances):
+            if experiment.experiment_name == experiment_name:
+                exp_id = idx
+                break
+        if exp_id is None:
+            raise ValueError(f"Experiment '{experiment_name}' not found in context.")
 
-        # Use pcolormesh to plot the histogram. Note: we transpose H so that the orientation matches the x and y axes.
-        if "histogram" in mode:
-            plt.pcolormesh(xedges, yedges, H.T, **histogram_kwargs)
-            plt.colorbar()
+        alea_model = self.get_alea_model(signal_parameter_value, save_config=False)
+        best_fit, max_ll = alea_model.fit(stabilized_parameter=stabilized_parameter)
 
-        # Overlay the contours with custom linestyles:
-        # 95% contour (red) is dashed and 68% contour (blue) is solid.
-        if "contour" in mode:
-            contours = plt.contour(X, Y, H, levels=[level95, level68], **contour_kwargs)
+        for bkg_config in self.experiment_instances[exp_id].config["bkgs"]:
+            if (
+                bkg_to_include is not None
+                and bkg_config["bkg_name"] not in bkg_to_include
+            ):
+                continue
+            rate_name = self._get_rate_name(bkg_config, experiment_name)
+            best_fit_multiplier = alea_model.minuit_object.values[rate_name]
+            if bkg_mh is None:
+                bkg_mh = (
+                    self.get_bkg_template(experiment_name, bkg_config["bkg_name"])
+                    * best_fit_multiplier
+                )
+            else:
+                bkg_mh += (
+                    self.get_bkg_template(experiment_name, bkg_config["bkg_name"])
+                    * best_fit_multiplier
+                )
+
+        for shaped_bkg_config in self.experiment_instances[exp_id].config[
+            "shaped_bkgs"
+        ]:
+            if (
+                bkg_to_include is not None
+                and shaped_bkg_config["shaped_bkg_name"] not in bkg_to_include
+            ):
+                continue
+            rate_name = self._get_rate_name(shaped_bkg_config, experiment_name)
+            best_fit_multiplier = alea_model.minuit_object.values[rate_name]
+            shape_parameter_value = alea_model.minuit_object.values[
+                f"{experiment_name}_{shaped_bkg_config['shape_parameter_name']}"
+            ]
+            mh = self.get_bkg_template(
+                experiment_name,
+                shaped_bkg_config["shaped_bkg_name"],
+                shape_parameter_value=shape_parameter_value,
+            )
+            if bkg_mh is None:
+                bkg_mh = mh * best_fit_multiplier
+            else:
+                bkg_mh += mh * best_fit_multiplier
+        return bkg_mh
 
     def get_signal_template(self, experiment_name, signal_parameter_value):
+        """
+        Get the signal template for a given experiment and signal parameter value.
+
+        Parameters
+        ----------
+        experiment_name : str
+            The name of the experiment for which to get the signal template.
+        signal_parameter_value : float
+            The value of the signal parameter for which to get the template.
+
+        Returns
+        -------
+        histogram: Histdd
+            The signal template histogram for the specified experiment and signal parameter value.
+        """
         for experiment_instance in self.experiment_instances:
             if experiment_instance.experiment_name == experiment_name:
                 break
@@ -776,15 +927,34 @@ class Context(object):
         mh = template_to_multihist(template_file_path, hist_name=signal_name)
         return mh
 
-    def plot_signal_template(
+    def _plot_template(
         self,
-        experiment_name,
-        signal_parameter_value,
+        mh,
         mode=["histogram", "contour"],
-        histogram_kwargs={},
-        contour_kwargs={},
+        histogram_kwargs=None,
+        contour_kwargs=None,
     ):
-        mh = self.get_signal_template(experiment_name, signal_parameter_value)
+        """
+        Plot the template contours for a given histogram object.
+
+        Parameters
+        ----------
+        mh : Histdd
+            The Histdd object containing the template data.
+        mode : list of str
+            Modes for plotting. Options are "histogram" and "contour".
+        histogram_kwargs : dict
+            Additional keyword arguments for the histogram plot.
+        contour_kwargs : dict
+            Additional keyword arguments for the contour plot.
+
+        Returns
+        -------
+        quadmesh : QuadMesh
+            The QuadMesh object for the histogram plot.
+        contours : ContourSet
+            The ContourSet object for the contour plot.
+        """
         H = mh.histogram
         xcenters, ycenters = mh.bin_centers()
         xedges, yedges = mh.bin_edges
@@ -807,13 +977,136 @@ class Context(object):
 
         # Use pcolormesh to plot the histogram. Note: we transpose H so that the orientation matches the x and y axes.
         if "histogram" in mode:
-            plt.pcolormesh(xedges, yedges, H.T, **histogram_kwargs)
+            quadmesh = plt.pcolormesh(xedges, yedges, H.T, **histogram_kwargs)
             plt.colorbar()
+        else:
+            quadmesh = None
 
         # Overlay the contours with custom linestyles:
         # 95% contour (red) is dashed and 68% contour (blue) is solid.
         if "contour" in mode:
             contours = plt.contour(X, Y, H, levels=[level95, level68], **contour_kwargs)
+        else:
+            contours = None
+
+        return quadmesh, contours
+
+    def plot_bkg_template(
+        self,
+        experiment_name,
+        bkg_name,
+        shape_parameter_value=None,
+        mode=["histogram", "contour"],
+        histogram_kwargs={},
+        contour_kwargs={},
+    ):
+        """
+        Plot the background template for a given experiment and background name.
+        It also supports shaped backgrounds by providing a shape parameter value.
+
+        Parameters
+        ----------
+        experiment_name : str
+            The name of the experiment for which to plot the background template.
+        bkg_name : str
+            The name of the background for which to plot the template.
+        shape_parameter_value : float, optional
+            The value of the shape parameter for shaped backgrounds. Required if the background is shaped.
+            Otherwise it should be None.
+        mode : list of str
+            Modes for plotting. Options are "histogram" and "contour".
+        histogram_kwargs : dict
+            Additional keyword arguments for the histogram plot.
+        contour_kwargs : dict
+            Additional keyword arguments for the contour plot.
+
+        Returns
+        -------
+        quadmesh : QuadMesh
+            The QuadMesh object for the histogram plot.
+        contours : ContourSet
+            The ContourSet object for the contour plot.
+        """
+        mh = self.get_bkg_template(experiment_name, bkg_name, shape_parameter_value)
+        return self._plot_template(mh, mode, histogram_kwargs, contour_kwargs)
+
+    def plot_best_fit_bkg_mh(
+        self,
+        experiment_name,
+        signal_parameter_value,
+        bkg_to_include=None,
+        mode=["histogram", "contour"],
+        histogram_kwargs={},
+        contour_kwargs={},
+    ):
+        """
+        Plot the total best-fit background model histogram for a given experiment and signal parameter value.
+        This method aggregates the background templates for the specified experiment and signal parameter value,
+        optionally filtering by a list of background names to include.
+
+        Parameters
+        ----------
+        experiment_name : str
+            The name of the experiment for which to plot the background model.
+        signal_parameter_value : float
+            The value of the signal parameter to use for the background model when fitting.
+        bkg_to_include : list of str, optional
+            List of background names to include in the total background model. If None, all backgrounds are included.
+        mode : list of str
+            Modes for plotting. Options are "histogram" and "contour".
+        histogram_kwargs : dict
+            Additional keyword arguments for the histogram plot.
+        contour_kwargs : dict
+            Additional keyword arguments for the contour plot.
+
+        Returns
+        -------
+        quadmesh : QuadMesh
+            The QuadMesh object for the histogram plot.
+        contours : ContourSet
+            The ContourSet object for the contour plot.
+        """
+        bkg_mh = self.get_best_fit_bkg_mh(
+            experiment_name,
+            signal_parameter_value,
+            bkg_to_include=bkg_to_include,
+            stabilize_fit=True,
+        )
+        return self._plot_template(bkg_mh, mode, histogram_kwargs, contour_kwargs)
+
+    def plot_signal_template(
+        self,
+        experiment_name,
+        signal_parameter_value,
+        mode=["histogram", "contour"],
+        histogram_kwargs={},
+        contour_kwargs={},
+    ):
+        """
+        Plot the signal template for a given experiment and signal parameter value.
+
+        Parameters
+        ----------
+        experiment_name : str
+            The name of the experiment for which to plot the signal template.
+        signal_parameter_value : float
+            The value of the signal parameter to use for the template.
+        mode : list of str
+            Modes for plotting. Options are "histogram" and "contour".
+        histogram_kwargs : dict
+            Additional keyword arguments for the histogram plot.
+        contour_kwargs : dict
+            Additional keyword arguments for the contour plot.
+
+        Returns
+        -------
+        quadmesh : QuadMesh
+            The QuadMesh object for the histogram plot.
+        contours : ContourSet
+            The ContourSet object for the contour plot.
+        """
+        mh = self.get_signal_template(experiment_name, signal_parameter_value)
+        self._plot_template(mh, mode, histogram_kwargs, contour_kwargs)
 
     def check_config_sanity(self):
         config_attributes = ["experiments", "signal"]
