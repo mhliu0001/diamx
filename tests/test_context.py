@@ -75,6 +75,12 @@ def test_lz_ws2022_context(tmp_path):
     st.generate_templates()
     st.run_inference(stabilize_fit=False)
     st.print_best_fit(40)
+    st.plot_best_fit_bkg_mh(
+        "lz_ws2022",
+        40,
+        histogram_kwargs={"norm": LogNorm()},
+        contour_kwargs={"colors": ["blue", "blue"], "linestyles": ["--", "-"]},
+    )
 
 
 def test_lz_ws2024_context(tmp_path):
@@ -84,3 +90,19 @@ def test_lz_ws2024_context(tmp_path):
     st.generate_templates()
     st.run_inference(stabilize_fit=False)
     st.print_best_fit(40)
+    st.plot_best_fit_bkg_mh(
+        "lz_ws2024",
+        40,
+        bkg_to_include=[
+            "pb214",
+            "kr85_ar39_detgamma",
+            "solar_neutrino_er",
+            "pb212_po218",
+            "tritium_c14",
+            "xe136",
+            "xe127_xe125",
+            "xe124",
+        ],
+        histogram_kwargs={"norm": LogNorm()},
+        contour_kwargs={"colors": ["blue", "blue"], "linestyles": ["--", "-"]},
+    )
