@@ -599,15 +599,18 @@ class Context(object):
             else:
                 raise ValueError("Bkg name not found in config.")
 
-        total_livetime = sum(
+        total_ton_year = sum(
             [
-                experiment_config["livetime"]
+                experiment_config["livetime"] * experiment_config["fiducial_mass"]
                 for experiment_config in self.config["experiments"]
             ]
         )
         for experiment_config in self.config["experiments"]:
             print(experiment_config["experiment_name"])
             livetime = experiment_config["livetime"]
+            ton_year = (
+                experiment_config["livetime"] * experiment_config["fiducial_mass"]
+            )
             result_nominal = {
                 get_bkg_name(bkg_config): format_value_uncertainty(
                     *get_exp_unc_from_config(bkg_config, livetime)
@@ -671,7 +674,7 @@ class Context(object):
                 )
             signal_name = self.config["signal"]["signal_name"]
             print(
-                f"Signal best fit: {alea_model.get_expectation_values(**best_fit)[signal_name] * livetime / total_livetime}"
+                f"Signal best fit: {alea_model.get_expectation_values(**best_fit)[signal_name] * ton_year / total_ton_year}"
             )
             print()
 
