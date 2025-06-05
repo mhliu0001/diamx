@@ -547,7 +547,9 @@ class Context(object):
             delimiter=",",
         )
 
-    def print_best_fit(self, signal_parameter_value, stabilize_fit=True, disable_rounding=False):
+    def print_best_fit(
+        self, signal_parameter_value, stabilize_fit=True, disable_rounding=False
+    ):
         if stabilize_fit:
             stabilized_parameter = (
                 f"{self.config['signal']['signal_name']}_rate_multiplier"
