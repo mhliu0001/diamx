@@ -136,7 +136,7 @@ class Context(object):
                     bkg_name = bkg_config["bkg_name"]
                 elif "shaped_bkg_name" in bkg_config:
                     bkg_name = bkg_config["shaped_bkg_name"]
-                if "rate_fit_limits" in bkg_config:
+                if "rate_fit_limits" not in bkg_config:
                     rate_fit_limits = [0, None]
                 else:
                     rate_fit_limits = (
