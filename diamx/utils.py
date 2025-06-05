@@ -203,9 +203,11 @@ def nest_csv_to_template(csv_file, output_path, fname, experiment="lz_ws2022"):
     )
 
 
-def format_value_uncertainty(val, unc=None):
+def format_value_uncertainty(val, unc=None, disable_rounding=False):
     """
     Format a value and its uncertainty according to significant-figure rules:
+    - If disable_rounding is True:
+        * Do not round; just return "value" or "value ± uncertainty" as-is.
     - If unc is None:
         * Round the value to the nearest integer and return it as a string.
     - Else:
@@ -214,6 +216,14 @@ def format_value_uncertainty(val, unc=None):
        The value is rounded to the same decimal place as the uncertainty.
     Returns a string like "1.23 ± 0.04" or "42" if unc is None.
     """
+    # If rounding is disabled, return the raw values
+    if disable_rounding:
+        if unc is None:
+            return str(val)
+        if unc <= 0:
+            raise ValueError("Uncertainty must be positive")
+        return f"{val} ± {unc}"
+
     if unc is None:
         # No uncertainty: round to integer
         return f"{round(val):.0f}"

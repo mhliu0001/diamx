@@ -43,6 +43,7 @@ def test_xenonnt_sr0_context(tmp_path):
     st.run_inference(stabilize_fit=False)
     st.run_inference()
     st.print_best_fit(200)
+    st.print_best_fit(200, disable_rounding=True)
     st.plot_bkg_template(
         "xenonnt_sr0",
         "er",
