@@ -547,7 +547,7 @@ class Context(object):
             delimiter=",",
         )
 
-    def print_best_fit(self, signal_parameter_value, stabilize_fit=True):
+    def print_best_fit(self, signal_parameter_value, stabilize_fit=True, disable_rounding=False):
         if stabilize_fit:
             stabilized_parameter = (
                 f"{self.config['signal']['signal_name']}_rate_multiplier"
@@ -613,7 +613,8 @@ class Context(object):
             )
             result_nominal = {
                 get_bkg_name(bkg_config): format_value_uncertainty(
-                    *get_exp_unc_from_config(bkg_config, livetime)
+                    *get_exp_unc_from_config(bkg_config, livetime),
+                    disable_rounding=disable_rounding,
                 )
                 for bkg_config in experiment_config["bkgs"]
                 + experiment_config["shaped_bkgs"]
@@ -638,6 +639,7 @@ class Context(object):
                     ]
                     * livetime
                     * bkg_config["rate_nominal"],
+                    disable_rounding=disable_rounding,
                 )
                 for bkg_config in experiment_config["bkgs"]
                 + experiment_config["shaped_bkgs"]
@@ -654,13 +656,15 @@ class Context(object):
                     shape_parameter_name = f"{experiment_config['experiment_name']}_{bkg_config['shape_parameter_name']}"
                     shape_parameter_nominal_dict[shape_parameter_name] = (
                         format_value_uncertainty(
-                            *get_shape_parameter_unc_from_config(bkg_config)
+                            *get_shape_parameter_unc_from_config(bkg_config),
+                            disable_rounding=disable_rounding,
                         )
                     )
                     shape_parameter_bestfit_dict[shape_parameter_name] = (
                         format_value_uncertainty(
                             best_fit[shape_parameter_name],
                             alea_model.minuit_object.errors[shape_parameter_name],
+                            disable_rounding=disable_rounding,
                         )
                     )
                 print("Shape parameters:")
