@@ -136,11 +136,18 @@ class Context(object):
                     bkg_name = bkg_config["bkg_name"]
                 elif "shaped_bkg_name" in bkg_config:
                     bkg_name = bkg_config["shaped_bkg_name"]
+                if "rate_fit_limits" in bkg_config:
+                    rate_fit_limits = [0, None]
+                else:
+                    rate_fit_limits = (
+                        np.array(bkg_config["rate_fit_limits"])
+                        / bkg_config["rate_nominal"]
+                    ).tolist()
                 rate_config = {
                     "nominal_value": 1.0,
                     "ptype": "rate",
                     "fittable": bkg_config.get("rate_fittable", True),
-                    "fit_limits": bkg_config.get("rate_fit_limits", [0, None]),
+                    "fit_limits": rate_fit_limits,
                     "fit_guess": 1.0,
                     "description": f"Rate of {bkg_name} background in {experiment_name} (events per year)",
                 }
