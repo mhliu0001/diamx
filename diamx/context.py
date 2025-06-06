@@ -139,10 +139,14 @@ class Context(object):
                 if "rate_fit_limits" not in bkg_config:
                     rate_fit_limits = [0, None]
                 else:
-                    rate_fit_limits = (
-                        np.array(bkg_config["rate_fit_limits"])
-                        / bkg_config["rate_nominal"]
-                    ).tolist()
+                    rate_fit_limits = []
+                    for rate_fit_limit in bkg_config["rate_fit_limits"]:
+                        if rate_fit_limit is None:
+                            rate_fit_limits.append(None)
+                        else:
+                            rate_fit_limits.append(
+                                rate_fit_limit / bkg_config["rate_nominal"]
+                            )
                 rate_config = {
                     "nominal_value": 1.0,
                     "ptype": "rate",
