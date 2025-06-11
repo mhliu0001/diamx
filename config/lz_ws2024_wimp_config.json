@@ -19,7 +19,7 @@
                 },
                 {
                     "bkg_name": "neutrino",
-                    "rate_nominal": 167.29166666666669,
+                    "rate_nominal": 164.85833333333335,
                     "rate_uncertainty": 9.733333333333334,
                     "args": {}
                 },
@@ -111,7 +111,7 @@
                 {
                     "bkg_name": "ac",
                     "rate_nominal": 3.65,
-                    "rate_uncertainty": 0.39107142857142857,
+                    "rate_uncertainty": 0.7821428571428571,
                     "args": {
                         "template_path": "lz_ws2024_ac_template_contour_driven.h5",
                         "hist_name": "s1c-s2c"
