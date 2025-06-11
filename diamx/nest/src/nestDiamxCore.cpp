@@ -39,7 +39,7 @@ InferenceObservableArray LZModel(
         detector = new LZ_Detector();
         NRYieldsParam = default_NRYieldsParam;
         ERYieldsParam = default_ERYieldsParam;
-        NRERWidthsParam = {0.4, 0.4, 0.04, 0.5, 0.19, 2.25, 0.0015, 0.046452, 0.205, 0.45, -0.2};
+        NRERWidthsParam = {0.4, 0.4, 0.04, 0.5, 0.19, 2.25, -0.0015, 0.046452, 0.205, 0.45, -0.2};
     }
     else if (detector_name == "lz_ws2024") {
         detector = new LZ_Detector_2024();
