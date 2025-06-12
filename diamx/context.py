@@ -538,10 +538,7 @@ class Context(object):
                 _, ll_zero = alea_model.fit(
                     **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0}
                 )
-                if truncate_significance and lower_limit < 0:
-                    significance = 0
-                else:
-                    significance = norm().isf(chi2(1).sf(2 * (max_ll - ll_zero)))
+                significance = np.sqrt(2 * (max_ll - ll_zero))
 
                 ci_and_discovery.append(
                     np.array(

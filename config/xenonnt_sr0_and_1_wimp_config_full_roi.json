@@ -154,7 +154,7 @@
     ],
     "signal": {
         "signal_name": "wimp",
-        "rate_fit_limits": [0, 1e10],
+        "rate_fit_limits": [0, 3000],
         "rate_parameter_interval_bounds": [0, 3000],
         "parameter_name": "mass",
         "parameter_range": "list(range(6, 130, 2)) + list(range(150, 380, 10)) + [400, 500, 600, 800, 1000]",
