@@ -136,11 +136,22 @@ class Context(object):
                     bkg_name = bkg_config["bkg_name"]
                 elif "shaped_bkg_name" in bkg_config:
                     bkg_name = bkg_config["shaped_bkg_name"]
+                if "rate_fit_limits" not in bkg_config:
+                    rate_fit_limits = [0, None]
+                else:
+                    rate_fit_limits = []
+                    for rate_fit_limit in bkg_config["rate_fit_limits"]:
+                        if rate_fit_limit is None:
+                            rate_fit_limits.append(None)
+                        else:
+                            rate_fit_limits.append(
+                                rate_fit_limit / bkg_config["rate_nominal"]
+                            )
                 rate_config = {
                     "nominal_value": 1.0,
                     "ptype": "rate",
                     "fittable": bkg_config.get("rate_fittable", True),
-                    "fit_limits": bkg_config.get("rate_fit_limits", [0, None]),
+                    "fit_limits": rate_fit_limits,
                     "fit_guess": 1.0,
                     "description": f"Rate of {bkg_name} background in {experiment_name} (events per year)",
                 }
@@ -527,10 +538,7 @@ class Context(object):
                 _, ll_zero = alea_model.fit(
                     **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0}
                 )
-                if truncate_significance and lower_limit < 0:
-                    significance = 0
-                else:
-                    significance = norm().isf(chi2(1).sf(2 * (max_ll - ll_zero)))
+                significance = np.sqrt(2 * (max_ll - ll_zero))
 
                 ci_and_discovery.append(
                     np.array(
@@ -547,7 +555,9 @@ class Context(object):
             delimiter=",",
         )
 
-    def print_best_fit(self, signal_parameter_value, stabilize_fit=True):
+    def print_best_fit(
+        self, signal_parameter_value, stabilize_fit=True, disable_rounding=False
+    ):
         if stabilize_fit:
             stabilized_parameter = (
                 f"{self.config['signal']['signal_name']}_rate_multiplier"
@@ -599,18 +609,22 @@ class Context(object):
             else:
                 raise ValueError("Bkg name not found in config.")
 
-        total_livetime = sum(
+        total_ton_year = sum(
             [
-                experiment_config["livetime"]
+                experiment_config["livetime"] * experiment_config["fiducial_mass"]
                 for experiment_config in self.config["experiments"]
             ]
         )
         for experiment_config in self.config["experiments"]:
             print(experiment_config["experiment_name"])
             livetime = experiment_config["livetime"]
+            ton_year = (
+                experiment_config["livetime"] * experiment_config["fiducial_mass"]
+            )
             result_nominal = {
                 get_bkg_name(bkg_config): format_value_uncertainty(
-                    *get_exp_unc_from_config(bkg_config, livetime)
+                    *get_exp_unc_from_config(bkg_config, livetime),
+                    disable_rounding=disable_rounding,
                 )
                 for bkg_config in experiment_config["bkgs"]
                 + experiment_config["shaped_bkgs"]
@@ -635,6 +649,7 @@ class Context(object):
                     ]
                     * livetime
                     * bkg_config["rate_nominal"],
+                    disable_rounding=disable_rounding,
                 )
                 for bkg_config in experiment_config["bkgs"]
                 + experiment_config["shaped_bkgs"]
@@ -651,13 +666,15 @@ class Context(object):
                     shape_parameter_name = f"{experiment_config['experiment_name']}_{bkg_config['shape_parameter_name']}"
                     shape_parameter_nominal_dict[shape_parameter_name] = (
                         format_value_uncertainty(
-                            *get_shape_parameter_unc_from_config(bkg_config)
+                            *get_shape_parameter_unc_from_config(bkg_config),
+                            disable_rounding=disable_rounding,
                         )
                     )
                     shape_parameter_bestfit_dict[shape_parameter_name] = (
                         format_value_uncertainty(
                             best_fit[shape_parameter_name],
                             alea_model.minuit_object.errors[shape_parameter_name],
+                            disable_rounding=disable_rounding,
                         )
                     )
                 print("Shape parameters:")
@@ -671,7 +688,7 @@ class Context(object):
                 )
             signal_name = self.config["signal"]["signal_name"]
             print(
-                f"Signal best fit: {alea_model.get_expectation_values(**best_fit)[signal_name] * livetime / total_livetime}"
+                f"Signal best fit: {alea_model.get_expectation_values(**best_fit)[signal_name] * ton_year / total_ton_year}"
             )
             print()
 

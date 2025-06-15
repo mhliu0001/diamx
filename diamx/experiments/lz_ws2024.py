@@ -270,7 +270,7 @@ class LZWS2024(Experiment):
             signal_spectrum = signal_config["args"]["signal_spectrum_path"].format(
                 **{signal_config["parameter_name"]: signal_parameter_value}
             )
-            signal_spectrum_apt = csv_to_apt_map(signal_spectrum)
+            signal_spectrum_apt = csv_to_apt_map(signal_spectrum, coordinate_name="pdf")
             signal_spectrum_map = Map(
                 name="signal_spectrum", method="LERP", default=signal_spectrum_apt
             )

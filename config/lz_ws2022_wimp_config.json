@@ -19,7 +19,7 @@
                 },
                 {
                     "bkg_name": "neutrino",
-                    "rate_nominal": 167.29166666666669,
+                    "rate_nominal": 164.85833333333335,
                     "rate_uncertainty": 9.733333333333334,
                     "args": {}
                 },
@@ -58,8 +58,8 @@
     ],
     "signal": {
         "signal_name": "wimp",
-        "rate_fit_limits": [0, 1e10],
-        "rate_parameter_interval_bounds": [0, 1e10],
+        "rate_fit_limits": [0, 3000],
+        "rate_parameter_interval_bounds": [0, 3000],
         "parameter_name": "mass",
         "parameter_range": "list(range(10, 100, 2)) + list(range(100, 1000, 50)) + [1000, 2500, 5000, 10000]",
         "args": {
