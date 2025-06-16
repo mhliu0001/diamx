@@ -397,10 +397,11 @@ class XENONnT(Experiment):
         if os.path.exists(self.config["data"]):
             data = np.loadtxt(self.config["data"], delimiter=",")
         else:
-            warnings.warn(
-                f"Specified data path {self.config['data']} not found. "
-                f"Using {self.default_data_file} instead."
-            )
+            if self.config["data"] != self.default_data_file:
+                warnings.warn(
+                    f"Specified data path {self.config['data']} not found. "
+                    f"Using {self.default_data_file} instead."
+                )
             data = np.loadtxt(
                 importlib.resources.files("diamx") / "data" / self.default_data_file,
                 delimiter=",",
