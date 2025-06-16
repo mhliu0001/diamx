@@ -394,25 +394,17 @@ class XENONnT(Experiment):
         )
 
     def get_data(self):
-        if self.config["data"] == self.default_data_file:
+        if os.path.exists(self.config["data"]):
+            data = np.loadtxt(self.config["data"], delimiter=",")
+        else:
+            warnings.warn(
+                f"Specified data path {self.config['data']} not found. "
+                f"Using {self.default_data_file} instead."
+            )
             data = np.loadtxt(
                 importlib.resources.files("diamx") / "data" / self.default_data_file,
                 delimiter=",",
             )
-        else:
-            try:
-                data = np.loadtxt(self.config["data"], delimiter=",")
-            except FileNotFoundError:
-                warnings.warn(
-                    f"Specified data path {self.config['data']} not found."
-                    f"Using {self.default_data_file} instead."
-                )
-                data = np.loadtxt(
-                    importlib.resources.files("diamx")
-                    / "data"
-                    / self.default_data_file,
-                    delimiter=",",
-                )
         cs1 = data[:, 0]
         if "cs2" in self.config["roi"]:
             cs2 = data[:, 1]
