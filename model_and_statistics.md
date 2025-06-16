@@ -376,10 +376,10 @@ Table 4.1 shows the nominal and best-fit expected number of events for each mode
 | :------------: | :------------------: | :---------------: | :-------------------: | :----------------: |
 |       ER       |        $134$         |       $134$       |   $135^{+12}_{-11}$   |    $134 \pm 12$    |
 |    Neutron     | $1.1^{+0.6}_{-0.5}$  |    $1.1\pm0.5$    |     $1.1 \pm 0.4$     |   $1.1 \pm 0.5$    |
-|   CE$\nu$NS    |   $0.23 \pm 0.06$    |    Not modeled    |    $0.23 \pm 0.06$    |    Not modeled     |
+|   CE$\nu$NS    |   $0.23 \pm 0.06$    |        --         |    $0.23 \pm 0.06$    |         --         |
 |       AC       |    $4.3 \pm 0.9$     | $1$ (placeholder) |  $4.4^{+0.9}_{-0.8}$  |   $0.0 \pm 0.7$    |
 |    Surface     |      $14 \pm 3$      | $1$ (placeholder) |      $12 \pm 2$       |   $3.0 \pm 1.7$    |
-|      WIMP      |         N/A          |        N/A        |         $2.6$         |       $2.9$        |
+|      WIMP      |          --          |        --         |         $2.6$         |       $3.3$        |
 
 | <img src="plots/xenonnt_sr0_wimp_ci_400PE.png" alt="xenonnt_sr0_wimp_ci_400PE.png" style="zoom:25%;" /> |
 | :----------------------------------------------------------: |
@@ -412,37 +412,37 @@ Table 4.2a-c shows the comparison between expected number of events from literat
 |         Neutron         |    $0.7 \pm 0.3$     |    $0.7\pm0.3$    |     $0.6 \pm 0.3$     |   $0.7 \pm 0.3$    |
 |    CE$\nu$NS (solar)    |   $0.16 \pm 0.05$    |        --         |    $0.16 \pm 0.05$    |         --         |
 | CE$\nu$NS (atm. + DSNB) |   $0.04 \pm 0.02$    |        --         |    $0.04 \pm 0.02$    |         --         |
-|           AC            |    $4.3 \pm 0.9$     | $1$ (placeholder) |  $4.4^{+0.9}_{-0.8}$  |   $0.0 \pm 0.7$    |
+|           AC            |    $4.3 \pm 0.9$     | $1$ (placeholder) |  $4.4^{+0.9}_{-0.8}$  |   $0.0 \pm 0.8$    |
 |         Surface         |      $14 \pm 3$      | $1$ (placeholder) |      $12 \pm 2$       |   $3.0 \pm 1.7$    |
-| WIMP (200 GeV/c$^{2}$)  |          --          |        --         |         $1.8$         |       $1.7$        |
+| WIMP (200 GeV/c$^{2}$)  |          --          |        --         |         $1.8$         |       $1.9$        |
 
 **Table 4.2b:** Expected number of events for each model component for XENONnT SR1a, from a combined fit of SR0 & SR1 results. 
 
 |     Component Name      | Nominal (literature) | Nominal (`diamx`) | Best fit (literature) | Best fit (`diamx`) |
 | :---------------------: | :------------------: | :---------------: | :-------------------: | :----------------: |
-|        ER (flat)        |     $430 \pm 30$     |   $430 \pm 30$    |     $450 \pm 20$      |    $135 \pm 12$    |
+|        ER (flat)        |     $430 \pm 30$     |   $430 \pm 30$    |     $450 \pm 20$      |    $460 \pm 30$    |
 |    ER (${}^3$H like)    |         $62$         |       $62$        |      $40 \pm 30$      |    $20 \pm 30$     |
 |    ER (${}^{37}$Ar)     |      $58 \pm 6$      |    $58 \pm 6$     |      $55 \pm 5$       |     $53 \pm 5$     |
 |         Neutron         |   $0.47 \pm 0.19$    |   $0.47\pm0.19$   |    $0.45 \pm 0.19$    |  $0.47 \pm 0.19$   |
 |    CE$\nu$NS (solar)    |  $0.010 \pm 0.003$   |        --         |   $0.010 \pm 0.003$   |         --         |
 | CE$\nu$NS (atm. + DSNB) |  $0.024 \pm 0.012$   |        --         |   $0.024 \pm 0.012$   |         --         |
-|           AC            |   $2.12 \pm 0.18$    |  $2.12 \pm 0.18$  |    $2.10 \pm 0.18$    |  $2.10 \pm 0.18$   |
+|           AC            |   $2.12 \pm 0.18$    |  $2.12 \pm 0.18$  |    $2.10 \pm 0.18$    |  $2.11 \pm 0.18$   |
 |         Surface         |   $0.43 \pm 0.05$    |        --         |    $0.42 \pm 0.05$    |         --         |
-| WIMP (200 GeV/c$^{2}$)  |          --          |        --         |         $1.1$         |       $1.1$        |
+| WIMP (200 GeV/c$^{2}$)  |          --          |        --         |         $1.1$         |       $1.3$        |
 
 **Table 4.2c:** Expected number of events for each model component for XENONnT SR1b, from a combined fit of SR0 & SR1 results. 
 
 |     Component Name      | Nominal (literature) | Nominal (`diamx`) | Best fit (literature) | Best fit (`diamx`) |
 | :---------------------: | :------------------: | :---------------: | :-------------------: | :----------------: |
 |        ER (flat)        |     $151 \pm 11$     |   $151 \pm 11$    |     $154 \pm 10$      |    $157 \pm 10$    |
-|    ER (${}^3$H like)    |        $101$         |       $101$       |   $80^{+18}_{-17}$    |    $68 \pm 17$     |
+|    ER (${}^3$H like)    |        $101$         |       $101$       |   $80^{+18}_{-17}$    |    $69 \pm 17$     |
 |    ER (${}^{37}$Ar)     |          --          |        --         |          --           |         --         |
 |         Neutron         |    $0.7 \pm 0.3$     |    $0.7\pm0.3$    |     $0.7 \pm 0.3$     |   $0.7 \pm 0.3$    |
 |    CE$\nu$NS (solar)    |  $0.019 \pm 0.006$   |        --         |   $0.019 \pm 0.006$   |         --         |
 | CE$\nu$NS (atm. + DSNB) |   $0.05 \pm 0.02$    |        --         |    $0.05 \pm 0.02$    |         --         |
 |           AC            |    $3.8 \pm 0.3$     |   $3.8 \pm 0.3$   |     $3.8 \pm 0.3$     |   $3.8 \pm 0.3$    |
 |         Surface         |   $0.77 \pm 0.09$    |        --         |    $0.76 \pm 0.09$    |         --         |
-| WIMP (200 GeV/c$^{2}$)  |          --          |        --         |         $2.1$         |       $2.1$        |
+| WIMP (200 GeV/c$^{2}$)  |          --          |        --         |         $2.1$         |       $2.3$        |
 
 | <img src="plots/xenonnt_sr1_wimp_ci_400PE.png" alt="xenonnt_sr1_wimp_ci_400PE.png" style="zoom:25%;" /> |
 | :----------------------------------------------------------: |
@@ -465,20 +465,20 @@ The following background components are modeled:
 | :----------------------------------------------------------: |
 | **Fig. 4.5:** The $1\sigma$ and $2\sigma$ contours for different backgrounds modeled in `diamx` for LZ WS2022. Black points show the digitized events extracted from [[3]](#lz_ws2022). Dark and light, blue, black, and orange shading show the regions containing 68% and 95% of the events from background (best-fit), ${}^{37}$Ar and 30 GeV/c${}^2$ WIMP, respectively. The shading comes from Fig. 4 in [[3]](#lz_ws2022). The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. |
 
-Table 4.3 shows the comparison between expected number of events from literature and from `diamx`, which shows good agreement. Fig. 4.6 shows the upper limit of WIMP-nucleon scattering cross section. The upper limit from literature at high WIMP mass is around 18% lower than calculated from `diamx`, which is likely caused by lack of radon tagging model in `diamx`. (Note: in some runs the matching is much better. We are still investigating.)
+Table 4.3 shows the comparison between expected number of events from literature and from `diamx`, which shows good agreement. Fig. 4.6 shows the upper limit of WIMP-nucleon scattering cross section. The upper limits for WIMP mass larger than 80 GeV/c${}^{2}$ align well with the published results.
 
 **Table 4.3:** Number of events for each model component for LZ WS2022. The “nominal” columns show expectation values and uncertainties before fitting, and the "best-fit" columns show best-fit expectation values and uncertainties for a free fit including a 30 GeV/c${}^2$ WIMP signal component. The values in the "literature" column comes from Tab. I of [[3]](#lz_ws2022), while the  `diamx` columns contain results calculated from `diamx`.
 
 |     Component Name      | Nominal (literature) | Nominal (`diamx`)  | Best fit (literature) | Best fit (`diamx`) |
 | :---------------------: | :------------------: | :----------------: | :-------------------: | :----------------: |
-| $\beta$ decays + Det ER |     $215 \pm 36$     |    $215 \pm 36$    |     $222 \pm 16$      |    $225 \pm 16$    |
+| $\beta$ decays + Det ER |     $215 \pm 36$     |    $215 \pm 36$    |     $222 \pm 16$      |    $224 \pm 16$    |
 |        $\nu$ ER         |    $27.1 \pm 1.6$    |   $27.1 \pm 1.6$   |    $27.2 \pm 1.6$     |   $27.1 \pm 1.6$   |
-|      ${}^{127}$Xe       |    $9.2 \pm 0.8$     |   $9.2 \pm 0.8$    |     $9.3 \pm 0.8$     |   $9.3 \pm 0.8$    |
+|      ${}^{127}$Xe       |    $9.2 \pm 0.8$     |   $9.2 \pm 0.8$    |     $9.3 \pm 0.8$     |   $9.2 \pm 0.8$    |
 |      ${}^{124}$Xe       |    $5.0 \pm 1.4$     |   $5.0 \pm 1.4$    |     $5.2 \pm 1.4$     |   $5.3 \pm 1.4$    |
 |      ${}^{136}$Xe       |    $15.1 \pm 2.4$    |   $15.1 \pm 2.4$   |    $15.2 \pm 2.4$     |   $15.1 \pm 2.4$   |
 |    ${}^8$B CE$\nu$NS    |   $0.14 \pm 0.01$    |         --         |    $0.15 \pm 0.01$    |         --         |
 |       Accidentals       |    $1.2 \pm 0.3$     |         --         |     $1.2 \pm 0.3$     |         --         |
-|       ${}^{37}$Ar       |      $[0, 288]$      | $50$ (placeholder) | $52.5^{+9.6}_{-8.9}$  |   $49.1 \pm 8.9$   |
+|       ${}^{37}$Ar       |      $[0, 288]$      | $50$ (placeholder) | $52.5^{+9.6}_{-8.9}$  |   $50.5 \pm 9.1$   |
 |    Detector neutrons    |     $0.0^{+0.2}$     |         --         |     $0.0^{+0.2}$      |         --         |
 |   30 GeV/c${}^2$ WIMP   |          --          |         --         |     $0.0^{+0.6}$      |       $0.0$        |
 
@@ -506,19 +506,19 @@ The contours from `diamx` and from literature are compared in Fig. 4.7.
 | :----------------------------------------------------------: |
 | **Fig. 4.7:** The contours for different backgrounds / signal modeled in `diamx` for LZ WS2024. Black points show the digitized events extracted from [[4]](#lz_ws2024). Dark and light, blue, orange, purple, and black shading show the regions containing 68% and 95% of the events from ER background (best-fit), 40 GeV/c${}^2$ WIMP, accidental coincidence, and ${}^{124}$Xe (best-fit), respectively. The shading comes from Fig. 3 in [[4]](#lz_ws2024). The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. The contours of the AC template does not fully match because of a different ROI selection. |
 
-Table 4.4 shows the comparison between expected number of events from literature and from `diamx`, which shows good agreement. Fig. 4.8 shows the upper limit of WIMP-nucleon scattering cross section. The upper limit from literature at high WIMP mass is around 12% lower than calculated from `diamx`, which is likely caused by lack of radon tagging model in `diamx`. (Note: in some runs the matching is much better. We are still investigating.)
+Table 4.4 shows the comparison between expected number of events from literature and from `diamx`, which shows good agreement. Fig. 4.8 shows the upper limit of WIMP-nucleon scattering cross section. The upper limit from literature at high WIMP mass is around 9% lower than calculated from `diamx`, which is likely caused by lack of radon tagging model in `diamx`. The best-fit $Q_{LL}/Q_{\beta} = 0.69 \pm 0.04$, which agrees with the published result $0.70 \pm 0.04$. 
 
 **Table 4.4:** Number of events for each model component for LZ WS2024 in a combined fit of LZ WS2022 + LZ WS2024. The “nominal” columns show expectation values and uncertainties before fitting, and the "best-fit" columns show best-fit expectation values and uncertainties for a free fit including a 40 GeV/c${}^2$ WIMP signal component. The values in the "literature" column comes from Tab. I of [[4]](#lz_ws2024), while the  `diamx` columns contain results calculated from `diamx`.
 
 |                   Component Name                    | Nominal (literature) | Nominal (`diamx`) | Best fit (literature) | Best fit (`diamx`) |
 | :-------------------------------------------------: | :------------------: | :---------------: | :-------------------: | :----------------: |
-|                ${}^{214}$Pb $\beta$s                |     $743 \pm 88$     |   $743 \pm 88$    |     $733 \pm 34$      |    $749 \pm 39$    |
+|                ${}^{214}$Pb $\beta$s                |     $743 \pm 88$     |   $743 \pm 88$    |     $733 \pm 34$      |    $750 \pm 39$    |
 | ${}^{85}$Kr + ${}^{39}$Ar $\beta$s + det. $\gamma$s |     $162 \pm 22$     |   $162 \pm 22$    |     $161 \pm 21$      |    $162 \pm 21$    |
 |                   Solar $\nu$ ER                    |     $102 \pm 6$      |    $102 \pm 6$    |      $102 \pm 6$      |    $102 \pm 6$     |
 |        ${}^{212}$Pb + ${}^{218}$Po $\beta$s         |    $62.7 \pm 7.5$    |  $62.7 \pm 7.5$   |    $63.7 \pm 7.4$     |   $62.8 \pm 7.5$   |
 |             Tritium + $^{14}$C $\beta$s             |    $58.3 \pm 3.3$    |  $58.3 \pm 3.3$   |    $59.7 \pm 3.3$     |   $58.4 \pm 3.3$   |
 |                ${}^{136}$Xe 2$\nu$bb                |    $55.6 \pm 8.3$    |  $55.6 \pm 8.3$   |    $55.8 \pm 8.2$     |   $55.5 \pm 8.2$   |
-|                  ${}^{124}$Xe DEC                   |    $19.4 \pm 3.9$    |  $19.4 \pm 3.9$   |    $21.4 \pm 3.6$     |   $21.5 \pm 3.5$   |
+|                  ${}^{124}$Xe DEC                   |    $19.4 \pm 3.9$    |  $19.4 \pm 3.9$   |    $21.4 \pm 3.6$     |   $21.5 \pm 3.6$   |
 |           ${}^{127}$Xe + ${}^{125}$Xe EC            |    $3.2 \pm 0.6$     |   $3.2 \pm 0.6$   |     $2.7 \pm 0.6$     |   $3.2 \pm 0.6$    |
 |               Accidental coincidences               |    $2.8 \pm 0.6$     |   $2.8 \pm 0.6$   |     $2.6 \pm 0.6$     |   $2.6 \pm 0.6$    |
 |                    Atm. $\nu$ NR                    |   $0.12 \pm 0.02$    |        --         |    $0.12 \pm 0.02$    |         --         |
