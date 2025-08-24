@@ -418,21 +418,7 @@ class Context(object):
                 * experiment_instance.config["livetime"]
             )
             expected_events = np.sum(signal_mh.histogram)
-            data = experiment_instance.get_data()
-            data_names = list(experiment_instance.config["roi"].keys())
-            data_mh = mh.Histdd(
-                data[data_names[0]], data[data_names[1]], bins=bkg_mh.bin_edges
-            )
-            mask = (signal_mh.histogram > 0) | (bkg_mh.histogram > 0)
-            data_mh.histogram[~mask] = 0
-            if expected_events > 0:
-                estimnated_signal_multiplier = signal_multiplier_estimator(
-                    signal_mh.histogram, summed_bkg_mh.histogram, data_mh.histogram
-                )
-                if np.isnan(estimnated_signal_multiplier):
-                    estimnated_signal_multiplier = 1 / expected_events
-                signal_rate_multiplier.append(estimnated_signal_multiplier)
-            else:
+            if expected_events <= 0:
                 print(
                     f"Expected events for {experiment_instance.experiment_name} is {expected_events}."
                 )
@@ -442,6 +428,31 @@ class Context(object):
                     "This parameter will be skipped."
                 )
                 return None
+            # If expected_events is too large, e.g., larger than 1e10,
+            # the fit will not be sensitive to the signal rate multiplier.
+            elif expected_events >= 1e10:
+                print(
+                    f"Expected events for {experiment_instance.experiment_name} is {expected_events}."
+                )
+                warnings.warn(
+                    f"If {signal_parameter_name} is {signal_parameter_value}, "
+                    f"the template gives too many events for {experiment_instance.experiment_name}."
+                    "The results may not be reliable. Consider multiplying the input spectrum by a small factor."
+                )
+
+            data = experiment_instance.get_data()
+            data_names = list(experiment_instance.config["roi"].keys())
+            data_mh = mh.Histdd(
+                data[data_names[0]], data[data_names[1]], bins=bkg_mh.bin_edges
+            )
+            mask = (signal_mh.histogram > 0) | (bkg_mh.histogram > 0)
+            data_mh.histogram[~mask] = 0
+            estimated_signal_multiplier = signal_multiplier_estimator(
+                signal_mh.histogram, summed_bkg_mh.histogram, data_mh.histogram
+            )
+            if np.isnan(estimated_signal_multiplier):
+                estimated_signal_multiplier = 1 / expected_events
+            signal_rate_multiplier.append(estimated_signal_multiplier)
         alea_config["parameter_definition"][f"{signal_name}_rate_multiplier"][
             "nominal_value"
         ] = float(np.array(signal_rate_multiplier).mean())

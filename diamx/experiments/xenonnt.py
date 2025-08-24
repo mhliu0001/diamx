@@ -342,16 +342,29 @@ class XENONnT(Experiment):
                 for file_name in self.default_cut_acc_file:
                     get_file_path_diamx(file_name)
 
-            cs1, cs2, eff = self.run_appletree(
-                batch_size,
-                instruct_file_path,
-                yield_file_path,
-                param_file_path,
-                "nr",
-                energy_spectrum=csv_to_apt_map(
-                    kwargs["signal_spectrum_path"].format(**kwargs), "pdf"
-                ),
-            )
+            # If the energy_spectrum is invalid, we should generate an all-zero template
+            signal_spectrum_path = kwargs["signal_spectrum_path"].format(**kwargs)
+            input_spectrum = np.loadtxt(signal_spectrum_path, delimiter=",")
+            if np.any(input_spectrum[:, 1] < 0) or np.all(input_spectrum[:, 1] == 0):
+                # Generate an empty template with zero histogram
+                warnings.warn(
+                    f"Invalid input spectrum found at {signal_spectrum_path}. "
+                    "The template will be generated with zero histogram."
+                )
+                cs1 = np.zeros(batch_size, dtype=np.float64)
+                cs2 = np.ones(batch_size, dtype=np.float64)
+                eff = np.zeros(batch_size, dtype=np.float64)
+            else:
+                cs1, cs2, eff = self.run_appletree(
+                    batch_size,
+                    instruct_file_path,
+                    yield_file_path,
+                    param_file_path,
+                    "nr",
+                    energy_spectrum=csv_to_apt_map(
+                        kwargs["signal_spectrum_path"].format(**kwargs), "pdf"
+                    ),
+                )
 
         roi = self.config["roi"]
         if "cs1" not in roi or ("cs2" not in roi and "logcs2" not in roi):
