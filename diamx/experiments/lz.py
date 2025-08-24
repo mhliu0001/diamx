@@ -151,25 +151,37 @@ class LZ(Experiment):
         else:  # NR signal
             spectrum_file_path = kwargs["signal_spectrum_path"].format(**kwargs)
             spectrum = np.loadtxt(spectrum_file_path, delimiter=",")
-            sim_result = lz_model(
-                self.experiment_name, "NR", 0, spectrum_file_path, batch_size, 1.0
-            )
-            s1c_phd = np.array(sim_result.s1c_phd)
-            s2c_phd = np.array(sim_result.s2c_phd)
-            eff = np.bitwise_and(s1c_phd > 0, s2c_phd > 0).astype(float)
-            energy_rec = np.array(sim_result.energy_rec)
-            eff_medians = np.loadtxt(
-                importlib.resources.files(diamx) / "data" / self.default_eff_file[0],
-                delimiter=",",
-            )
-            eff_interpolator = interp1d(
-                eff_medians[:, 0],
-                eff_medians[:, 1],
-                kind="linear",
-                fill_value=0,
-                bounds_error=False,
-            )
-            eff = eff * eff_interpolator(energy_rec)
+            if np.any(spectrum[:, 1] < 0) or np.all(spectrum[:, 1] == 0):
+                # Generate an empty template with zero histogram
+                warnings.warn(
+                    f"Invalid input spectrum found at {spectrum_file_path}. "
+                    "The template will be generated with zero histogram."
+                )
+                s1c_phd = np.zeros(batch_size, dtype=np.float64)
+                s2c_phd = np.ones(batch_size, dtype=np.float64)
+                eff = np.zeros(batch_size, dtype=np.float64)
+            else:
+                sim_result = lz_model(
+                    self.experiment_name, "NR", 0, spectrum_file_path, batch_size, 1.0
+                )
+                s1c_phd = np.array(sim_result.s1c_phd)
+                s2c_phd = np.array(sim_result.s2c_phd)
+                eff = np.bitwise_and(s1c_phd > 0, s2c_phd > 0).astype(float)
+                energy_rec = np.array(sim_result.energy_rec)
+                eff_medians = np.loadtxt(
+                    importlib.resources.files(diamx)
+                    / "data"
+                    / self.default_eff_file[0],
+                    delimiter=",",
+                )
+                eff_interpolator = interp1d(
+                    eff_medians[:, 0],
+                    eff_medians[:, 1],
+                    kind="linear",
+                    fill_value=0,
+                    bounds_error=False,
+                )
+                eff = eff * eff_interpolator(energy_rec)
 
         roi = self.config["roi"]
         if "s1c" not in roi or ("s2c" not in roi and "logs2c" not in roi):
