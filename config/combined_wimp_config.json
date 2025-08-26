@@ -260,8 +260,8 @@
                     "shape_parameter_nominal": 71,
                     "formatter": "d",
                     "shape_parameter_fit_limits": [65, 87],
-                    "rate_nominal": 25.289285714285715,
-                    "rate_uncertainty": 5.083928571428571,
+                    "rate_nominal": 32.18636363636364,
+                    "rate_uncertainty": 6.470454545454546,
                     "args": {}
                 }
             ],
