@@ -357,6 +357,7 @@ class Context(object):
         args[signal_parameter_name] = signal_parameter_value
 
         signal_rate_multiplier = []
+        max_rate_multiplier = 0  # To check if the expected events is too large
         for index, experiment_instance in enumerate(self.experiment_instances):
             args["fiducial_mass"] = experiment_instance.config["fiducial_mass"]
             file_hash = create_hash(experiment_instance.config["roi"], **args)
@@ -448,14 +449,27 @@ class Context(object):
             mask = (signal_mh.histogram > 0) | (bkg_mh.histogram > 0)
             data_mh.histogram[~mask] = 0
             estimated_signal_multiplier = signal_multiplier_estimator(
-                signal_mh.histogram, summed_bkg_mh.histogram, data_mh.histogram
+                signal_mh.histogram,
+                summed_bkg_mh.histogram,
+                data_mh.histogram,
             )
-            if np.isnan(estimated_signal_multiplier):
+            if estimated_signal_multiplier * expected_events > 1.5 * len(
+                data
+            ) or np.isnan(estimated_signal_multiplier):
+                # The estimator failed to converge
                 estimated_signal_multiplier = 1 / expected_events
             signal_rate_multiplier.append(estimated_signal_multiplier)
+            if max_rate_multiplier == 0:
+                max_rate_multiplier = 1.5 * len(data) / expected_events
+            else:
+                max_rate_multiplier = min(
+                    max_rate_multiplier, 1.5 * len(data) / expected_events
+                )
+        # Sometimes the estimator gives a very large value, which makes the fit unstable.
+        # So we cap the nominal value to be the maximum allowed value.
         alea_config["parameter_definition"][f"{signal_name}_rate_multiplier"][
             "nominal_value"
-        ] = float(np.array(signal_rate_multiplier).mean())
+        ] = min(float(np.array(signal_rate_multiplier).mean()), max_rate_multiplier)
 
         return alea_config
 
