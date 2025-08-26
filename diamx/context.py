@@ -463,7 +463,7 @@ class Context(object):
         # So we cap the nominal value to be the maximum allowed value.
         alea_config["parameter_definition"][f"{signal_name}_rate_multiplier"][
             "nominal_value"
-        ] = max(float(np.array(signal_rate_multiplier).mean()), max_rate_multiplier)
+        ] = min(float(np.array(signal_rate_multiplier).mean()), max_rate_multiplier)
 
         return alea_config
 
