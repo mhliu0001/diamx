@@ -190,7 +190,7 @@
         },
         {
             "experiment_name": "lz_ws2024",
-            "livetime": 0.7671232876712328,
+            "livetime": 0.6027397260273972,
             "fiducial_mass": 5.5,
             "data": "lz_ws2024_wimp_data.csv",
             "roi": {
@@ -201,50 +201,50 @@
             "bkgs": [
                 {
                     "bkg_name": "pb214",
-                    "rate_nominal": 968.5535714285714,
-                    "rate_uncertainty": 114.71428571428572,
+                    "rate_nominal": 1232.7045454545455,
+                    "rate_uncertainty": 146.0,
                     "args": {}
                 },
                 {
                     "bkg_name": "kr85_ar39_detgamma",
-                    "rate_nominal": 211.17857142857144,
-                    "rate_uncertainty": 28.67857142857143,
+                    "rate_nominal": 268.7727272727273,
+                    "rate_uncertainty": 36.5,
                     "args": {}
                 },
                 {
                     "bkg_name": "solar_neutrino_er",
-                    "rate_nominal": 132.96428571428572,
-                    "rate_uncertainty": 7.821428571428572,
+                    "rate_nominal": 169.22727272727275,
+                    "rate_uncertainty": 9.954545454545455,
                     "args": {}
                 },
                 {
                     "bkg_name": "pb212_po218",
-                    "rate_nominal": 81.73392857142858,
-                    "rate_uncertainty": 9.776785714285715,
+                    "rate_nominal": 104.025,
+                    "rate_uncertainty": 12.443181818181818,
                     "args": {}
                 },
                 {
                     "bkg_name": "tritium_c14",
-                    "rate_nominal": 75.99821428571428,
-                    "rate_uncertainty": 4.301785714285714,
+                    "rate_nominal": 96.725,
+                    "rate_uncertainty": 5.475,
                     "args": {}
                 },
                 {
                     "bkg_name": "xe136",
-                    "rate_nominal": 72.47857142857143,
-                    "rate_uncertainty": 10.819642857142858,
+                    "rate_nominal": 92.24545454545455,
+                    "rate_uncertainty": 13.770454545454548,
                     "args": {}
                 },
                 {
                     "bkg_name": "xe127_xe125",
-                    "rate_nominal": 4.171428571428572,
-                    "rate_uncertainty": 0.7821428571428571,
+                    "rate_nominal": 5.3090909090909095,
+                    "rate_uncertainty": 0.9954545454545455,
                     "args": {}
                 },
                 {
                     "bkg_name": "ac",
-                    "rate_nominal": 3.65,
-                    "rate_uncertainty": 0.39107142857142857,
+                    "rate_nominal": 4.6454545454545455,
+                    "rate_uncertainty": 0.9954545454545455,
                     "args": {
                         "template_path": "lz_ws2024_ac_template_contour_driven.h5",
                         "hist_name": "s1c-s2c"
@@ -260,8 +260,8 @@
                     "shape_parameter_nominal": 71,
                     "formatter": "d",
                     "shape_parameter_fit_limits": [65, 87],
-                    "rate_nominal": 25.289285714285715,
-                    "rate_uncertainty": 5.083928571428571,
+                    "rate_nominal": 32.18636363636364,
+                    "rate_uncertainty": 6.470454545454546,
                     "args": {}
                 }
             ],
