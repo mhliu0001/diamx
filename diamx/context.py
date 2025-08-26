@@ -448,13 +448,10 @@ class Context(object):
             )
             mask = (signal_mh.histogram > 0) | (bkg_mh.histogram > 0)
             data_mh.histogram[~mask] = 0
-            estimated_signal_multiplier = (
-                signal_multiplier_estimator(
-                    signal_mh.histogram / expected_events,
-                    summed_bkg_mh.histogram,
-                    data_mh.histogram,
-                )
-                / expected_events
+            estimated_signal_multiplier = signal_multiplier_estimator(
+                signal_mh.histogram,
+                summed_bkg_mh.histogram,
+                data_mh.histogram,
             )
             if estimated_signal_multiplier * expected_events > 1.5 * len(
                 data
