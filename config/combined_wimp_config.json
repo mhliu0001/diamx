@@ -7,7 +7,7 @@
             "data": "xenonnt_sr0_wimp_data.csv",
             "roi": {
                 "cs1": "np.linspace(0, 100, 101)",
-                "cs2": "np.logspace(2.7781512503836434, 4.1, 81)"
+                "cs2": "np.logspace(2.6020599913279625, 4.1, 81)"
             },
             "bkgs": [
                 {
@@ -22,6 +22,22 @@
                     "rate_relative_uncertainty": true,
                     "shared_rate": true,
                     "args": {}
+                },
+                {
+                    "bkg_name": "ac",
+                    "rate_nominal": 3.838065194532072,
+                    "args": {
+                        "template_path": "xenonnt_sr0_ac_template_contour_driven_400PE.h5",
+                        "hist_name": "cs1-cs2"
+                    }
+                },
+                {
+                    "bkg_name": "surface",
+                    "rate_nominal": 3.838065194532072,
+                    "args": {
+                        "template_path": "xenonnt_sr0_surface_template_contour_driven_400PE.h5",
+                        "hist_name": "cs1-cs2"
+                    }
                 }
             ],
             "shaped_bkgs": [],
@@ -73,7 +89,7 @@
                     "rate_relative_uncertainty": true,
                     "shared_rate": true,
                     "args": {
-                        "template_path": "xenonnt_sr1b_ac_template_contour_driven.h5",
+                        "template_path": "xenonnt_sr1b_ac_template_contour_driven_400PE.h5",
                         "hist_name": "cs1-cs2"
                     }
                 }
@@ -121,7 +137,7 @@
                     "rate_relative_uncertainty": true,
                     "shared_rate": true,
                     "args": {
-                        "template_path": "xenonnt_sr1b_ac_template_contour_driven.h5",
+                        "template_path": "xenonnt_sr1b_ac_template_contour_driven_400PE.h5",
                         "hist_name": "cs1-cs2"
                     }
                 }
