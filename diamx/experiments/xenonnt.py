@@ -621,6 +621,10 @@ class XENONnT(Experiment):
                     bounds_error=False,
                 )
                 eff_mean.append(np.mean(eff_interpolator(sampled_energies)))
+            if eff_mean[0] == 0:
+                eff_untertainty[signal_parameter_value] = 1e-6
+                print("Efficiency is zero. Skip uncertainty calculation.")
+                continue
             eff_untertainty[signal_parameter_value] = float(
                 np.clip((eff_mean[2] - eff_mean[1]) / eff_mean[0] / 2, 1e-6, None)
             )

@@ -306,6 +306,10 @@ class LZ(Experiment):
             eff_lower_mean = np.mean(eff_lower_interpolator(sampled_energies))
             eff_median_mean = np.mean(eff_median_interpolator(sampled_energies))
             eff_upper_mean = np.mean(eff_upper_interpolator(sampled_energies))
+            if eff_median_mean == 0:
+                eff_untertainty[signal_parameter_value] = 1e-6
+                print("Efficiency is zero. Skip uncertainty calculation.")
+                continue
             eff_untertainty[signal_parameter_value] = float(
                 np.clip(
                     (eff_upper_mean - eff_lower_mean) / eff_median_mean / 2, 0, None
