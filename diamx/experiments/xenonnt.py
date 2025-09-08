@@ -590,7 +590,7 @@ class XENONnT(Experiment):
             )
 
     def get_eff_uncertainty(self, signal_config):
-        eff_untertainty = {}
+        eff_uncertainty = {}
         for signal_parameter_value in generate_bin_array(
             signal_config["parameter_range"]
         ).tolist():
@@ -622,16 +622,16 @@ class XENONnT(Experiment):
                 )
                 eff_mean.append(np.mean(eff_interpolator(sampled_energies)))
             if eff_mean[0] == 0:
-                eff_untertainty[signal_parameter_value] = 1e-6
+                eff_uncertainty[signal_parameter_value] = 1e-6
                 print("Efficiency is zero. Skip uncertainty calculation.")
                 continue
-            eff_untertainty[signal_parameter_value] = float(
+            eff_uncertainty[signal_parameter_value] = float(
                 np.clip((eff_mean[2] - eff_mean[1]) / eff_mean[0] / 2, 1e-6, None)
             )
 
             apt.share.clear_cache()
 
-        return eff_untertainty
+        return eff_uncertainty
 
 
 class XENONnTSR0(XENONnT):
