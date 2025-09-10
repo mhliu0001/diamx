@@ -576,7 +576,7 @@ class Context(object):
                     **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0}
                 )
                 # Cowan et al. 2011, Eq. 52
-                significance = np.sqrt(2 * (max_ll - ll_zero))
+                significance = np.sqrt(2 * np.clip(max_ll - ll_zero, 0, None))
 
                 ci_and_discovery.append(
                     np.array(
