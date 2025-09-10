@@ -253,7 +253,7 @@ class LZ(Experiment):
         return data_alea
 
     def get_eff_uncertainty(self, signal_config):
-        eff_untertainty = {}
+        eff_uncertainty = {}
         for signal_parameter_value in generate_bin_array(
             signal_config["parameter_range"]
         ).tolist():
@@ -306,7 +306,11 @@ class LZ(Experiment):
             eff_lower_mean = np.mean(eff_lower_interpolator(sampled_energies))
             eff_median_mean = np.mean(eff_median_interpolator(sampled_energies))
             eff_upper_mean = np.mean(eff_upper_interpolator(sampled_energies))
-            eff_untertainty[signal_parameter_value] = float(
+            if eff_median_mean == 0:
+                eff_uncertainty[signal_parameter_value] = 1e-6
+                print("Efficiency is zero. Skip uncertainty calculation.")
+                continue
+            eff_uncertainty[signal_parameter_value] = float(
                 np.clip(
                     (eff_upper_mean - eff_lower_mean) / eff_median_mean / 2, 0, None
                 )
@@ -314,7 +318,7 @@ class LZ(Experiment):
 
             apt.share.clear_cache()
 
-        return eff_untertainty
+        return eff_uncertainty
 
 
 class LZWS2022(LZ):
