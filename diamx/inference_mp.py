@@ -8,6 +8,7 @@ from diamx.utils import generate_bin_array, HiddenTqdm
 from diamx.model import DiamxModel
 import traceback
 
+
 def _pool_task(pool_parameters):
     """Worker task: build model, run fit, return result row."""
     (
@@ -30,12 +31,12 @@ def _pool_task(pool_parameters):
             data_dict_new["ancillary"] = toy_data["ancillary"]
             if len(data_dict_new["ancillary"]) > 0:  # Avoid empty ancillary data
                 for name in data_dict_new["ancillary"].dtype.names:
-                    data_dict_new["ancillary"][0][name] = alea_config["parameter_definition"][
-                        name
-                    ]["nominal_value"]
+                    data_dict_new["ancillary"][0][name] = alea_config[
+                        "parameter_definition"
+                    ][name]["nominal_value"]
 
             data_dict_new["generate_values"] = toy_data["generate_values"]
-            
+
             alea_model.data = data_dict_new
 
             # best fit
@@ -63,7 +64,9 @@ def _pool_task(pool_parameters):
             _, ll_zero = alea_model.fit(**{poi_name: 0})
             significance = float(np.sqrt(2.0 * (max_ll - ll_zero)))
 
-        return np.array([signal_parameter_value, lower, upper, significance], dtype=float)
+        return np.array(
+            [signal_parameter_value, lower, upper, significance], dtype=float
+        )
     except Exception:
         tb = traceback.format_exc(limit=8)
         # Return a soft error record; the parent will print and continue
@@ -78,11 +81,11 @@ def run_inference_pool(
     exact_asymptotic=True,
     stabilize_fit=False,
     output_file_name=None,
-    processes=None,           # default: mp.cpu_count()
-    chunksize=1,              # tune for many tiny tasks; for long fits 1 is fine
-    maxtasksperchild=None,    # set e.g. 50 to recycle workers if you suspect leaks
+    processes=None,  # default: mp.cpu_count()
+    chunksize=1,  # tune for many tiny tasks; for long fits 1 is fine
+    maxtasksperchild=None,  # set e.g. 50 to recycle workers if you suspect leaks
     show_progress=True,
-    start_method=None,        # e.g. "spawn" for cross-platform consistency
+    start_method=None,  # e.g. "spawn" for cross-platform consistency
 ):
     """
     Multiprocessing (Pool) version of run_inference().
@@ -91,7 +94,7 @@ def run_inference_pool(
     if output_file_name is None:
         output_file_name = f"ci_{context.config['signal']['signal_name']}.csv"
     out_path = os.path.join(context.output_path, output_file_name)
-    
+
     if stabilize_fit:
         stabilized_parameter = (
             f"{context.config['signal']['signal_name']}_rate_multiplier"
@@ -101,31 +104,32 @@ def run_inference_pool(
     poi_name = f"{context.config['signal']['signal_name']}_rate_multiplier"
 
     # Build the pool parameters
-    signal_grid = generate_bin_array(context.config["signal"]["parameter_range"]).tolist()
+    signal_grid = generate_bin_array(
+        context.config["signal"]["parameter_range"]
+    ).tolist()
     pool_parameters = []
     data_dict = {}
     for experiment_instance in context.experiment_instances:
-        data_dict[experiment_instance.experiment_name] = (
-            experiment_instance.get_data()
-        )
+        data_dict[experiment_instance.experiment_name] = experiment_instance.get_data()
     for v in signal_grid:
         alea_config = context.update_alea_config_signal(v)
-        pool_parameters.append((
-            v,
-            copy.deepcopy(alea_config),
-            poi_name,
-            data_dict,
-            stabilized_parameter,
-            confidence_level,
-            confidence_interval_kind,
-            exact_asymptotic,
-            fit_strategy,
-        ))
+        pool_parameters.append(
+            (
+                v,
+                copy.deepcopy(alea_config),
+                poi_name,
+                data_dict,
+                stabilized_parameter,
+                confidence_level,
+                confidence_interval_kind,
+                exact_asymptotic,
+                fit_strategy,
+            )
+        )
 
     if len(pool_parameters) == 0:
         warnings.warn("Empty signal parameter grid.")
         return
-
 
     # Choose a context if requested (spawn is safest cross-platform)
     mp_ctx = mp.get_context(start_method) if start_method else mp
@@ -149,7 +153,9 @@ def run_inference_pool(
 
     with mp_ctx.Pool(**pool_kwargs) as pool:
         # Stream results as they complete; imap_unordered yields as tasks finish
-        for res in pool.imap_unordered(_pool_task, pool_parameters, chunksize=chunksize):
+        for res in pool.imap_unordered(
+            _pool_task, pool_parameters, chunksize=chunksize
+        ):
             if isinstance(res, tuple) and len(res) == 3 and res[0] == "__ERR__":
                 # Soft error from worker
                 _, spv, tb = res

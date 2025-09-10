@@ -51,7 +51,7 @@ class DiamxModel(BlueiceExtendedModel):
         fit_args = kwargs.copy()
         fit_args[stabilized_parameter] = re.x[0]
         return super().fit(**fit_args)
-    
+
     def confidence_interval_asymptotic(
         self,
         poi_name: str,
@@ -90,17 +90,29 @@ class DiamxModel(BlueiceExtendedModel):
             )
             # Clip the test statistic to be non-negative
             return np.clip(2.0 * (best_ll - ll), 0, None)
+
         def cumulative_t_tilde(hypothesis_value):
             t_tilde_value = t_tilde(hypothesis_value)
             sigma = get_asimov_sigma(self, poi_name, hypothesis_value)
-            if t_tilde_value <= (hypothesis_value / sigma)**2 or hypothesis_value == 0:
+            if (
+                t_tilde_value <= (hypothesis_value / sigma) ** 2
+                or hypothesis_value == 0
+            ):
                 # If mu = 0, then hypothesis_value/sigma = 0, so we always use the first case
                 return 2 * norm.cdf(np.sqrt(t_tilde_value)) - 1
             else:
-                return norm.cdf(np.sqrt(t_tilde_value)) + norm.cdf((t_tilde_value + (hypothesis_value/sigma)**2) / (2*hypothesis_value/sigma)) - 1
+                return (
+                    norm.cdf(np.sqrt(t_tilde_value))
+                    + norm.cdf(
+                        (t_tilde_value + (hypothesis_value / sigma) ** 2)
+                        / (2 * hypothesis_value / sigma)
+                    )
+                    - 1
+                )
+
         def p_value(hypothesis_value):
             return 1 - cumulative_t_tilde(hypothesis_value)
-        
+
         best_p_value = p_value(best_fit[poi_name])
         if best_p_value < 1 - confidence_level:
             warnings.warn(
@@ -111,7 +123,7 @@ class DiamxModel(BlueiceExtendedModel):
             return np.nan, np.nan
         lower_p_value = p_value(parameter_interval_bounds[0])
         upper_p_value = p_value(parameter_interval_bounds[1])
-        
+
         if lower_p_value < 1 - confidence_level:
             dl = brentq(
                 lambda x: p_value(x) - (1 - confidence_level),

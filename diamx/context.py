@@ -553,14 +553,16 @@ class Context(object):
                     stabilized_parameter=stabilized_parameter
                 )
                 if exact_asymptotic:
-                    assert confidence_interval_kind == "central", (
-                        "Non-central asymptotic confidence interval is not implemented."
-                    )
-                    lower_limit, upper_limit = alea_model.confidence_interval_asymptotic(
-                        poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
-                        stabilized_parameter=stabilized_parameter,
-                        confidence_level=confidence_level,
-                        fit_strategy=fit_strategy
+                    assert (
+                        confidence_interval_kind == "central"
+                    ), "Non-central asymptotic confidence interval is not implemented."
+                    lower_limit, upper_limit = (
+                        alea_model.confidence_interval_asymptotic(
+                            poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
+                            stabilized_parameter=stabilized_parameter,
+                            confidence_level=confidence_level,
+                            fit_strategy=fit_strategy,
+                        )
                     )
                 else:
                     lower_limit, upper_limit = alea_model.confidence_interval(
@@ -580,7 +582,7 @@ class Context(object):
                     np.array(
                         [signal_parameter_value, lower_limit, upper_limit, significance]
                     )
-                )  
+                )
                 del alea_model
 
         ci_and_discovery = np.array(ci_and_discovery)
