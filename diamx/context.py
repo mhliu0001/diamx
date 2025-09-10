@@ -580,7 +580,8 @@ class Context(object):
                     np.array(
                         [signal_parameter_value, lower_limit, upper_limit, significance]
                     )
-                )
+                )  
+                del alea_model
 
         ci_and_discovery = np.array(ci_and_discovery)
         if output_file_name is None:

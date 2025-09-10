@@ -7,7 +7,7 @@ from blueice.utils import inherit_docstring_from
 from collections import OrderedDict
 from blueice.likelihood import UnbinnedLogLikelihood, LogLikelihoodSum
 from alea.models.blueice_extended_model import CustomAncillaryLikelihood
-from copy import deepcopy
+from copy import copy
 
 class ExtendedBinnedLogLikelihood(LogLikelihoodBase):
     """
@@ -155,7 +155,7 @@ def get_asimov_sigma(alea_model, poi_name, poi_value):
     best_fit_parameters, _ = alea_model.fit(**{poi_name: poi_value})
 
     # Generate the Asimov model
-    asimov_model = deepcopy(alea_model)
+    asimov_model = copy(alea_model)
     old_lls = asimov_model._likelihood.likelihood_list
     new_lls = []
     for ll_idx, ll in enumerate(old_lls):
@@ -209,4 +209,6 @@ def get_asimov_sigma(alea_model, poi_name, poi_value):
     
     if np.abs(asimov_fit_parameters[poi_name] - poi_value) > sigma:
         warnings.warn("Asimov fit did not recover the input signal strength within 1 sigma.", RuntimeWarning)
+    
+    del asimov_model
     return sigma

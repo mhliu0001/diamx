@@ -42,6 +42,8 @@ def test_xenonnt_sr0_context(tmp_path):
     st.generate_templates()
     st.run_inference(stabilize_fit=False)
     st.run_inference()
+    st.run_inference(exact_asymptotic=False)
+    diamx.run_inference_pool(st, processes=2, stabilize_fit=False)
     st.print_best_fit(200)
     st.print_best_fit(200, disable_rounding=True)
     st.plot_bkg_template(
