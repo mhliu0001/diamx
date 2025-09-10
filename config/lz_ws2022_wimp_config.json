@@ -27,13 +27,18 @@
                     "bkg_name": "xe127",
                     "rate_nominal": 55.96666666666667,
                     "rate_uncertainty": 4.866666666666667,
-                    "args": {}
+                    "args": {
+                        "l_quenching_factor": 1.0
+                    }
                 },
                 {
                     "bkg_name": "xe124",
                     "rate_nominal": 30.416666666666668,
                     "rate_uncertainty": 8.516666666666666,
-                    "args": {}
+                    "args": {
+                        "ll_quenching_factor": 1.0,
+                        "lm_quenching_factor": 1.0
+                    }
                 },
                 {
                     "bkg_name": "xe136",

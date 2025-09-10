@@ -339,6 +339,8 @@ class LZWS2022(LZ):
         elif name == "xe124":
             branching_ratio = {"lm": 7.1 / 19.4, "ll": 12.3 / 19.4}
             energy = {"lm": 5.98, "ll": 10.0}
+            ll_quenching_factor = kwargs.get("ll_quenching_factor", 0.70)
+            lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
             self._generate_template(
                 "er_mono",
                 rate,
@@ -347,11 +349,12 @@ class LZWS2022(LZ):
                 energy=energy,
                 int_type="DEC",
                 branching_ratio=branching_ratio,
-                quenching_factor={"lm": 0.87, "ll": 0.87},
+                quenching_factor={"lm": lm_quenching_factor, "ll": ll_quenching_factor},
                 **kwargs,
             )
 
         elif name == "xe127":
+            l_quenching_factor = kwargs.get("l_quenching_factor", 0.87)
             self._generate_template(
                 "er_mono",
                 rate,
@@ -359,7 +362,7 @@ class LZWS2022(LZ):
                 name,
                 energy=5.2,
                 int_type="EC",
-                quenching_factor=0.87,
+                quenching_factor=l_quenching_factor,
                 **kwargs,
             )
 
@@ -466,6 +469,16 @@ class LZWS2024(LZ):
 
         elif name == "xe124":
             # DEC model
+            # For backwards compatibility, the naming conventions are changed a bit
+            # If "dec_quenching_factor" is provided, use it for ll (divided by 100),
+            #    and "lm_quenching_factor" for lm
+            # If not, use "ll_quenching_factor" and "lm_quenching_factor" if provided
+            if "dec_quenching_factor" not in kwargs:
+                ll_quenching_factor = kwargs.get("ll_quenching_factor", 0.70)
+                lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
+            else:
+                ll_quenching_factor = kwargs["dec_quenching_factor"] / 100
+                lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
             branching_ratio = {"lm": 7.1 / 19.4, "ll": 12.3 / 19.4}
             energy = {"lm": 5.98, "ll": 10.0}
             self._generate_template(
@@ -477,13 +490,14 @@ class LZWS2024(LZ):
                 int_type="DEC",
                 branching_ratio=branching_ratio,
                 quenching_factor={
-                    "lm": 0.87,
-                    "ll": kwargs["dec_quenching_factor"] / 100,
+                    "lm": lm_quenching_factor,
+                    "ll": ll_quenching_factor,
                 },
                 **kwargs,
             )
 
         elif name == "xe127_xe125":
+            l_quenching_factor = kwargs.get("l_quenching_factor", 0.87)
             self._generate_template(
                 "er_mono",
                 rate,
@@ -491,7 +505,7 @@ class LZWS2024(LZ):
                 name,
                 energy=5.2,
                 int_type="EC",
-                quenching_factor=0.87,
+                quenching_factor=l_quenching_factor,
                 **kwargs,
             )
 
