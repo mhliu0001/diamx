@@ -515,8 +515,8 @@ class Context(object):
         confidence_level=0.9,
         confidence_interval_kind="central",
         fit_strategy={"minuit_strategy": 2},
-        truncate_significance=False,
-        stabilize_fit=True,
+        exact_asymptotic=True,
+        stabilize_fit=False,
         output_file_name=None,
     ):
         ci_and_discovery = []
@@ -552,17 +552,30 @@ class Context(object):
                 best_fit, max_ll = alea_model.fit(
                     stabilized_parameter=stabilized_parameter
                 )
-
-                lower_limit, upper_limit = alea_model.confidence_interval(
-                    poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
-                    stabilized_parameter=stabilized_parameter,
-                    confidence_level=confidence_level,
-                    confidence_interval_kind=confidence_interval_kind,
-                    fit_strategy=fit_strategy,
-                )
+                if exact_asymptotic:
+                    assert (
+                        confidence_interval_kind == "central"
+                    ), "Non-central asymptotic confidence interval is not implemented."
+                    lower_limit, upper_limit = (
+                        alea_model.confidence_interval_asymptotic(
+                            poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
+                            stabilized_parameter=stabilized_parameter,
+                            confidence_level=confidence_level,
+                            fit_strategy=fit_strategy,
+                        )
+                    )
+                else:
+                    lower_limit, upper_limit = alea_model.confidence_interval(
+                        poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
+                        stabilized_parameter=stabilized_parameter,
+                        confidence_level=confidence_level,
+                        confidence_interval_kind=confidence_interval_kind,
+                        fit_strategy=fit_strategy,
+                    )
                 _, ll_zero = alea_model.fit(
                     **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0}
                 )
+                # Cowan et al. 2011, Eq. 52
                 significance = np.sqrt(2 * (max_ll - ll_zero))
 
                 ci_and_discovery.append(
@@ -570,6 +583,7 @@ class Context(object):
                         [signal_parameter_value, lower_limit, upper_limit, significance]
                     )
                 )
+                del alea_model
 
         ci_and_discovery = np.array(ci_and_discovery)
         if output_file_name is None:

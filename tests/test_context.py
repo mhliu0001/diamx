@@ -40,8 +40,10 @@ def test_xenonnt_sr0_context(tmp_path):
     st = diamx.Context(config_preprocess("xenonnt_sr0_wimp_config.json"), tmp_path)
     st.register_experiment(diamx.experiments.XENONnTSR0)
     st.generate_templates()
-    st.run_inference(stabilize_fit=False)
     st.run_inference()
+    st.run_inference(stabilize_fit=True)
+    st.run_inference(exact_asymptotic=False)
+    diamx.run_inference_pool(st, processes=2, stabilize_fit=False)
     st.print_best_fit(200)
     st.print_best_fit(200, disable_rounding=True)
     st.plot_bkg_template(
@@ -66,7 +68,7 @@ def test_xenonnt_sr0_and_1_context(tmp_path):
     st.register_experiment(diamx.experiments.XENONnTSR1a)
     st.register_experiment(diamx.experiments.XENONnTSR1b)
     st.generate_templates()
-    st.run_inference(stabilize_fit=False)
+    st.run_inference(stabilize_fit=False, exact_asymptotic=False)
     st.print_best_fit(200)
 
 
@@ -74,7 +76,7 @@ def test_lz_ws2022_context(tmp_path):
     st = diamx.Context(config_preprocess("lz_ws2022_wimp_config.json"), tmp_path)
     st.register_experiment(diamx.experiments.LZWS2022)
     st.generate_templates()
-    st.run_inference(stabilize_fit=False)
+    st.run_inference(stabilize_fit=False, exact_asymptotic=False)
     st.print_best_fit(40)
     st.plot_best_fit_bkg_mh(
         "lz_ws2022",
@@ -89,7 +91,7 @@ def test_lz_ws2024_context(tmp_path):
     st.register_experiment(diamx.experiments.LZWS2022)
     st.register_experiment(diamx.experiments.LZWS2024)
     st.generate_templates()
-    st.run_inference(stabilize_fit=False)
+    st.run_inference(stabilize_fit=False, exact_asymptotic=False)
     st.print_best_fit(40)
     st.plot_best_fit_bkg_mh(
         "lz_ws2024",

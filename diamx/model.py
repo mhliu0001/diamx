@@ -6,13 +6,16 @@ from copy import deepcopy
 import numpy as np
 from blueice.likelihood import _needs_data
 from scipy.optimize import minimize
+from scipy.stats import norm
 import warnings
+from diamx.asimov import get_asimov_sigma
 
 
 class DiamxModel(BlueiceExtendedModel):
     """
     The Diamx model class extends the BlueiceExtendedModel class, mainly to implement a custom
-    fitting interface to stabilize the fit.
+    fitting interface to stabilize the fit, and the exact asymptotic confidence interval calculation
+    from Cowan et al. (2011) (https://arxiv.org/abs/1007.1727).
     """
 
     @_needs_data
@@ -48,6 +51,96 @@ class DiamxModel(BlueiceExtendedModel):
         fit_args = kwargs.copy()
         fit_args[stabilized_parameter] = re.x[0]
         return super().fit(**fit_args)
+
+    def confidence_interval_asymptotic(
+        self,
+        poi_name: str,
+        stabilized_parameter: Optional[str] = None,
+        parameter_interval_bounds: Optional[Tuple[float, float]] = None,
+        confidence_level: Optional[float] = 0.9,
+        fit_strategy: Optional[dict] = None,
+    ) -> Tuple[float, float]:
+        """Compute asymptotic confidence intervals for a certain named parameter.
+
+        Args:
+            poi_name (str): name of the parameter of interest
+            stabilized_parameter (str, optional (default=None)): name of the parameter to
+                stabilize the fit by fixing it in the fit.
+            confidence_level (float, optional (default=None)):
+                confidence level for confidence intervals.
+                If None, the default confidence level of the model is used.
+            fit_strategy (dict, optional (default=None)): strategy for the fit,
+                see _DEFAULT_FIT_STRATEGY for possible settings.
+        """
+        best_fit, best_ll = self.fit(
+            stabilized_parameter=stabilized_parameter, fit_strategy=fit_strategy
+        )
+        parameter_of_interest = self.parameters[poi_name]
+        if not parameter_of_interest.fittable:
+            raise ValueError("The parameter of interest must be fittable")
+
+        if parameter_interval_bounds is None:
+            parameter_interval_bounds = parameter_of_interest.parameter_interval_bounds
+
+        def t_tilde(hypothesis_value):
+            _, ll = self.fit(
+                **{poi_name: hypothesis_value},
+                stabilized_parameter=stabilized_parameter,
+                fit_strategy=fit_strategy,
+            )
+            # Clip the test statistic to be non-negative
+            return np.clip(2.0 * (best_ll - ll), 0, None)
+
+        def cumulative_t_tilde(hypothesis_value):
+            t_tilde_value = t_tilde(hypothesis_value)
+            sigma = get_asimov_sigma(self, poi_name, hypothesis_value)
+            if (
+                t_tilde_value <= (hypothesis_value / sigma) ** 2
+                or hypothesis_value == 0
+            ):
+                # If mu = 0, then hypothesis_value/sigma = 0, so we always use the first case
+                return 2 * norm.cdf(np.sqrt(t_tilde_value)) - 1
+            else:
+                return (
+                    norm.cdf(np.sqrt(t_tilde_value))
+                    + norm.cdf(
+                        (t_tilde_value + (hypothesis_value / sigma) ** 2)
+                        / (2 * hypothesis_value / sigma)
+                    )
+                    - 1
+                )
+
+        def p_value(hypothesis_value):
+            return 1 - cumulative_t_tilde(hypothesis_value)
+
+        best_p_value = p_value(best_fit[poi_name])
+        if best_p_value < 1 - confidence_level:
+            warnings.warn(
+                f"The best-fit {best_fit[poi_name]} has a p-value {best_p_value} "
+                f"lower than 1-confidence_level {1-confidence_level}. Cannot compute "
+                f"confidence interval."
+            )
+            return np.nan, np.nan
+        lower_p_value = p_value(parameter_interval_bounds[0])
+        upper_p_value = p_value(parameter_interval_bounds[1])
+
+        if lower_p_value < 1 - confidence_level:
+            dl = brentq(
+                lambda x: p_value(x) - (1 - confidence_level),
+                parameter_interval_bounds[0],
+                best_fit[poi_name],
+            )
+        else:
+            dl = -1 * np.inf
+        if upper_p_value < 1 - confidence_level:
+            ul = brentq(
+                lambda x: p_value(x) - (1 - confidence_level),
+                best_fit[poi_name],
+                parameter_interval_bounds[1],
+            )
+        else:
+            ul = np.inf
+        return dl, ul
 
     def confidence_interval(
         self,
