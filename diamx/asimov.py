@@ -146,7 +146,7 @@ def extended_poisson_logpmf(observed, expected, atol=0.0):
     mask_impossible = (exp == 0.0) & (obs > 0.0)
     if np.any(mask_impossible):
         warnings.warn(
-            "Some bins have expected=0 but observed>0; setting log likelihood to be 0.",
+            "Some bins have expected=0 but observed>0; log likelihood should be -inf, but setting contribution to 0 for the sum.",
             RuntimeWarning,
         )
         logL[mask_impossible] = 0.0  # logL = -inf, but set to 0 for sum
