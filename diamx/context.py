@@ -550,7 +550,7 @@ class Context(object):
 
                 alea_model.data = self.get_data(alea_model, alea_config)
 
-            _, max_ll = alea_model.fit(stabilized_parameter=stabilized_parameter)
+            _, max_ll = alea_model.fit(stabilized_parameter=stabilized_parameter, fit_strategy=fit_strategy)
             if exact_asymptotic:
                 assert (
                     confidence_interval_kind == "central"
@@ -570,9 +570,12 @@ class Context(object):
                     fit_strategy=fit_strategy,
                 )
             _, ll_zero = alea_model.fit(
-                **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0}
+                **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0},
+                stabilized_parameter=stabilized_parameter,
+                fit_strategy=fit_strategy,
             )
             # Cowan et al. 2011, Eq. 52
+            # Clipping to avoid nan significance due to numerical issues
             significance = np.sqrt(2 * np.clip(max_ll - ll_zero, 0, None))
 
             ci_and_discovery.append(
