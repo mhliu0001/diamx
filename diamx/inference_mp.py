@@ -113,6 +113,9 @@ def run_inference_pool(
         data_dict[experiment_instance.experiment_name] = experiment_instance.get_data()
     for v in signal_grid:
         alea_config = context.update_alea_config_signal(v)
+        if alea_config is None:
+            # e.g. invalid spectrum that gives zero events, skip
+            continue
         pool_parameters.append(
             (
                 v,

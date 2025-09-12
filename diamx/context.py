@@ -544,46 +544,45 @@ class Context(object):
                 ) as alea_config_file:
                     yaml.dump(alea_config, alea_config_file)
                 saved_yaml_config = True
+            alea_model = None
             with HiddenTqdm():  # Suppress print from alea
                 alea_model = DiamxModel(**alea_config)
 
                 alea_model.data = self.get_data(alea_model, alea_config)
 
-                best_fit, max_ll = alea_model.fit(
-                    stabilized_parameter=stabilized_parameter
+            _, max_ll = alea_model.fit(stabilized_parameter=stabilized_parameter, fit_strategy=fit_strategy)
+            if exact_asymptotic:
+                assert (
+                    confidence_interval_kind == "central"
+                ), "Non-central asymptotic confidence interval is not implemented."
+                lower_limit, upper_limit = alea_model.confidence_interval_asymptotic(
+                    poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
+                    stabilized_parameter=stabilized_parameter,
+                    confidence_level=confidence_level,
+                    fit_strategy=fit_strategy,
                 )
-                if exact_asymptotic:
-                    assert (
-                        confidence_interval_kind == "central"
-                    ), "Non-central asymptotic confidence interval is not implemented."
-                    lower_limit, upper_limit = (
-                        alea_model.confidence_interval_asymptotic(
-                            poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
-                            stabilized_parameter=stabilized_parameter,
-                            confidence_level=confidence_level,
-                            fit_strategy=fit_strategy,
-                        )
-                    )
-                else:
-                    lower_limit, upper_limit = alea_model.confidence_interval(
-                        poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
-                        stabilized_parameter=stabilized_parameter,
-                        confidence_level=confidence_level,
-                        confidence_interval_kind=confidence_interval_kind,
-                        fit_strategy=fit_strategy,
-                    )
-                _, ll_zero = alea_model.fit(
-                    **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0}
+            else:
+                lower_limit, upper_limit = alea_model.confidence_interval(
+                    poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
+                    stabilized_parameter=stabilized_parameter,
+                    confidence_level=confidence_level,
+                    confidence_interval_kind=confidence_interval_kind,
+                    fit_strategy=fit_strategy,
                 )
-                # Cowan et al. 2011, Eq. 52
-                significance = np.sqrt(2 * np.clip(max_ll - ll_zero, 0, None))
+            _, ll_zero = alea_model.fit(
+                **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0},
+                stabilized_parameter=stabilized_parameter,
+                fit_strategy=fit_strategy,
+            )
+            # Cowan et al. 2011, Eq. 52
+            # Clipping to avoid nan significance due to numerical issues
+            significance = np.sqrt(2 * np.clip(max_ll - ll_zero, 0, None))
 
-                ci_and_discovery.append(
-                    np.array(
-                        [signal_parameter_value, lower_limit, upper_limit, significance]
-                    )
+            ci_and_discovery.append(
+                np.array(
+                    [signal_parameter_value, lower_limit, upper_limit, significance]
                 )
-                del alea_model
+            )
 
         ci_and_discovery = np.array(ci_and_discovery)
         if output_file_name is None:

@@ -58,7 +58,7 @@ class DiamxModel(BlueiceExtendedModel):
         stabilized_parameter: Optional[str] = None,
         parameter_interval_bounds: Optional[Tuple[float, float]] = None,
         confidence_level: Optional[float] = 0.9,
-        fit_strategy: Optional[dict] = None,
+        fit_strategy: Optional[dict] = {"minuit_strategy": 2},
     ) -> Tuple[float, float]:
         """Compute asymptotic confidence intervals for a certain named parameter.
 
@@ -93,10 +93,12 @@ class DiamxModel(BlueiceExtendedModel):
 
         def cumulative_t_tilde(hypothesis_value):
             t_tilde_value = t_tilde(hypothesis_value)
-            sigma = get_asimov_sigma(self, poi_name, hypothesis_value)
+            sigma = get_asimov_sigma(
+                self, poi_name, hypothesis_value, fit_strategy=fit_strategy
+            )
             if (
-                t_tilde_value <= (hypothesis_value / sigma) ** 2
-                or hypothesis_value == 0
+                hypothesis_value == 0
+                or t_tilde_value <= (hypothesis_value / sigma) ** 2
             ):
                 # If mu = 0, then hypothesis_value/sigma = 0, so we always use the first case
                 return 2 * norm.cdf(np.sqrt(t_tilde_value)) - 1
