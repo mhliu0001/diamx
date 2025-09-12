@@ -155,7 +155,9 @@ def extended_poisson_logpmf(observed, expected, atol=0.0):
     return logL
 
 
-def get_asimov_sigma(alea_model, poi_name, poi_value):
+def get_asimov_sigma(
+    alea_model, poi_name, poi_value, fit_strategy={"minuit_strategy": 2}
+):
     """
     Given the signal strength parameter value, calculate the standard deviation sigma
     of the estimator of the signal strength, using the Asimov dataset.
@@ -168,6 +170,8 @@ def get_asimov_sigma(alea_model, poi_name, poi_value):
         Name of the parameter of interest (signal strength).
     poi_value : float
         Value of the parameter of interest (signal strength).
+    fit_strategy : dict
+        Fit strategy to use for the Asimov fit. Default is {"minuit_strategy": 2}.
 
     Returns
     -------
@@ -253,15 +257,25 @@ def get_asimov_sigma(alea_model, poi_name, poi_value):
         new_lls, likelihood_weights=asimov_model._likelihood.likelihood_weights
     )
 
-    asimov_fit_parameters, _ = asimov_model.fit()
-    asimov_model.minuit_object.hesse()
-    sigma = asimov_model.minuit_object.errors[poi_name]
+    asimov_fit_parameters, _ = asimov_model.fit(fit_strategy=fit_strategy)
 
+    asimov_model.minuit_object.hesse()
+    if asimov_model.minuit_object.fmin.hesse_failed:
+        raise RuntimeError(
+            f"Hesse failed for Asimov fit in poi value {poi_value}; "
+            "cannot estimate sigma."
+        )
+    if not asimov_model.minuit_object.valid:
+        warnings.warn(
+            "Asimov fit did not converge properly; errors may be unreliable.",
+            RuntimeWarning,
+        )
+
+    sigma = asimov_model.minuit_object.errors[poi_name]
     if np.abs(asimov_fit_parameters[poi_name] - poi_value) > sigma:
         warnings.warn(
             "Asimov fit did not recover the input signal strength within 1 sigma.",
             RuntimeWarning,
         )
 
-    del asimov_model
     return sigma
