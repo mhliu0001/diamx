@@ -42,7 +42,8 @@ class ExtendedBinnedLogLikelihood(LogLikelihoodBase):
         if len(self.shape_parameters):
             assert (
                 self.source_wise_interpolation
-            ), "ExtendedBinnedLogLikelihood only supports source-wise interpolation."
+            ), "ExtendedBinnedLogLikelihood only supports source-wise interpolation. "
+            "If you see this error, consider updating alea_inference and blueice."
             self.ps_interpolators = OrderedDict()
             analysis_space_dims = None
             for sn, base_source in zip(self.source_name_list, self.base_model.sources):
