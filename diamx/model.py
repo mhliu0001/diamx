@@ -82,6 +82,10 @@ class DiamxModel(BlueiceExtendedModel):
         if parameter_interval_bounds is None:
             parameter_interval_bounds = parameter_of_interest.parameter_interval_bounds
 
+        assert (
+            parameter_interval_bounds[0] == 0
+        ), "Asymptotic CI only implemented for lower bound at 0."
+
         def t_tilde(hypothesis_value):
             _, ll = self.fit(
                 **{poi_name: hypothesis_value},

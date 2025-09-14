@@ -341,7 +341,7 @@ class Context(object):
 
     def update_alea_config_signal(self, signal_parameter_value):
         try:
-            alea_config = self._cached_alea_config
+            alea_config = copy.deepcopy(self._cached_alea_config)
         except AttributeError:
             alea_config = self.generate_alea_config()
         signal_config = self.config["signal"]
@@ -352,7 +352,6 @@ class Context(object):
         ] = signal_parameter_value
 
         # Signal template file name & signal rate multiplier
-        signal_rate_multiplier = 0
         args = copy.deepcopy(signal_config.get("args", {}))
         args[signal_parameter_name] = signal_parameter_value
 
@@ -433,12 +432,14 @@ class Context(object):
             # the fit will not be sensitive to the signal rate multiplier.
             elif expected_events >= 1e10:
                 print(
-                    f"Expected events for {experiment_instance.experiment_name} is {expected_events}."
+                    f"Expected events for {experiment_instance.experiment_name} "
+                    f"is {expected_events}."
                 )
                 warnings.warn(
                     f"If {signal_parameter_name} is {signal_parameter_value}, "
                     f"the template gives too many events for {experiment_instance.experiment_name}."
-                    "The results may not be reliable. Consider multiplying the input spectrum by a small factor."
+                    "The results may not be reliable. Consider multiplying the input spectrum "
+                    "by a small factor."
                 )
 
             data = experiment_instance.get_data()
@@ -470,6 +471,24 @@ class Context(object):
         alea_config["parameter_definition"][f"{signal_name}_rate_multiplier"][
             "nominal_value"
         ] = min(float(np.array(signal_rate_multiplier).mean()), max_rate_multiplier)
+
+        # Also, we can update the upper parameter_interval_bounds to be max_rate_multiplier
+        # if upper parameter_interval_bounds is larger.
+        upper_parameter_bound = alea_config["parameter_definition"][
+            f"{signal_name}_rate_multiplier"
+        ]["parameter_interval_bounds"][1]
+        if upper_parameter_bound is None or upper_parameter_bound > max_rate_multiplier:
+            alea_config["parameter_definition"][f"{signal_name}_rate_multiplier"][
+                "parameter_interval_bounds"
+            ][1] = max_rate_multiplier
+        else:
+            warnings.warn(
+                f"Upper parameter_interval_bounds {upper_parameter_bound} of signal rate multiplier "
+                f"for signal parameter value  {signal_parameter_value} "
+                f"is smaller than the estimated maximum {max_rate_multiplier}."
+                "This may not cause issues, but if you see infinity in upper limits, consider "
+                "increasing upper parameter_interval_bounds."
+            )
 
         return alea_config
 
@@ -550,17 +569,23 @@ class Context(object):
 
                 alea_model.data = self.get_data(alea_model, alea_config)
 
-            _, max_ll = alea_model.fit(stabilized_parameter=stabilized_parameter, fit_strategy=fit_strategy)
+            _, max_ll = alea_model.fit(
+                stabilized_parameter=stabilized_parameter, fit_strategy=fit_strategy
+            )
             if exact_asymptotic:
                 assert (
                     confidence_interval_kind == "central"
                 ), "Non-central asymptotic confidence interval is not implemented."
-                lower_limit, upper_limit = alea_model.confidence_interval_asymptotic(
-                    poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
-                    stabilized_parameter=stabilized_parameter,
-                    confidence_level=confidence_level,
-                    fit_strategy=fit_strategy,
-                )
+
+                with HiddenTqdm():
+                    lower_limit, upper_limit = (
+                        alea_model.confidence_interval_asymptotic(
+                            poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
+                            stabilized_parameter=stabilized_parameter,
+                            confidence_level=confidence_level,
+                            fit_strategy=fit_strategy,
+                        )
+                    )
             else:
                 lower_limit, upper_limit = alea_model.confidence_interval(
                     poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",

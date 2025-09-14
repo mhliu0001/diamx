@@ -62,7 +62,7 @@ def _pool_task(pool_parameters):
 
             # Discovery Z (Cowan+ 2011 Eq. 52)
             _, ll_zero = alea_model.fit(**{poi_name: 0})
-            significance = float(np.sqrt(2.0 * (max_ll - ll_zero)))
+            significance = float(np.sqrt(2.0 * (np.clip(max_ll - ll_zero, 0, None))))
 
         return np.array(
             [signal_parameter_value, lower, upper, significance], dtype=float
@@ -154,6 +154,7 @@ def run_inference_pool(
         except Exception:
             progress_iter = None  # fall back to prints
 
+    error = False
     with mp_ctx.Pool(**pool_kwargs) as pool:
         # Stream results as they complete; imap_unordered yields as tasks finish
         for res in pool.imap_unordered(
@@ -163,6 +164,7 @@ def run_inference_pool(
                 # Soft error from worker
                 _, spv, tb = res
                 print(f"\n[worker error] signal={spv}\n{tb}")
+                error = True
             elif res is None:
                 # Skipped parameter (e.g. invalid template)
                 pass
@@ -177,6 +179,8 @@ def run_inference_pool(
 
     if len(results) == 0:
         warnings.warn("No valid results produced in run_inference_pool().")
+        if error:
+            raise RuntimeError("Errors occurred in worker processes; see output above.")
         return
 
     # Stack + sort by parameter (unordered stream)
@@ -185,3 +189,9 @@ def run_inference_pool(
 
     # Single write from parent
     np.savetxt(out_path, arr, delimiter=",")
+
+    if error:
+        raise RuntimeError(
+            "Errors occurred in worker processes; see output above. "
+            "The output file is still created."
+        )
