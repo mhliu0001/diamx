@@ -341,7 +341,7 @@ class Context(object):
 
     def update_alea_config_signal(self, signal_parameter_value):
         try:
-            alea_config = self._cached_alea_config
+            alea_config = copy.deepcopy(self._cached_alea_config)
         except AttributeError:
             alea_config = self.generate_alea_config()
         signal_config = self.config["signal"]
