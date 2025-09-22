@@ -44,7 +44,7 @@ def _pool_task(pool_parameters):
 
             # CI
             if exact_asymptotic:
-                # only central is supported by your asymptotic path
+                # only central is supported
                 lower, upper = alea_model.confidence_interval_asymptotic(
                     poi_name=poi_name,
                     stabilized_parameter=stabilized_parameter,
@@ -85,7 +85,7 @@ def run_inference_pool(
     chunksize=1,  # tune for many tiny tasks; for long fits 1 is fine
     maxtasksperchild=None,  # set e.g. 50 to recycle workers if you suspect leaks
     show_progress=True,
-    start_method=None,  # e.g. "spawn" for cross-platform consistency
+    start_method="spawn",  # e.g. "spawn" for cross-platform consistency
 ):
     """
     Multiprocessing (Pool) version of run_inference().

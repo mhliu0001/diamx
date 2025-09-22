@@ -343,7 +343,7 @@ class Context(object):
         try:
             alea_config = copy.deepcopy(self._cached_alea_config)
         except AttributeError:
-            alea_config = self.generate_alea_config()
+            alea_config = copy.deepcopy(self.generate_alea_config())
         signal_config = self.config["signal"]
         signal_name = signal_config["signal_name"]
         signal_parameter_name = signal_config["parameter_name"]
