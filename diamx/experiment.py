@@ -193,9 +193,7 @@ class Experiment:
                         f"Missing attribute {attr} for shaped background component."
                     )
 
-    def get_bkg_templates(
-        self,
-    ):
+    def get_bkg_templates(self):
         """Generate background templates in parallel."""
         template_folder = "templates"  # Set your folder name here.
         if "multiprocess_threads" in self.config:
