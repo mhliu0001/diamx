@@ -193,12 +193,14 @@ class Experiment:
                         f"Missing attribute {attr} for shaped background component."
                     )
 
-    def get_bkg_templates(self):
+    def get_bkg_templates(
+        self,
+    ):
         """Generate background templates in parallel."""
         template_folder = "templates"  # Set your folder name here.
         if "multiprocess_threads" in self.config:
             processes = self.config["multiprocess_threads"]
-            pool = multiprocessing.Pool(processes=processes)
+            ctx = multiprocessing.get_context("spawn")
             func = partial(
                 process_bkg_template,
                 experiment_config=self.config,
@@ -208,15 +210,14 @@ class Experiment:
                 generate_template=self.generate_template,
             )
             tasks = self.config["bkgs"]
-            list(
-                tqdm(
-                    pool.imap_unordered(func, tasks),
+            with ctx.Pool(processes=processes, maxtasksperchild=1) as pool:
+                it = pool.imap_unordered(func, tasks, chunksize=1)
+                for _ in tqdm(
+                    it,
                     total=len(tasks),
                     desc=f"Generating background templates for {self.experiment_name}",
-                )
-            )
-            pool.close()
-            pool.join()
+                ):
+                    pass
         else:
             # Do not use multiprocessing, especially when using JAX like in appletree
             for bkg_config in tqdm(
@@ -245,7 +246,7 @@ class Experiment:
                 tasks.append((shaped_bkg_config, shape_parameter_value))
         if "multiprocess_threads" in self.config:
             processes = self.config["multiprocess_threads"]
-            pool = multiprocessing.Pool(processes=processes)
+            ctx = multiprocessing.get_context("spawn")
             func = partial(
                 process_shaped_bkg_template,
                 experiment_config=self.config,
@@ -254,15 +255,14 @@ class Experiment:
                 template_folder=template_folder,
                 generate_template=self.generate_template,
             )
-            list(
-                tqdm(
-                    pool.imap_unordered(func, tasks),
+            with ctx.Pool(processes=processes, maxtasksperchild=1) as pool:
+                it = pool.imap_unordered(func, tasks, chunksize=1)
+                for _ in tqdm(
+                    it,
                     total=len(tasks),
                     desc=f"Generating shaped background templates for {self.experiment_name}",
-                )
-            )
-            pool.close()
-            pool.join()
+                ):
+                    pass
         else:
             # Do not use multiprocessing, especially when using JAX like in appletree
             for task in tqdm(
@@ -284,7 +284,7 @@ class Experiment:
         parameter_range = generate_bin_array(signal_config["parameter_range"]).tolist()
         if "multiprocess_threads" in self.config:
             processes = self.config["multiprocess_threads"]
-            pool = multiprocessing.Pool(processes=processes)
+            ctx = multiprocessing.get_context("spawn")
             func = partial(
                 process_signal_template,
                 signal_config,
@@ -294,15 +294,14 @@ class Experiment:
                 template_folder=template_folder,
                 generate_template=self.generate_template,
             )
-            list(
-                tqdm(
-                    pool.imap_unordered(func, parameter_range),
+            with ctx.Pool(processes=processes, maxtasksperchild=1) as pool:
+                it = pool.imap_unordered(func, parameter_range, chunksize=1)
+                for _ in tqdm(
+                    it,
                     total=len(parameter_range),
                     desc=f"Generating signal templates for {self.experiment_name}",
-                )
-            )
-            pool.close()
-            pool.join()
+                ):
+                    pass
         else:
             # Do not use multiprocessing, especially when using JAX like in appletree
             for parameter in tqdm(
