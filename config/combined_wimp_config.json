@@ -283,7 +283,7 @@
                             "shape_parameter_fittable": true,
                             "shape_parameter_range": "np.arange(0.65, 0.88, 0.02)",
                             "shape_parameter_nominal": 0.71,
-                            "formatter": "d",
+                            "formatter": ".2f",
                             "shape_parameter_fit_limits": [0.65, 0.87]
                         }
                     ],
