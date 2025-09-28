@@ -26,7 +26,7 @@ def config_preprocess(
                 "args"
             ]["batch_size"] = batch_size
             for shape_parameter_idx, shape_parameter_config in enumerate(
-                shaped_bkg_config
+                shaped_bkg_config["shape_parameters"]
             ):
                 if "shape_parameter_range" in shape_parameter_config:
                     assert "shape_parameter_fit_limits" in shape_parameter_config
