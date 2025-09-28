@@ -25,6 +25,26 @@ def config_preprocess(
             new_config["experiments"][experiment_idx]["shaped_bkgs"][shaped_bkg_idx][
                 "args"
             ]["batch_size"] = batch_size
+            for shape_parameter_idx, shape_parameter_config in enumerate(
+                shaped_bkg_config
+            ):
+                if "shape_parameter_range" in shape_parameter_config:
+                    assert "shape_parameter_fit_limits" in shape_parameter_config
+                    shape_parameter_fit_limits = shape_parameter_config[
+                        "shape_parameter_fit_limits"
+                    ]
+                    shape_parameter_nominal = shape_parameter_config[
+                        "shape_parameter_nominal"
+                    ]
+                    new_config["experiments"][experiment_idx]["shaped_bkgs"][
+                        shaped_bkg_idx
+                    ]["shape_parameters"][shape_parameter_idx][
+                        "shape_parameter_range"
+                    ] = [
+                        shape_parameter_fit_limits[0],
+                        shape_parameter_nominal,
+                        shape_parameter_fit_limits[1],
+                    ]
         new_config["experiments"][experiment_idx]["eff"]["args"][
             "batch_size"
         ] = batch_size
@@ -88,6 +108,33 @@ def test_lz_ws2022_context(tmp_path):
 
 def test_lz_ws2024_context(tmp_path):
     st = diamx.Context(config_preprocess("lz_ws2024_wimp_config.json"), tmp_path)
+    st.register_experiment(diamx.experiments.LZWS2022)
+    st.register_experiment(diamx.experiments.LZWS2024)
+    st.generate_templates()
+    st.run_inference(stabilize_fit=False, exact_asymptotic=False)
+    st.print_best_fit(40)
+    st.plot_best_fit_bkg_mh(
+        "lz_ws2024",
+        40,
+        bkg_to_include=[
+            "pb214",
+            "kr85_ar39_detgamma",
+            "solar_neutrino_er",
+            "pb212_po218",
+            "tritium_c14",
+            "xe136",
+            "xe127_xe125",
+            "xe124",
+        ],
+        histogram_kwargs={"norm": LogNorm()},
+        contour_kwargs={"colors": ["blue", "blue"], "linestyles": ["--", "-"]},
+    )
+
+
+def test_lz_ws2024_shape_par_context(tmp_path):
+    st = diamx.Context(
+        config_preprocess("lz_ws2024_wimp_config_shape_par.json"), tmp_path
+    )
     st.register_experiment(diamx.experiments.LZWS2022)
     st.register_experiment(diamx.experiments.LZWS2024)
     st.generate_templates()

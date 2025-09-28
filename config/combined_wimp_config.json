@@ -277,17 +277,19 @@
             "shaped_bkgs": [
                 {
                     "shaped_bkg_name": "xe124",
-                    "shape_parameter_name": "dec_quenching_factor",
-                    "shape_parameter_fittable": true,
-                    "shape_parameter_range": "np.arange(65, 88, 2)",
-                    "shape_parameter_nominal": 71,
-                    "formatter": "d",
-                    "shape_parameter_fit_limits": [65, 87],
+                    "shape_parameters": [
+                        {
+                            "shape_parameter_name": "ll_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.65, 0.88, 0.02)",
+                            "shape_parameter_nominal": 0.71,
+                            "formatter": "d",
+                            "shape_parameter_fit_limits": [0.65, 0.87]
+                        }
+                    ],
                     "rate_nominal": 32.18636363636364,
                     "rate_uncertainty": 6.470454545454546,
-                    "args": {
-                        "lm_quenching_factor": 0.87
-                    }
+                    "args": {}
                 }
             ],
             "eff": {

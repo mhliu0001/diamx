@@ -259,3 +259,32 @@ def format_value_uncertainty(val, unc=None, disable_rounding=False):
 
     # 6) Format output
     return f"{val_str} ± {unc_str}"
+
+
+def get_shape_parameter_config(
+    shaped_bkg_name,
+    shape_parameter_nominal,
+    shape_parameter_fittable,
+    shape_parameter_range,
+    shape_parameter_fit_limits,
+    shape_parameter_uncertainty,
+    shape_parameter_relative_uncertainty,
+    experiment_name,
+):
+    shape_parameter_config = {
+        "nominal_value": shape_parameter_nominal,
+        "ptype": "shape",
+        "fittable": shape_parameter_fittable,
+        "blueice_anchors": generate_bin_array(shape_parameter_range).tolist(),
+        "description": f"Shape parameter for {shaped_bkg_name} bkg in {experiment_name}",
+    }
+    if shape_parameter_fit_limits is not None:
+        shape_parameter_config["fit_limits"] = shape_parameter_fit_limits
+    if shape_parameter_uncertainty is not None:
+        if shape_parameter_relative_uncertainty:
+            shape_parameter_config["uncertainty"] = (
+                shape_parameter_uncertainty * shape_parameter_nominal
+            )
+        else:
+            shape_parameter_config["uncertainty"] = shape_parameter_uncertainty
+    return shape_parameter_config

@@ -50,23 +50,45 @@ def process_shaped_bkg_template(
     generate_template,
 ):
     """Process one shaped background template.
-    `task` is a tuple: (shaped_bkg_config, shape_parameter_value).
+    `task` is a tuple: (shaped_bkg_config, shape_parameter_values).
+    `shape_parameter_values` is a list of shape parameter values to process.
     """
-    shaped_bkg_config, shape_parameter_value = task
-    shape_parameter_name = shaped_bkg_config["shape_parameter_name"]
+    shaped_bkg_config, shape_parameter_values = task
+    shape_parameter_configs = shaped_bkg_config["shape_parameters"]
     # Use a deep copy so that modifications do not affect the original args.
     args = copy.deepcopy(shaped_bkg_config.get("args", {}))
-    # Warn once per shaped_bkg_config if the parameter is already in args.
-    if shape_parameter_name in args:
-        warnings.warn(
-            f"Found {shape_parameter_name} in shaped bkg args that is supposed to be scanned over "
-            "shaped_parameter_range. It will be updated and will not be used."
-        )
     file_hash = create_hash(experiment_config["roi"], **args)
-    args[shape_parameter_name] = shape_parameter_value
+    # Warn once per shaped_bkg_config if the parameter is already in args.
+    assert isinstance(
+        shape_parameter_values, (list, tuple)
+    ), "shape_parameter_values must be a list or tuple."
+    assert len(shape_parameter_values) == len(
+        shape_parameter_configs
+    ), "Length of shape_parameter_values must match length of shape_parameter_configs."
+    template_suffix_parts = []
+    for shape_parameter_config, shape_parameter_value in zip(
+        shape_parameter_configs, shape_parameter_values
+    ):
+        shape_parameter_name = shape_parameter_config["shape_parameter_name"]
+        if shape_parameter_name in args:
+            warnings.warn(
+                f"Found {shape_parameter_name} in shaped bkg args that is supposed to be scanned over "
+                "shaped_parameter_range. It will be updated and will not be used."
+            )
+        args[shape_parameter_name] = shape_parameter_value
+        shape_parameter_name = (
+            f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
+            if not shape_parameter_config.get("shape_parameter_shared", False)
+            else shape_parameter_config["shape_parameter_name"]
+        )
+        template_suffix_parts.append(
+            f"{shape_parameter_name}_{shape_parameter_value:{shape_parameter_config['formatter']}}"
+        )
+    template_suffix = "_".join(template_suffix_parts)
+
     template_file_name = (
         f"{experiment_name}_shaped_bkg_{shaped_bkg_config['shaped_bkg_name']}"
-        f"_{file_hash}_{shape_parameter_value:{shaped_bkg_config['formatter']}}.ii.h5"
+        f"_{file_hash}_{template_suffix}.ii.h5"
     )
     template_file_path = os.path.join(output_path, template_folder, template_file_name)
     if not os.path.exists(template_file_path):
@@ -181,10 +203,7 @@ class Experiment:
         for shaped_bkg in self.config["shaped_bkgs"]:
             shaped_bkg_attrs = [
                 "shaped_bkg_name",
-                "shape_parameter_name",
-                "shape_parameter_range",
-                "shape_parameter_nominal",
-                "formatter",
+                "shape_parameters",
                 "rate_nominal",
             ]
             for attr in shaped_bkg_attrs:
@@ -236,12 +255,23 @@ class Experiment:
         template_folder = "templates"
         tasks = []
         for shaped_bkg_config in self.config["shaped_bkgs"]:
-            # Build a list of (shaped_bkg_config, shape_parameter_value) tasks.
-            shape_parameter_range = generate_bin_array(
-                shaped_bkg_config["shape_parameter_range"]
-            ).tolist()
-            for shape_parameter_value in shape_parameter_range:
-                tasks.append((shaped_bkg_config, shape_parameter_value))
+            shape_parameter_ranges = []
+            for shape_parameter_config in shaped_bkg_config["shape_parameters"]:
+                # Build a list of (shaped_bkg_config, shape_parameter_value) tasks.
+                shape_parameter_ranges.append(
+                    generate_bin_array(
+                        shape_parameter_config["shape_parameter_range"]
+                    ).tolist()
+                )
+            shape_parameter_values_list = np.stack(
+                [
+                    m.flatten()
+                    for m in np.meshgrid(*shape_parameter_ranges, indexing="ij")
+                ],
+                axis=-1,
+            )
+            for shape_parameter_values in shape_parameter_values_list:
+                tasks.append((shaped_bkg_config, shape_parameter_values.tolist()))
         if "multiprocess_threads" in self.config:
             processes = self.config["multiprocess_threads"]
             ctx = multiprocessing.get_context("spawn")

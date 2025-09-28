@@ -337,10 +337,27 @@ class LZWS2022(LZ):
             self._generate_template("er_flat", rate, template_file_path, name, **kwargs)
 
         elif name == "xe124":
+            if "dec_quenching_factor" not in kwargs:
+                if (
+                    "lm_quenching_factor" in kwargs
+                    and "l_lm_quenching_factor" in kwargs
+                ):
+                    assert (
+                        kwargs["lm_quenching_factor"] == kwargs["l_lm_quenching_factor"]
+                    ), (
+                        "lm_quenching_factor and l_lm_quenching_factor are both provided but not equal. "
+                        "Please only provide one of them."
+                    )
+                ll_quenching_factor = kwargs.get("ll_quenching_factor", 0.70)
+                if "l_lm_quenching_factor" in kwargs:
+                    lm_quenching_factor = kwargs["l_lm_quenching_factor"]
+                else:
+                    lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
+            else:
+                ll_quenching_factor = kwargs["dec_quenching_factor"] / 100
+                lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
             branching_ratio = {"lm": 7.1 / 19.4, "ll": 12.3 / 19.4}
             energy = {"lm": 5.98, "ll": 10.0}
-            ll_quenching_factor = kwargs.get("ll_quenching_factor", 0.70)
-            lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
             self._generate_template(
                 "er_mono",
                 rate,
@@ -354,7 +371,10 @@ class LZWS2022(LZ):
             )
 
         elif name == "xe127":
-            l_quenching_factor = kwargs.get("l_quenching_factor", 0.87)
+            if "l_lm_quenching_factor" in kwargs:
+                l_quenching_factor = kwargs["l_lm_quenching_factor"]
+            else:
+                l_quenching_factor = kwargs.get("l_quenching_factor", 0.87)
             self._generate_template(
                 "er_mono",
                 rate,
@@ -469,13 +489,27 @@ class LZWS2024(LZ):
 
         elif name == "xe124":
             # DEC model
-            # For backwards compatibility, the naming conventions are changed a bit
+            # For backwards compatibility, the "dec_quenching_factor" naming convention was kept
             # If "dec_quenching_factor" is provided, use it for ll (divided by 100),
             #    and "lm_quenching_factor" for lm
             # If not, use "ll_quenching_factor" and "lm_quenching_factor" if provided
+            # For shared quenching factor between lm and l, use "l_lm_quenching_factor"
             if "dec_quenching_factor" not in kwargs:
+                if (
+                    "lm_quenching_factor" in kwargs
+                    and "l_lm_quenching_factor" in kwargs
+                ):
+                    assert (
+                        kwargs["lm_quenching_factor"] == kwargs["l_lm_quenching_factor"]
+                    ), (
+                        "lm_quenching_factor and l_lm_quenching_factor are both provided but not equal. "
+                        "Please only provide one of them."
+                    )
                 ll_quenching_factor = kwargs.get("ll_quenching_factor", 0.70)
-                lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
+                if "l_lm_quenching_factor" in kwargs:
+                    lm_quenching_factor = kwargs["l_lm_quenching_factor"]
+                else:
+                    lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
             else:
                 ll_quenching_factor = kwargs["dec_quenching_factor"] / 100
                 lm_quenching_factor = kwargs.get("lm_quenching_factor", 0.87)
@@ -497,7 +531,10 @@ class LZWS2024(LZ):
             )
 
         elif name == "xe127_xe125":
-            l_quenching_factor = kwargs.get("l_quenching_factor", 0.87)
+            if "l_lm_quenching_factor" in kwargs:
+                l_quenching_factor = kwargs["l_lm_quenching_factor"]
+            else:
+                l_quenching_factor = kwargs.get("l_quenching_factor", 0.87)
             self._generate_template(
                 "er_mono",
                 rate,
