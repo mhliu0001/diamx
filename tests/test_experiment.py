@@ -244,12 +244,16 @@ def test_lz_ws2024(tmp_path):
         "shaped_bkgs": [
             {
                 "shaped_bkg_name": "xe124",
-                "shape_parameter_name": "dec_quenching_factor",
-                "shape_parameter_fittable": True,
-                "shape_parameter_range": "np.arange(65, 88, 2)",
-                "shape_parameter_nominal": 71,
-                "formatter": "d",
-                "shape_parameter_fit_limits": [65, 87],
+                "shape_parameters": [
+                    {
+                        "shape_parameter_name": "dec_quenching_factor",
+                        "shape_parameter_fittable": True,
+                        "shape_parameter_range": "np.arange(65, 88, 2)",
+                        "shape_parameter_nominal": 71,
+                        "formatter": "d",
+                        "shape_parameter_fit_limits": [65, 87],
+                    }
+                ],
                 "rate_nominal": 25.289285714285715,
                 "rate_uncertainty": 5.083928571428571,
                 "args": {"batch_size": 1000},

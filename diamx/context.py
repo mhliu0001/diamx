@@ -4,7 +4,13 @@ import os
 import diamx.experiment
 import numpy as np
 import pandas as pd
-from diamx.utils import HiddenPrints, ignore_warning, csv_to_apt_map, make_template
+from diamx.utils import (
+    HiddenPrints,
+    ignore_warning,
+    csv_to_apt_map,
+    make_template,
+    get_shape_parameter_config,
+)
 from glob import glob
 import yaml
 import copy
@@ -17,6 +23,8 @@ from inference_interface import template_to_multihist
 import multihist as mh
 from alea.utils import signal_multiplier_estimator
 from diamx.model import DiamxModel
+from blueice.utils import arrays_to_grid
+from scipy.interpolate import RegularGridInterpolator
 
 import diamx
 from diamx.utils import (
@@ -54,7 +62,7 @@ class Context(object):
 
         os.makedirs(os.path.join(output_path, template_folder), exist_ok=True)
 
-    def generate_templates(self):
+    def prepare(self):
         self.experiment_instances = []
         for experiment_config in self.config["experiments"]:
             try:
@@ -68,6 +76,9 @@ class Context(object):
                     f"Missing experiment name or experiment not registered"
                     f"for config: {experiment_config}"
                 )
+
+    def generate_templates(self):
+        self.prepare()
         for experiment_instance in self.experiment_instances:
             experiment_instance.get_bkg_templates()
             experiment_instance.get_shaped_bkg_templates()
@@ -193,37 +204,55 @@ class Context(object):
 
             # Shape parameter
             for shaped_bkg_config in experiment_instance.config["shaped_bkgs"]:
-                shape_parameter_name = (
-                    f"{experiment_name}_{shaped_bkg_config['shape_parameter_name']}"
-                )
-                shape_parameter_config = {
-                    "nominal_value": shaped_bkg_config["shape_parameter_nominal"],
-                    "ptype": "shape",
-                    "fittable": shaped_bkg_config.get("shape_parameter_fittable", True),
-                    "blueice_anchors": generate_bin_array(
-                        shaped_bkg_config["shape_parameter_range"]
-                    ).tolist(),
-                    "description": f"Shape parameter for {shaped_bkg_config['shaped_bkg_name']} bkg in {experiment_name}",
-                }
-                if "shape_parameter_fit_limits" in shaped_bkg_config:
-                    shape_parameter_config["fit_limits"] = shaped_bkg_config[
-                        "shape_parameter_fit_limits"
-                    ]
-                if "shape_parameter_uncertainty" in shaped_bkg_config:
-                    if shaped_bkg_config.get(
-                        "shape_parameter_relative_uncertainty", False
-                    ):
-                        shape_parameter_config["uncertainty"] = (
-                            shaped_bkg_config["shape_parameter_uncertainty"]
-                            * shaped_bkg_config["shape_parameter_nominal"]
-                        )
-                    else:
-                        shaped_bkg_config["uncertainty"] = shaped_bkg_config[
-                            "shape_parameter_uncertainty"
+                for shape_parameter_config in shaped_bkg_config["shape_parameters"]:
+                    shape_parameter_alea_config = get_shape_parameter_config(
+                        shaped_bkg_config["shaped_bkg_name"],
+                        shape_parameter_config["shape_parameter_nominal"],
+                        shape_parameter_config.get("shape_parameter_fittable", True),
+                        shape_parameter_config.get("shape_parameter_range", None),
+                        shape_parameter_config.get("shape_parameter_fit_limits", None),
+                        shape_parameter_config.get("shape_parameter_uncertainty", None),
+                        shape_parameter_config.get(
+                            "shape_parameter_relative_uncertainty", False
+                        ),
+                        experiment_name,
+                    )
+                    if shape_parameter_config.get("shape_parameter_shared", False):
+                        shape_parameter_name = shape_parameter_config[
+                            "shape_parameter_name"
                         ]
-                alea_config["parameter_definition"][
-                    shape_parameter_name
-                ] = shape_parameter_config
+                        if shape_parameter_name in alea_config["parameter_definition"]:
+                            # Check whether the definition is consistent
+                            old_def = alea_config["parameter_definition"][
+                                shape_parameter_name
+                            ]
+                            # Compare all keys except "description"
+                            old_keys = set(old_def) - {"description"}
+                            new_keys = set(shape_parameter_alea_config) - {
+                                "description"
+                            }
+                            if old_keys != new_keys:
+                                raise ValueError(
+                                    f"Inconsistent shared-shape-parameter keys for '{shape_parameter_name}': "
+                                    f"old={old_keys}, new={new_keys}"
+                                )
+                            for key in old_keys:
+                                if old_def[key] != shape_parameter_alea_config[key]:
+                                    raise ValueError(
+                                        f"Inconsistent shared-shape-parameter definition for '{shape_parameter_name}' "
+                                        f"(key='{key}'): old={old_def[key]}, "
+                                        f"new={shape_parameter_alea_config[key]}"
+                                    )
+                            # Update description
+                            shape_parameter_alea_config["description"] = (
+                                f"Shared shape parameter for {shaped_bkg_config['shaped_bkg_name']} background"
+                            )
+
+                    else:
+                        shape_parameter_name = f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
+                    alea_config["parameter_definition"][
+                        shape_parameter_name
+                    ] = shape_parameter_alea_config
 
             # Efficiency
             alea_config["parameter_definition"][
@@ -291,14 +320,37 @@ class Context(object):
             for shaped_bkg_config in experiment_instance.config["shaped_bkgs"]:
                 args = shaped_bkg_config.get("args", {})
                 file_hash = create_hash(experiment_instance.config["roi"], **args)
+                template_suffix_parts = []
+                for shape_parameter_config in shaped_bkg_config["shape_parameters"]:
+                    shape_parameter_name = (
+                        f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
+                        if not shape_parameter_config.get(
+                            "shape_parameter_shared", False
+                        )
+                        else shape_parameter_config["shape_parameter_name"]
+                    )
+                    template_suffix_parts.append(
+                        f"{shape_parameter_name}_{{{shape_parameter_name}:{shape_parameter_config['formatter']}}}"
+                    )
+                template_suffix = "_".join(template_suffix_parts)
+
                 template_file_name = (
                     f"{experiment_name}_shaped_bkg_{shaped_bkg_config['shaped_bkg_name']}"
-                    f"_{file_hash}_{{{experiment_name}_{shaped_bkg_config['shape_parameter_name']}"
-                    f":{shaped_bkg_config['formatter']}}}.ii.h5"
+                    f"_{file_hash}_{template_suffix}.ii.h5"
                 )
                 template_file_path = os.path.join(
                     self.output_path, template_folder, template_file_name
                 )
+                shape_parameter_list = [
+                    (
+                        f"{experiment_name}_{shaped_parameter_config['shape_parameter_name']}"
+                        if not shaped_parameter_config.get(
+                            "shape_parameter_shared", False
+                        )
+                        else shaped_parameter_config["shape_parameter_name"]
+                    )
+                    for shaped_parameter_config in shaped_bkg_config["shape_parameters"]
+                ]
                 experiment_sources.append(
                     {
                         "name": (
@@ -309,11 +361,9 @@ class Context(object):
                         "histname": shaped_bkg_config["shaped_bkg_name"],
                         "parameters": [
                             self._get_rate_name(shaped_bkg_config, experiment_name),
-                            f"{experiment_name}_{shaped_bkg_config['shape_parameter_name']}",
-                        ],
-                        "named_parameters": [
-                            f"{experiment_name}_{shaped_bkg_config['shape_parameter_name']}"
-                        ],
+                        ]
+                        + shape_parameter_list,
+                        "named_parameters": shape_parameter_list,
                         "template_filename": os.path.abspath(template_file_path),
                     }
                 )
@@ -726,20 +776,28 @@ class Context(object):
                 shape_parameter_nominal_dict = {}
                 shape_parameter_bestfit_dict = {}
                 for bkg_config in experiment_config["shaped_bkgs"]:
-                    shape_parameter_name = f"{experiment_config['experiment_name']}_{bkg_config['shape_parameter_name']}"
-                    shape_parameter_nominal_dict[shape_parameter_name] = (
-                        format_value_uncertainty(
-                            *get_shape_parameter_unc_from_config(bkg_config),
-                            disable_rounding=disable_rounding,
+                    for shape_parameter_config in bkg_config["shape_parameters"]:
+                        if shape_parameter_config.get("shape_parameter_shared", False):
+                            shape_parameter_name = shape_parameter_config[
+                                "shape_parameter_name"
+                            ]
+                        else:
+                            shape_parameter_name = f"{experiment_config['experiment_name']}_{shape_parameter_config['shape_parameter_name']}"
+                        shape_parameter_nominal_dict[shape_parameter_name] = (
+                            format_value_uncertainty(
+                                *get_shape_parameter_unc_from_config(
+                                    shape_parameter_config
+                                ),
+                                disable_rounding=disable_rounding,
+                            )
                         )
-                    )
-                    shape_parameter_bestfit_dict[shape_parameter_name] = (
-                        format_value_uncertainty(
-                            best_fit[shape_parameter_name],
-                            alea_model.minuit_object.errors[shape_parameter_name],
-                            disable_rounding=disable_rounding,
+                        shape_parameter_bestfit_dict[shape_parameter_name] = (
+                            format_value_uncertainty(
+                                best_fit[shape_parameter_name],
+                                alea_model.minuit_object.errors[shape_parameter_name],
+                                disable_rounding=disable_rounding,
+                            )
                         )
-                    )
                 print("Shape parameters:")
                 print(
                     pd.DataFrame.from_dict(
@@ -756,7 +814,7 @@ class Context(object):
             print()
 
     def _get_shaped_bkg_template(
-        self, shaped_bkg_config, experiment_instance, shape_parameter_value
+        self, shaped_bkg_config, experiment_instance, shape_parameter_values
     ):
         """
         Internal method to get the shaped background template histogram.
@@ -769,8 +827,8 @@ class Context(object):
             The configuration dictionary for the shaped background.
         experiment_instance : diamx.experiment.Experiment
             The instance of the experiment for which the shaped background is defined.
-        shape_parameter_value : scalar
-            The value of the shape parameter for the shaped background.
+        shape_parameter_values : tuple or list
+            The values of the shape parameters for the shaped background.
 
         Returns
         -------
@@ -779,19 +837,33 @@ class Context(object):
         """
         args = copy.deepcopy(shaped_bkg_config.get("args", {}))
         file_hash = create_hash(experiment_instance.config["roi"], **args)
+        template_suffix_parts = []
+        for shape_parameter_config, shape_parameter_value in zip(
+            shaped_bkg_config["shape_parameters"], shape_parameter_values
+        ):
+            shape_parameter_name = (
+                f"{experiment_instance.experiment_name}_{shape_parameter_config['shape_parameter_name']}"
+                if not shape_parameter_config.get("shape_parameter_shared", False)
+                else shape_parameter_config["shape_parameter_name"]
+            )
+            template_suffix_parts.append(
+                f"{shape_parameter_name}_{shape_parameter_value:{shape_parameter_config['formatter']}}"
+            )
+        template_suffix = "_".join(template_suffix_parts)
+
         template_file_name = (
             f"{experiment_instance.experiment_name}_shaped_bkg_{shaped_bkg_config['shaped_bkg_name']}"
-            f"_{file_hash}_{shape_parameter_value:{shaped_bkg_config['formatter']}}.ii.h5"
+            f"_{file_hash}_{template_suffix}.ii.h5"
         )
         template_file_path = os.path.join(
             self.output_path, template_folder, template_file_name
         )
-        mh = template_to_multihist(
+        bkg_mh = template_to_multihist(
             template_file_path, hist_name=shaped_bkg_config["shaped_bkg_name"]
         )
-        return mh
+        return bkg_mh
 
-    def get_bkg_template(self, experiment_name, bkg_name, shape_parameter_value=None):
+    def get_bkg_template(self, experiment_name, bkg_name, shape_parameter_values=None):
         """
         Get the background template for a given experiment and background name.
         It also supports shaped backgrounds by providing a shape parameter value.
@@ -802,8 +874,8 @@ class Context(object):
             The name of the experiment for which to get the background template.
         bkg_name : str
             The name of the background for which to get the template.
-        shape_parameter_value : scalar, optional
-            The value of the shape parameter for shaped backgrounds. Required if the background is shaped.
+        shape_parameter_values : list or tuple, optional
+            The values of the shape parameters for shaped backgrounds. Required if the background is shaped.
             Otherwise it should be None.
 
         Returns
@@ -818,53 +890,67 @@ class Context(object):
                 break
         if experiment_instance is None:
             raise ValueError(f"Experiment {experiment_name} not found.")
-        if shape_parameter_value is not None:
+
+        def _anchor_grid_iterator(anchor_z_grid):
+            # Copied from https://github.com/JelleAalbers/blueice/blob/master/blueice/pdf_morphers.py
+            """Iterates over the anchor grid, yielding index, z-values"""
+            fake_grid = np.zeros(list(anchor_z_grid.shape)[:-1])
+            it = np.nditer(fake_grid, flags=["multi_index"])
+            while not it.finished:
+                anchor_grid_index = list(it.multi_index)
+                yield (
+                    anchor_grid_index,
+                    tuple(anchor_z_grid[tuple(anchor_grid_index + [slice(None)])]),
+                )
+                it.iternext()
+
+        if shape_parameter_values is not None:
             for shaped_bkg_config in experiment_instance.config["shaped_bkgs"]:
                 if shaped_bkg_config["shaped_bkg_name"] == bkg_name:
                     # Check whether shape_parameter_value is already in blueice anchors.
                     # If not, use an interpolated template.
-                    blueice_anchors = np.sort(
-                        generate_bin_array(shaped_bkg_config["shape_parameter_range"])
-                    )
-                    if shape_parameter_value in blueice_anchors:
-                        mh = self._get_shaped_bkg_template(
+                    anchor_arrays = [
+                        np.sort(
+                            generate_bin_array(
+                                shape_parameter_config["shape_parameter_range"]
+                            )
+                        )
+                        for shape_parameter_config in shaped_bkg_config[
+                            "shape_parameters"
+                        ]
+                    ]
+                    anchor_grid = arrays_to_grid(anchor_arrays)
+                    extra_dims = None
+                    anchor_scores = None
+                    for (
+                        anchor_grid_index,
+                        grid_shape_parameter_values,
+                    ) in _anchor_grid_iterator(anchor_grid):
+                        # Compute f at this point, and store it in anchor_scores
+                        anchor_template = self._get_shaped_bkg_template(
                             shaped_bkg_config,
                             experiment_instance,
-                            shape_parameter_value,
+                            grid_shape_parameter_values,
                         )
-                    else:
-                        idx_left = (
-                            np.searchsorted(
-                                blueice_anchors, shape_parameter_value, side="right"
+                        if extra_dims is None:
+                            extra_dims = anchor_template.histogram.shape
+                            anchor_scores = np.empty(
+                                anchor_grid.shape[:-1] + extra_dims
                             )
-                            - 1
-                        )
-                        if idx_left < 0 or idx_left >= len(blueice_anchors) - 1:
-                            raise ValueError(
-                                f"Shape parameter value {shape_parameter_value} is out of bounds for bkg {bkg_name}."
-                            )
-                        shape_parameter_value_left = blueice_anchors[idx_left]
-                        shape_parameter_value_right = blueice_anchors[idx_left + 1]
-                        weight_left = (
-                            shape_parameter_value_right - shape_parameter_value
-                        ) / (blueice_anchors[idx_left + 1] - shape_parameter_value_left)
-                        weight_right = 1 - weight_left
+                        assert (
+                            extra_dims == anchor_template.histogram.shape
+                        ), "All templates must have the same shape."
+                        anchor_scores[
+                            tuple(anchor_grid_index + [slice(None)] * len(extra_dims))
+                        ] = anchor_template.histogram
 
-                        mh = (
-                            self._get_shaped_bkg_template(
-                                shaped_bkg_config,
-                                experiment_instance,
-                                shape_parameter_value_left,
-                            )
-                            * weight_left
-                            + self._get_shaped_bkg_template(
-                                shaped_bkg_config,
-                                experiment_instance,
-                                shape_parameter_value_right,
-                            )
-                            * weight_right
-                        )
-                    return mh
+                    itp = RegularGridInterpolator(anchor_arrays, anchor_scores)
+                    interpolated_histogram = itp(np.array(shape_parameter_values))[0]
+                    bkg_mh = mh.Histdd.from_histogram(
+                        histogram=interpolated_histogram,
+                        bin_edges=anchor_template.bin_edges,
+                    )
+                    return bkg_mh
             raise ValueError(
                 f"Shaped bkg {bkg_name} not found for experiment {experiment_name}."
             )
@@ -879,9 +965,9 @@ class Context(object):
                 template_file_path = os.path.join(
                     self.output_path, template_folder, template_file_name
                 )
-                mh = template_to_multihist(template_file_path, hist_name=bkg_name)
+                bkg_mh = template_to_multihist(template_file_path, hist_name=bkg_name)
                 # mh.plot()
-                return mh
+                return bkg_mh
         raise ValueError(f"Bkg {bkg_name} not found for experiment {experiment_name}.")
 
     def get_best_fit_bkg_mh(
@@ -959,18 +1045,27 @@ class Context(object):
                 continue
             rate_name = self._get_rate_name(shaped_bkg_config, experiment_name)
             best_fit_multiplier = alea_model.minuit_object.values[rate_name]
-            shape_parameter_value = alea_model.minuit_object.values[
-                f"{experiment_name}_{shaped_bkg_config['shape_parameter_name']}"
+            shape_parameter_values = [
+                alea_model.minuit_object.values[
+                    (
+                        f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
+                        if not shape_parameter_config.get(
+                            "shape_parameter_shared", False
+                        )
+                        else shape_parameter_config["shape_parameter_name"]
+                    )
+                ]
+                for shape_parameter_config in shaped_bkg_config["shape_parameters"]
             ]
-            mh = self.get_bkg_template(
+            bkg_component_mh = self.get_bkg_template(
                 experiment_name,
                 shaped_bkg_config["shaped_bkg_name"],
-                shape_parameter_value=shape_parameter_value,
+                shape_parameter_values=shape_parameter_values,
             )
             if bkg_mh is None:
-                bkg_mh = mh * best_fit_multiplier
+                bkg_mh = bkg_component_mh * best_fit_multiplier
             else:
-                bkg_mh += mh * best_fit_multiplier
+                bkg_mh += bkg_component_mh * best_fit_multiplier
         return bkg_mh
 
     def get_signal_template(self, experiment_name, signal_parameter_value):

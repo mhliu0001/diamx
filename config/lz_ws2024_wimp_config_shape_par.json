@@ -9,7 +9,7 @@
                 "s1c": "np.linspace(3, 80, 78)",
                 "s2c": "np.logspace(2.7781512503836434, 5, 81)"
             },
-            "multiprocess_threads": 2,
+            "multiprocess_threads": 16,
             "bkgs": [
                 {
                     "bkg_name": "beta",
@@ -69,7 +69,7 @@
                 "s1c": "np.linspace(3, 80, 78)",
                 "s2c": "np.logspace(2.8095597146352675, 4.5, 81)"
             },
-            "multiprocess_threads": 2,
+            "multiprocess_threads": 16,
             "bkgs": [
                 {
                     "bkg_name": "pb214",
@@ -108,12 +108,6 @@
                     "args": {}
                 },
                 {
-                    "bkg_name": "xe127_xe125",
-                    "rate_nominal": 5.3090909090909095,
-                    "rate_uncertainty": 0.9954545454545455,
-                    "args": {}
-                },
-                {
                     "bkg_name": "ac",
                     "rate_nominal": 4.6454545454545455,
                     "rate_uncertainty": 0.9954545454545455,
@@ -134,10 +128,38 @@
                             "shape_parameter_nominal": 0.71,
                             "formatter": ".2f",
                             "shape_parameter_fit_limits": [0.65, 0.87]
+                        },
+                        {
+                            "shape_parameter_name": "l_lm_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.78, 0.97, 0.03)",
+                            "shape_parameter_nominal": 0.87,
+                            "shape_parameter_uncertainty": 0.03,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.78, 0.96],
+                            "shape_parameter_shared": true
                         }
                     ],
                     "rate_nominal": 32.18636363636364,
                     "rate_uncertainty": 6.470454545454546,
+                    "args": {}
+                },
+                {
+                    "shaped_bkg_name": "xe127_xe125",
+                    "shape_parameters": [
+                        {
+                            "shape_parameter_name": "l_lm_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.78, 0.97, 0.03)",
+                            "shape_parameter_nominal": 0.87,
+                            "shape_parameter_uncertainty": 0.03,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.78, 0.96],
+                            "shape_parameter_shared": true
+                        }
+                    ],
+                    "rate_nominal": 5.3090909090909095,
+                    "rate_uncertainty": 0.9954545454545455,
                     "args": {}
                 }
             ],
