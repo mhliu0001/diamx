@@ -3,6 +3,7 @@ import json
 import copy
 import diamx
 from matplotlib.colors import LogNorm
+import numpy as np
 
 diamx_path = os.path.dirname(diamx.__file__)
 
@@ -77,6 +78,15 @@ def test_xenonnt_sr0_context(tmp_path):
         200,
         mode=["contour"],
         contour_kwargs={"colors": ["orange", "orange"], "linestyles": ["--", "-"]},
+    )
+    data = st.experiment_instances[0].get_data()
+    local_pdf_raw = st.get_best_fit_local_pdf(
+        experiment_name="xenonnt_sr0",
+        signal_parameter_value=200,
+        data_points=np.stack(
+            (data["cs1"], data["cs2"]),
+            axis=-1,
+        ),
     )
 
 
