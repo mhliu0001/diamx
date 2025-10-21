@@ -102,7 +102,7 @@ class Context(object):
             return f"{experiment_name}_{bkg_name}_rate_multiplier"
 
     @staticmethod
-    def _get_shaped_parameter_name(shape_parameter_config, experiment_name=None):
+    def _get_shape_parameter_name(shape_parameter_config, experiment_name=None):
         """Internal method to get the right parameter name for shape_parameter."""
         if shape_parameter_config.get("shape_parameter_shared", False):
             return shape_parameter_config["shape_parameter_name"]
@@ -342,7 +342,7 @@ class Context(object):
                     #     )
                     #     else shape_parameter_config["shape_parameter_name"]
                     # )
-                    shape_parameter_name = self._get_shaped_parameter_name(
+                    shape_parameter_name = self._get_shape_parameter_name(
                         shape_parameter_config, experiment_name
                     )
                     template_suffix_parts.append(
@@ -364,7 +364,7 @@ class Context(object):
                         #     "shape_parameter_shared", False
                         # )
                         # else shaped_parameter_config["shape_parameter_name"]
-                        self._get_shaped_parameter_name(
+                        self._get_shape_parameter_name(
                             shape_parameter_config, experiment_name
                         )
                     )
@@ -865,7 +865,7 @@ class Context(object):
             #     if not shape_parameter_config.get("shape_parameter_shared", False)
             #     else shape_parameter_config["shape_parameter_name"]
             # )
-            shape_parameter_name = self._get_shaped_parameter_name(
+            shape_parameter_name = self._get_shape_parameter_name(
                 shape_parameter_config, experiment_instance.experiment_name
             )
             template_suffix_parts.append(
@@ -1353,7 +1353,7 @@ class Context(object):
                     shaped_bkg_config["shaped_bkg_name"],
                     shape_parameter_values=[
                         best_fit[
-                            self._get_shaped_parameter_name(
+                            self._get_shape_parameter_name(
                                 shape_parameter_config, experiment_name
                             )
                         ]

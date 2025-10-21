@@ -5,7 +5,6 @@ import numpy as np
 import inference_interface
 from multihist import Histdd
 from scipy.interpolate import RegularGridInterpolator
-from copy import deepcopy
 
 save_folder = "."
 template_folder = "templates"
@@ -314,8 +313,12 @@ def uniform_or_log_bins(bins, rtol=1e-10):
     if len(bins) < 2:
         return "uniform"  # Not enough bins to determine
 
+    if np.any(bins <= 0):
+        raise ValueError(
+            "All bin edges must be positive for logarithmic spacing check."
+        )
     diffs = np.diff(bins)
-    log_diffs = np.diff(np.log10(bins[bins > 0]))  # Avoid log of non-positive numbers
+    log_diffs = np.diff(np.log10(bins))
 
     if np.allclose(diffs, diffs[0], rtol=rtol):
         return "uniform"
@@ -343,7 +346,7 @@ def get_local_pdf_from_template(template_mh, data_points, rtol=1e-10):
     pdf_values : np.ndarray
         An array of shape (N,) containing the PDF values at the specified data points.
     """
-    data_points_reg = np.array(deepcopy(data_points))
+    data_points_reg = np.array(data_points, copy=True)
     x_bins, y_bins = template_mh.bin_centers()
     x_bins_type, y_bins_type = uniform_or_log_bins(
         x_bins, rtol=rtol
