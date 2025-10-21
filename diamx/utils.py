@@ -4,6 +4,8 @@ import hashlib
 import numpy as np
 import inference_interface
 from multihist import Histdd
+from scipy.interpolate import RegularGridInterpolator
+from copy import deepcopy
 
 save_folder = "."
 template_folder = "templates"
@@ -288,3 +290,81 @@ def get_shape_parameter_config(
         else:
             shape_parameter_config["uncertainty"] = shape_parameter_uncertainty
     return shape_parameter_config
+
+
+def uniform_or_log_bins(bins, rtol=1e-10):
+    """
+    Determine if the given bin edges are uniformly spaced, logarithmically spaced, or non-uniform.
+
+    Parameters:
+    ----------
+    bins : array-like
+        An array of bin edges.
+    rtol : float
+        Relative tolerance for floating-point comparisons.
+
+    Returns:
+    -------
+    str
+        "uniform" if bins are uniformly spaced,
+        "logarithmic" if bins are logarithmically spaced,
+        "non-uniform" otherwise.
+    """
+    bins = np.array(bins)
+    if len(bins) < 2:
+        return "uniform"  # Not enough bins to determine
+
+    diffs = np.diff(bins)
+    log_diffs = np.diff(np.log10(bins[bins > 0]))  # Avoid log of non-positive numbers
+
+    if np.allclose(diffs, diffs[0], rtol=rtol):
+        return "uniform"
+    elif np.allclose(log_diffs, log_diffs[0], rtol=rtol):
+        return "logarithmic"
+    else:
+        return "non-uniform"
+
+
+def get_local_pdf_from_template(template_mh, data_points, rtol=1e-10):
+    """
+    Get the local PDF values from a 2D template multihist at specified data points.
+
+    Parameters:
+    ----------
+    template_mh : Histdd
+        A 2D multihist template.
+    data_points : np.ndarray
+        An array of shape (N, 2) containing the data points where the PDF values are to be evaluated.
+    rtol : float
+        Relative tolerance for floating-point comparisons when determining bin types.
+
+    Returns:
+    -------
+    pdf_values : np.ndarray
+        An array of shape (N,) containing the PDF values at the specified data points.
+    """
+    data_points_reg = np.array(deepcopy(data_points))
+    x_bins, y_bins = template_mh.bin_centers()
+    x_bins_type, y_bins_type = uniform_or_log_bins(
+        x_bins, rtol=rtol
+    ), uniform_or_log_bins(y_bins, rtol=rtol)
+    if x_bins_type == "non-uniform" or y_bins_type == "non-uniform":
+        raise ValueError("Template bins must be either uniform or logarithmic.")
+    if x_bins_type == "logarithmic":
+        x_bins_reg = np.log10(x_bins)
+        data_points_reg[:, 0] = np.log10(data_points[:, 0])
+    else:
+        x_bins_reg = x_bins
+    if y_bins_type == "logarithmic":
+        y_bins_reg = np.log10(y_bins)
+        data_points_reg[:, 1] = np.log10(data_points[:, 1])
+    else:
+        y_bins_reg = y_bins
+    interpolator = RegularGridInterpolator(
+        (x_bins_reg, y_bins_reg),
+        template_mh.histogram,
+        bounds_error=False,
+        fill_value=None,
+    )
+    pdf_values = np.clip(interpolator(data_points_reg), 0, None)
+    return pdf_values

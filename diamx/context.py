@@ -10,6 +10,7 @@ from diamx.utils import (
     csv_to_apt_map,
     make_template,
     get_shape_parameter_config,
+    get_local_pdf_from_template,
 )
 from glob import glob
 import yaml
@@ -99,6 +100,18 @@ class Context(object):
                     "experiment_name must be provided unless shared_rate=True"
                 )
             return f"{experiment_name}_{bkg_name}_rate_multiplier"
+
+    @staticmethod
+    def _get_shaped_parameter_name(shape_parameter_config, experiment_name=None):
+        """Internal method to get the right parameter name for shape_parameter."""
+        if shape_parameter_config.get("shape_parameter_shared", False):
+            return shape_parameter_config["shape_parameter_name"]
+        else:
+            if experiment_name is None:
+                raise ValueError(
+                    "experiment_name must be provided unless shape_parameter_shared=True"
+                )
+            return f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
 
     def generate_alea_config(self):
         """Generate configuration file for combined fit with placeholder signal."""
@@ -322,12 +335,15 @@ class Context(object):
                 file_hash = create_hash(experiment_instance.config["roi"], **args)
                 template_suffix_parts = []
                 for shape_parameter_config in shaped_bkg_config["shape_parameters"]:
-                    shape_parameter_name = (
-                        f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
-                        if not shape_parameter_config.get(
-                            "shape_parameter_shared", False
-                        )
-                        else shape_parameter_config["shape_parameter_name"]
+                    # shape_parameter_name = (
+                    #     f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
+                    #     if not shape_parameter_config.get(
+                    #         "shape_parameter_shared", False
+                    #     )
+                    #     else shape_parameter_config["shape_parameter_name"]
+                    # )
+                    shape_parameter_name = self._get_shaped_parameter_name(
+                        shape_parameter_config, experiment_name
                     )
                     template_suffix_parts.append(
                         f"{shape_parameter_name}_{{{shape_parameter_name}:{shape_parameter_config['formatter']}}}"
@@ -343,13 +359,16 @@ class Context(object):
                 )
                 shape_parameter_list = [
                     (
-                        f"{experiment_name}_{shaped_parameter_config['shape_parameter_name']}"
-                        if not shaped_parameter_config.get(
-                            "shape_parameter_shared", False
+                        # f"{experiment_name}_{shaped_parameter_config['shape_parameter_name']}"
+                        # if not shaped_parameter_config.get(
+                        #     "shape_parameter_shared", False
+                        # )
+                        # else shaped_parameter_config["shape_parameter_name"]
+                        self._get_shaped_parameter_name(
+                            shape_parameter_config, experiment_name
                         )
-                        else shaped_parameter_config["shape_parameter_name"]
                     )
-                    for shaped_parameter_config in shaped_bkg_config["shape_parameters"]
+                    for shape_parameter_config in shaped_bkg_config["shape_parameters"]
                 ]
                 experiment_sources.append(
                     {
@@ -841,10 +860,13 @@ class Context(object):
         for shape_parameter_config, shape_parameter_value in zip(
             shaped_bkg_config["shape_parameters"], shape_parameter_values
         ):
-            shape_parameter_name = (
-                f"{experiment_instance.experiment_name}_{shape_parameter_config['shape_parameter_name']}"
-                if not shape_parameter_config.get("shape_parameter_shared", False)
-                else shape_parameter_config["shape_parameter_name"]
+            # shape_parameter_name = (
+            #     f"{experiment_instance.experiment_name}_{shape_parameter_config['shape_parameter_name']}"
+            #     if not shape_parameter_config.get("shape_parameter_shared", False)
+            #     else shape_parameter_config["shape_parameter_name"]
+            # )
+            shape_parameter_name = self._get_shaped_parameter_name(
+                shape_parameter_config, experiment_instance.experiment_name
             )
             template_suffix_parts.append(
                 f"{shape_parameter_name}_{shape_parameter_value:{shape_parameter_config['formatter']}}"
@@ -1282,6 +1304,78 @@ class Context(object):
         """
         mh = self.get_signal_template(experiment_name, signal_parameter_value)
         self._plot_template(mh, mode, histogram_kwargs, contour_kwargs)
+
+    def get_best_fit_local_pdf(
+        self, experiment_name, signal_parameter_value, data_points, rtol=1e-10
+    ):
+        """
+        Get the best-fit local probability density function (PDF) for a given experiment and signal parameter value.
+
+        Parameters
+        ----------
+        experiment_name : str
+            The name of the experiment for which to get the local PDF.
+        signal_parameter_value : float
+            The value of the signal parameter to use for the PDF when fitting.
+        data_points : array-like
+            The data points at which to evaluate the local PDF. It should be of shape (N, 2) for 2D histograms.
+        rtol : float, optional
+            The relative tolerance for bin-type determination. Default is 1e-10.
+
+        Returns
+        -------
+        local_pdf : dict
+            A dictionary containing the local PDF for each background and signal component.
+        """
+        experiment_instance = None
+        for instance in self.experiment_instances:
+            if instance.experiment_name == experiment_name:
+                experiment_instance = instance
+                break
+        if experiment_instance is None:
+            raise ValueError(f"Experiment {experiment_name} not found.")
+
+        alea_model = self.get_alea_model(signal_parameter_value)
+        best_fit, _max_ll = alea_model.fit()
+        local_pdf = {}
+        for bkg_config in experiment_instance.config["bkgs"]:
+            bkg_mh = (
+                self.get_bkg_template(experiment_name, bkg_config["bkg_name"])
+                * best_fit[self._get_rate_name(bkg_config, experiment_name)]
+            )
+            local_pdf[bkg_config["bkg_name"]] = get_local_pdf_from_template(
+                bkg_mh, data_points, rtol=rtol
+            )
+        for shaped_bkg_config in experiment_instance.config["shaped_bkgs"]:
+            shaped_bkg_mh = (
+                self.get_bkg_template(
+                    experiment_name,
+                    shaped_bkg_config["shaped_bkg_name"],
+                    shape_parameter_values=[
+                        best_fit[
+                            self._get_shaped_parameter_name(
+                                shape_parameter_config, experiment_name
+                            )
+                        ]
+                        for shape_parameter_config in shaped_bkg_config[
+                            "shape_parameters"
+                        ]
+                    ],
+                )
+                * best_fit[self._get_rate_name(shaped_bkg_config, experiment_name)]
+            )
+            local_pdf[shaped_bkg_config["shaped_bkg_name"]] = (
+                get_local_pdf_from_template(shaped_bkg_mh, data_points, rtol=rtol)
+            )
+        signal_mh = (
+            self.get_signal_template(experiment_name, signal_parameter_value)
+            * best_fit[f"{self.config['signal']['signal_name']}_rate_multiplier"]
+        )
+        local_pdf[self.config["signal"]["signal_name"]] = get_local_pdf_from_template(
+            signal_mh, data_points, rtol=rtol
+        )
+
+        return local_pdf
 
     def check_config_sanity(self):
         config_attributes = ["experiments", "signal"]
