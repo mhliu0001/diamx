@@ -20,6 +20,39 @@ from scipy.interpolate import interp1d
 from appletree import randgen
 
 
+def er_yields(energy, w, nex_ni_ratio, py0, py1, py2, py3, py4, field):
+    mean_num_quanta = energy / w
+    mean_num_ion = mean_num_quanta / (1 + nex_ni_ratio)
+    ti = mean_num_ion * py0 * np.exp(-energy / py1) * field**py2 / 4.0
+    fd = 1.0 / (1.0 + np.exp(-(energy - py3) / py4))
+    if ti < 1e-2:
+        r = ti / 2.0 - ti * ti / 3.0
+    else:
+        r = 1.0 - np.log(1.0 + ti) / ti
+    recomb_mean = r * fd
+    mean_num_electron = mean_num_ion * (1 - recomb_mean)
+    mean_num_photon = mean_num_quanta - mean_num_electron
+    return mean_num_photon / energy, mean_num_electron / energy
+
+
+def calculate_ly_scalar(energy, qy_scalar, yield_model):
+    ly, qy = er_yields(
+        energy,
+        yield_model["w"],
+        yield_model["nex_ni_ratio"],
+        yield_model["py0"],
+        yield_model["py1"],
+        yield_model["py2"],
+        yield_model["py3"],
+        yield_model["py4"],
+        yield_model["field"],
+    )
+    qy_new = qy * qy_scalar
+    ly_new = 1.0 / yield_model["w"] - qy_new
+    ly_scalar = ly_new / ly
+    return ly_scalar
+
+
 class XENONnT(Experiment):
     """XENONnT experiment base class. Default to XENONnTSR0, but can be used for other SRs."""
 
@@ -86,11 +119,10 @@ class XENONnT(Experiment):
     def run_appletree(
         self,
         batch_size,
-        instruct_file_path,
-        yield_file_path,
+        apt_config,
+        yield_model,
         param_file_path,
         runmode,
-        **kwargs,
     ):
         with HiddenPrints():  # suppress annoying appletree print
             supported_runmodes = ["er_mono", "er_flat", "er_bkg", "neutron", "nr"]
@@ -98,17 +130,14 @@ class XENONnT(Experiment):
                 raise ValueError(
                     f"Unsupported runmode {runmode}. Possible options are {supported_runmodes}."
                 )
-            with open(instruct_file_path, "r") as instruct_file:
-                apt_config = json.load(instruct_file)
+            # with open(instruct_file_path, "r") as instruct_file:
+            #     apt_config = json.load(instruct_file)
 
-            # Keyword argument substitution
-            for key, value in kwargs.items():
-                apt_config[key] = value
+            # # Keyword argument substitution
+            # for key, value in kwargs.items():
+            #     apt_config[key] = value
 
-            # Overlap with SR0 best fit yield model
-            with open(yield_file_path, "r") as yield_file:
-                yield_model = json.load(yield_file)
-
+            # Overlap with best fit yield model
             param_manager = apt.Parameter(get_file_path_diamx(param_file_path))
             param_manager.sample_prior()
             parameters = param_manager.get_all_parameter()
@@ -179,23 +208,31 @@ class XENONnT(Experiment):
             instruct_file_path = get_file_path_diamx(
                 kwargs.get("instruct_file", self.default_instruct_file[name])
             )
+            with open(instruct_file_path, "r") as instruct_file:
+                apt_config = json.load(instruct_file)
             yield_file_path = get_file_path_diamx(
                 kwargs.get("yield_file", self.default_yield_file[name])
             )
+            with open(yield_file_path, "r") as yield_file:
+                yield_model = json.load(yield_file)
             param_file_path = get_file_path_diamx(
                 kwargs.get("param_file", self.default_param_file[name])
             )
-            apt_kwargs = {}
             if "mono_energy" in kwargs:
                 if np.isscalar(kwargs["mono_energy"]):
-                    apt_kwargs.update({"mono_energy": kwargs["mono_energy"]})
+                    apt_config.update({"mono_energy": kwargs["mono_energy"]})
+                    adjusted_yield_model = copy.deepcopy(yield_model)
+                    if "qy_scalar" in kwargs:
+                        adjusted_yield_model["g1"] *= calculate_ly_scalar(
+                            kwargs["mono_energy"], kwargs["qy_scalar"], yield_model
+                        )
+                        adjusted_yield_model["g2"] *= kwargs["qy_scalar"]
                     cs1, cs2, eff = self.run_appletree(
                         batch_size,
-                        instruct_file_path,
-                        yield_file_path,
+                        apt_config,
+                        adjusted_yield_model,
                         param_file_path,
                         "er_mono",
-                        **apt_kwargs,
                     )
                 elif isinstance(kwargs["mono_energy"], (list, tuple)):
                     if "branching_ratio" not in kwargs:
@@ -206,20 +243,29 @@ class XENONnT(Experiment):
                         raise ValueError(
                             "Number of mono energies must match number of branching ratios."
                         )
+                    if "qy_scalar" in kwargs:
+                        assert isinstance(kwargs["qy_scalar"], (list, tuple)) and len(
+                            kwargs["qy_scalar"]
+                        ) == len(
+                            kwargs["mono_energy"]
+                        ), "Number of qy_scalars must match number of mono energies."
                     cs1 = []
                     cs2 = []
                     eff = []
-                    for mono_energy, branching_ratio in zip(
-                        kwargs["mono_energy"], kwargs["branching_ratio"]
-                    ):
-                        apt_kwargs.update({"mono_energy": mono_energy})
+                    for comp_idx, mono_energy in enumerate(kwargs["mono_energy"]):
+                        apt_config.update({"mono_energy": mono_energy})
+                        adjusted_yield_model = copy.deepcopy(yield_model)
+                        if "qy_scalar" in kwargs:
+                            adjusted_yield_model["g1"] *= calculate_ly_scalar(
+                                mono_energy, kwargs["qy_scalar"][comp_idx], yield_model
+                            )
+                            adjusted_yield_model["g2"] *= kwargs["qy_scalar"][comp_idx]
                         cs1_temp, cs2_temp, eff_temp = self.run_appletree(
-                            int(batch_size * branching_ratio),
-                            instruct_file_path,
-                            yield_file_path,
+                            int(batch_size * kwargs["branching_ratio"][comp_idx]),
+                            apt_config,
+                            adjusted_yield_model,
                             param_file_path,
                             "er_mono",
-                            **apt_kwargs,
                         )
                         cs1.append(cs1_temp)
                         cs2.append(cs2_temp)
@@ -234,39 +280,44 @@ class XENONnT(Experiment):
             instruct_file_path = get_file_path_diamx(
                 kwargs.get("instruct_file", self.default_instruct_file[name])
             )
+            with open(instruct_file_path, "r") as instruct_file:
+                apt_config = json.load(instruct_file)
             yield_file_path = get_file_path_diamx(
                 kwargs.get("yield_file", self.default_yield_file[name])
             )
+            with open(yield_file_path, "r") as yield_file:
+                yield_model = json.load(yield_file)
             param_file_path = get_file_path_diamx(
                 kwargs.get("param_file", self.default_param_file[name])
             )
-            apt_kwargs = {}
             if "upper_energy" in kwargs:
-                apt_kwargs.update({"upper_energy": kwargs["upper_energy"]})
+                apt_config.update({"upper_energy": kwargs["upper_energy"]})
             if "lower_energy" in kwargs:
-                apt_kwargs.update({"lower_energy": kwargs["lower_energy"]})
+                apt_config.update({"lower_energy": kwargs["lower_energy"]})
             cs1, cs2, eff = self.run_appletree(
                 batch_size,
-                instruct_file_path,
-                yield_file_path,
+                apt_config,
+                yield_model,
                 param_file_path,
                 "er_flat",
-                **apt_kwargs,
             )
 
         elif name == "er_bkg":
             instruct_file_path = get_file_path_diamx(
                 kwargs.get("instruct_file", self.default_instruct_file[name])
             )
+            with open(instruct_file_path, "r") as instruct_file:
+                apt_config = json.load(instruct_file)
             yield_file_path = get_file_path_diamx(
                 kwargs.get("yield_file", self.default_yield_file[name])
             )
+            with open(yield_file_path, "r") as yield_file:
+                yield_model = json.load(yield_file)
             param_file_path = get_file_path_diamx(
                 kwargs.get("param_file", self.default_param_file[name])
             )
-            apt_kwargs = {}
             if "energy_spectrum" in kwargs:
-                apt_kwargs.update(
+                apt_config.update(
                     {
                         "energy_spectrum": csv_to_apt_map(
                             kwargs["energy_spectrum"], "pdf"
@@ -275,20 +326,23 @@ class XENONnT(Experiment):
                 )
             cs1, cs2, eff = self.run_appletree(
                 batch_size,
-                instruct_file_path,
-                yield_file_path,
+                apt_config,
+                yield_model,
                 param_file_path,
                 "er_bkg",
-                **apt_kwargs,
             )
 
         elif name == "neutron":
             instruct_file_path = get_file_path_diamx(
                 kwargs.get("instruct_file", self.default_instruct_file[name])
             )
+            with open(instruct_file_path, "r") as instruct_file:
+                apt_config = json.load(instruct_file)
             yield_file_path = get_file_path_diamx(
                 kwargs.get("yield_file", self.default_yield_file[name])
             )
+            with open(yield_file_path, "r") as yield_file:
+                yield_model = json.load(yield_file)
             param_file_path = get_file_path_diamx(
                 kwargs.get("param_file", self.default_param_file[name])
             )
@@ -310,8 +364,8 @@ class XENONnT(Experiment):
 
             cs1, cs2, eff = self.run_appletree(
                 batch_size,
-                instruct_file_path,
-                yield_file_path,
+                apt_config,
+                yield_model,
                 param_file_path,
                 "neutron",
             )
@@ -320,9 +374,13 @@ class XENONnT(Experiment):
             instruct_file_path = get_file_path_diamx(
                 kwargs.get("instruct_file", self.default_instruct_file["nr"])
             )
+            with open(instruct_file_path, "r") as instruct_file:
+                apt_config = json.load(instruct_file)
             yield_file_path = get_file_path_diamx(
                 kwargs.get("yield_file", self.default_yield_file["nr"])
             )
+            with open(yield_file_path, "r") as yield_file:
+                yield_model = json.load(yield_file)
             param_file_path = get_file_path_diamx(
                 kwargs.get("param_file", self.default_param_file["nr"])
             )
@@ -355,15 +413,19 @@ class XENONnT(Experiment):
                 cs2 = np.ones(batch_size, dtype=np.float64)
                 eff = np.zeros(batch_size, dtype=np.float64)
             else:
+                apt_config.update(
+                    {
+                        "energy_spectrum": csv_to_apt_map(
+                            kwargs["signal_spectrum_path"].format(**kwargs), "pdf"
+                        )
+                    }
+                )
                 cs1, cs2, eff = self.run_appletree(
                     batch_size,
-                    instruct_file_path,
-                    yield_file_path,
+                    apt_config,
+                    yield_model,
                     param_file_path,
                     "nr",
-                    energy_spectrum=csv_to_apt_map(
-                        kwargs["signal_spectrum_path"].format(**kwargs), "pdf"
-                    ),
                 )
 
         roi = self.config["roi"]
@@ -641,6 +703,20 @@ class XENONnTSR0(XENONnT):
         if name == "er" or name == "er_flat":
             self._generate_template("er_flat", rate, template_file_path, name, **kwargs)
 
+        elif name == "xe124":
+            self._generate_template(
+                "er_mono",
+                rate,
+                template_file_path,
+                name,
+                mono_energy=[5.98, 10.0],
+                branching_ratio=[7.1 / 19.4, 12.3 / 19.4],
+                qy_scalar=[
+                    kwargs.get("lm_quenching_factor", 1.0),
+                    kwargs.get("ll_quenching_factor", 1.0),
+                ],
+            )
+
         elif name == "neutron" or name == "xenonnt_neutron":
             self._generate_template("neutron", rate, template_file_path, name, **kwargs)
 
@@ -694,6 +770,20 @@ class XENONnTSR1(XENONnT):
                 mono_energy=[2.82, 0.27],
                 branching_ratio=[0.902, 0.087],
                 **kwargs,
+            )
+
+        elif name == "xe124":
+            self._generate_template(
+                "er_mono",
+                rate,
+                template_file_path,
+                name,
+                mono_energy=[5.98, 10.0],
+                branching_ratio=[7.1 / 19.4, 12.3 / 19.4],
+                qy_scalar=[
+                    kwargs.get("lm_quenching_factor", 1.0),
+                    kwargs.get("ll_quenching_factor", 1.0),
+                ],
             )
 
         elif name == "neutron" or name == "xenonnt_neutron":

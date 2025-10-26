@@ -10,6 +10,7 @@ save_folder = "."
 template_folder = "templates"
 
 from typing import Type
+from copy import deepcopy
 import functools
 import warnings
 import sys
@@ -371,3 +372,17 @@ def get_local_pdf_from_template(template_mh, data_points, rtol=1e-10):
     )
     pdf_values = np.clip(interpolator(data_points_reg), 0, None)
     return pdf_values
+
+
+def replace_alias(config_dict):
+    """Replaces keys in the config_dict that end with '_alias' with their corresponding original keys."""
+    replaced_config_dict = deepcopy(config_dict)
+    for key, value in config_dict.items():
+        if key.endswith("_alias"):
+            original_key = key[:-6]
+            assert (
+                original_key in config_dict
+            ), f"Alias key {original_key} not found in config!"
+            replaced_config_dict[original_key] = value
+            del replaced_config_dict[key]
+    return replaced_config_dict

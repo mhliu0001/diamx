@@ -6,7 +6,7 @@ import os
 import copy
 from tqdm import tqdm
 import diamx
-from diamx.utils import generate_bin_array, create_hash, template_folder
+from diamx.utils import generate_bin_array, create_hash, template_folder, replace_alias
 import inference_interface
 import numpy as np
 import multiprocessing
@@ -27,6 +27,7 @@ def process_bkg_template(
     template_file_name = (
         f"{experiment_name}_bkg_{bkg_config['bkg_name']}_{file_hash}.ii.h5"
     )
+    bkg_config = replace_alias(bkg_config)
     template_file_path = os.path.join(output_path, template_folder, template_file_name)
     if not os.path.exists(template_file_path):
         generate_template(
@@ -55,6 +56,7 @@ def process_shaped_bkg_template(
     """
     shaped_bkg_config, shape_parameter_values = task
     shape_parameter_configs = shaped_bkg_config["shape_parameters"]
+
     # Use a deep copy so that modifications do not affect the original args.
     args = copy.deepcopy(shaped_bkg_config.get("args", {}))
     file_hash = create_hash(experiment_config["roi"], **args)
@@ -69,13 +71,6 @@ def process_shaped_bkg_template(
     for shape_parameter_config, shape_parameter_value in zip(
         shape_parameter_configs, shape_parameter_values
     ):
-        shape_parameter_name = shape_parameter_config["shape_parameter_name"]
-        if shape_parameter_name in args:
-            warnings.warn(
-                f"Found {shape_parameter_name} in shaped bkg args that is supposed to be scanned over "
-                "shaped_parameter_range. It will be updated and will not be used."
-            )
-        args[shape_parameter_name] = shape_parameter_value
         shape_parameter_name = (
             f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
             if not shape_parameter_config.get("shape_parameter_shared", False)
@@ -92,6 +87,18 @@ def process_shaped_bkg_template(
     )
     template_file_path = os.path.join(output_path, template_folder, template_file_name)
     if not os.path.exists(template_file_path):
+        shaped_bkg_config = replace_alias(shaped_bkg_config)
+        for shape_parameter_config, shape_parameter_value in zip(
+            shape_parameter_configs, shape_parameter_values
+        ):
+            shape_parameter_config = replace_alias(shape_parameter_config)
+            shape_parameter_name = shape_parameter_config["shape_parameter_name"]
+            if shape_parameter_name in args:
+                warnings.warn(
+                    f"Found {shape_parameter_name} in shaped bkg args that is supposed to be scanned over "
+                    "shaped_parameter_range. It will be updated and will not be used."
+                )
+            args[shape_parameter_name] = shape_parameter_value
         generate_template(
             shaped_bkg_config["shaped_bkg_name"],
             shaped_bkg_config["rate_nominal"],
