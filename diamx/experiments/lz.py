@@ -26,6 +26,7 @@ class LZ(Experiment):
         "lz_ws2022_eff_upper.csv",
     ]
     default_data_file = "lz_ws2022_wimp_data.csv"
+    default_eff_batch_size = 10000000
 
     def __init__(
         self, config: Union[str, dict], output_path: Optional[str] = "./diamx_output"
@@ -266,7 +267,9 @@ class LZ(Experiment):
             )
             signal_spectrum_map.build()
             key = jax.random.PRNGKey(0)
-            key, probability = randgen.uniform(key, 0.0, 1.0, shape=(1000000,))
+            key, probability = randgen.uniform(
+                key, 0.0, 1.0, shape=(int(self.default_eff_batch_size),)
+            )
             sampled_energies = np.array(signal_spectrum_map.apply(probability))
 
             eff_lower = np.loadtxt(

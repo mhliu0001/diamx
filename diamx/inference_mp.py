@@ -7,6 +7,55 @@ from tqdm import tqdm
 from diamx.utils import generate_bin_array, HiddenTqdm
 from diamx.model import DiamxModel
 import traceback
+import signal
+import functools
+
+
+# ---------- Timeout decorator (Unix SIGALRM; warns & disables elsewhere) ----------
+def timeout(seconds=300):
+    """
+    Decorator to raise TimeoutError if the wrapped function runs longer than `seconds`.
+    Uses signal.SIGALRM (Unix only). On unsupported platforms (e.g. Windows),
+    emits a RuntimeWarning (once per process) and disables timeout.
+    """
+
+    def decorator(func):
+        if not hasattr(signal, "SIGALRM"):
+            warned = False
+
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                nonlocal warned
+                if not warned:
+                    warnings.warn(
+                        f"Timeout not available on this platform; '{func.__name__}' "
+                        f"will not be interrupted.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    warned = True
+                return func(*args, **kwargs)
+
+            return wrapper
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            def handler(signum, frame):
+                raise TimeoutError(
+                    f"Function '{func.__name__}' timed out after {seconds} seconds"
+                )
+
+            old_handler = signal.signal(signal.SIGALRM, handler)
+            signal.alarm(int(seconds))
+            try:
+                return func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+
+        return wrapper
+
+    return decorator
 
 
 def _pool_task(pool_parameters):
@@ -21,6 +70,7 @@ def _pool_task(pool_parameters):
         confidence_interval_kind,
         exact_asymptotic,
         fit_strategy,
+        timeout_seconds,
     ) = pool_parameters
     try:
         with HiddenTqdm():  # silence internal prints
@@ -36,33 +86,56 @@ def _pool_task(pool_parameters):
                     ][name]["nominal_value"]
 
             data_dict_new["generate_values"] = toy_data["generate_values"]
-
             alea_model.data = data_dict_new
 
-            # best fit
-            best_fit, max_ll = alea_model.fit(stabilized_parameter=stabilized_parameter)
-
-            # CI
-            if exact_asymptotic:
-                # only central is supported
-                lower, upper = alea_model.confidence_interval_asymptotic(
-                    poi_name=poi_name,
-                    stabilized_parameter=stabilized_parameter,
-                    confidence_level=confidence_level,
-                    fit_strategy=fit_strategy,
-                )
-            else:
-                lower, upper = alea_model.confidence_interval(
-                    poi_name=poi_name,
-                    stabilized_parameter=stabilized_parameter,
-                    confidence_level=confidence_level,
-                    confidence_interval_kind=confidence_interval_kind,
-                    fit_strategy=fit_strategy,
+            # Define the work function without decoration first…
+            def do_fit(
+                alea_model,
+                poi_name,
+                stabilized_parameter,
+                confidence_level,
+                confidence_interval_kind,
+                fit_strategy,
+                exact_asymptotic,
+            ):
+                best_fit, max_ll = alea_model.fit(
+                    stabilized_parameter=stabilized_parameter
                 )
 
-            # Discovery Z (Cowan+ 2011 Eq. 52)
-            _, ll_zero = alea_model.fit(**{poi_name: 0})
-            significance = float(np.sqrt(2.0 * (np.clip(max_ll - ll_zero, 0, None))))
+                if exact_asymptotic:
+                    lower, upper = alea_model.confidence_interval_asymptotic(
+                        poi_name=poi_name,
+                        stabilized_parameter=stabilized_parameter,
+                        confidence_level=confidence_level,
+                        fit_strategy=fit_strategy,
+                    )
+                else:
+                    lower, upper = alea_model.confidence_interval(
+                        poi_name=poi_name,
+                        stabilized_parameter=stabilized_parameter,
+                        confidence_level=confidence_level,
+                        confidence_interval_kind=confidence_interval_kind,
+                        fit_strategy=fit_strategy,
+                    )
+
+                _, ll_zero = alea_model.fit(**{poi_name: 0})
+                significance = float(
+                    np.sqrt(2.0 * (np.clip(max_ll - ll_zero, 0, None)))
+                )
+                return np.array([lower, upper, significance], float)
+
+            # …then wrap it with the *current* timeout value.
+            do_fit_with_timeout = timeout(timeout_seconds)(do_fit)
+
+            lower, upper, significance = do_fit_with_timeout(
+                alea_model,
+                poi_name,
+                stabilized_parameter,
+                confidence_level,
+                confidence_interval_kind,
+                fit_strategy,
+                exact_asymptotic,
+            )
 
         return np.array(
             [signal_parameter_value, lower, upper, significance], dtype=float
@@ -86,6 +159,7 @@ def run_inference_pool(
     maxtasksperchild=None,  # set e.g. 50 to recycle workers if you suspect leaks
     show_progress=True,
     start_method="spawn",  # e.g. "spawn" for cross-platform consistency
+    timeout_seconds=3600,  # <-- configurable; passed to each worker
 ):
     """
     Multiprocessing (Pool) version of run_inference().
@@ -127,6 +201,7 @@ def run_inference_pool(
                 confidence_interval_kind,
                 exact_asymptotic,
                 fit_strategy,
+                timeout_seconds,  # <-- pass through
             )
         )
 

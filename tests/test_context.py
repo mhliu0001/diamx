@@ -88,7 +88,7 @@ def test_xenonnt_sr0_context(tmp_path):
             "neutron",
         ],
         histogram_kwargs={"norm": LogNorm()},
-        contourf_kwargs={"colors": ["green", "green"], "alpha": [0.1, 0.2]},
+        contourf_kwargs={"colors": ["green", "green"], "alpha": [0.1, 0.2], "extend": "max"},
     )
     data = st.experiment_instances[0].get_data()
     local_pdf_raw = st.get_best_fit_local_pdf(
