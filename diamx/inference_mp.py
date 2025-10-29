@@ -154,15 +154,52 @@ def run_inference_pool(
     exact_asymptotic=True,
     stabilize_fit=False,
     output_file_name=None,
-    processes=None,  # default: mp.cpu_count()
-    chunksize=1,  # tune for many tiny tasks; for long fits 1 is fine
-    maxtasksperchild=None,  # set e.g. 50 to recycle workers if you suspect leaks
+    processes=None,
+    chunksize=1,
+    maxtasksperchild=None,
     show_progress=True,
-    start_method="spawn",  # e.g. "spawn" for cross-platform consistency
-    timeout_seconds=3600,  # <-- configurable; passed to each worker
+    start_method="spawn",
+    timeout_seconds=3600,
 ):
     """
-    Multiprocessing (Pool) version of run_inference().
+    Multiprocessing (Pool) version of diamx.Context.run_inference.
+
+    Parameters
+    ----------
+    context : diamx.Context
+        The Diamx Context with experiments registered and templates generated.
+    confidence_level : float, optional
+        Confidence level for the intervals (default: 0.9).
+    confidence_interval_kind : str, optional
+        Kind of confidence interval: "central", "upper" or "lower" (default: "central").
+    fit_strategy : dict, optional
+        Fit strategy options passed to DiamxModel.fit() (default: {"minuit_strategy": 2}).
+    exact_asymptotic : bool, optional
+        Whether to use exact asymptotic formulae for confidence intervals
+        (default: True). If False, uses a naive chi-squared approximation.
+    stabilize_fit : bool, optional
+        Whether to stabilize the fit by profiling over a rate multiplier
+        (default: False).
+    output_file_name : str or None, optional
+        Name of the output CSV file (default: None, which uses
+        "ci_{signal_name}.csv").
+    processes : int or None, optional
+        Number of worker processes to use (default: None, which uses mp.cpu_count()).
+    chunksize : int, optional
+        Number of tasks per worker chunk (default: 1).
+    maxtasksperchild : int or None, optional
+        Maximum tasks per worker process before recycling (default: None).
+    show_progress : bool, optional
+        Whether to show a progress bar (default: True).
+    start_method : str or None, optional
+        Multiprocessing start method (default: "spawn"). If None, uses the default for the platform.
+    timeout_seconds : int, optional
+        Timeout in seconds for each worker fit (default: 3600).
+
+    Returns
+    -------
+    None
+        Writes the confidence interval results to a CSV file.
     """
     # Resolve output name
     if output_file_name is None:
