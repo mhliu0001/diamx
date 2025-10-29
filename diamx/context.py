@@ -11,6 +11,7 @@ from diamx.utils import (
     make_template,
     get_shape_parameter_config,
     get_local_pdf_from_template,
+    replace_alias,
 )
 from glob import glob
 import yaml
@@ -321,7 +322,7 @@ class Context(object):
                             if bkg_config.get("shared_rate", False)
                             else f"{experiment_name}_{bkg_config['bkg_name']}"
                         ),
-                        "histname": bkg_config["bkg_name"],
+                        "histname": replace_alias(bkg_config)["bkg_name"],
                         "parameters": [
                             self._get_rate_name(bkg_config, experiment_name)
                         ],
@@ -373,11 +374,11 @@ class Context(object):
                 experiment_sources.append(
                     {
                         "name": (
-                            shaped_bkg_config["bkg_name"]
+                            shaped_bkg_config["shaped_bkg_name"]
                             if shaped_bkg_config.get("shared_rate", False)
                             else f"{experiment_name}_{shaped_bkg_config['shaped_bkg_name']}"
                         ),
-                        "histname": shaped_bkg_config["shaped_bkg_name"],
+                        "histname": replace_alias(shaped_bkg_config)["shaped_bkg_name"],
                         "parameters": [
                             self._get_rate_name(shaped_bkg_config, experiment_name),
                         ]
@@ -391,7 +392,7 @@ class Context(object):
             experiment_sources.append(
                 {
                     "name": self.config["signal"]["signal_name"],
-                    "histname": self.config["signal"]["signal_name"],
+                    "histname": replace_alias(self.config["signal"])["signal_name"],
                     "parameters": [
                         f"{self.config['signal']['signal_name']}_rate_multiplier",
                         f"{self.config['signal']['parameter_name']}",
@@ -688,7 +689,7 @@ class Context(object):
         )
 
     def print_best_fit(
-        self, signal_parameter_value, stabilize_fit=True, disable_rounding=False
+        self, signal_parameter_value, stabilize_fit=False, disable_rounding=False
     ):
         if stabilize_fit:
             stabilized_parameter = (
@@ -764,19 +765,15 @@ class Context(object):
             result_bestfit = {
                 get_bkg_name(bkg_config): format_value_uncertainty(
                     alea_model.minuit_object.values[
-                        (
-                            f"{get_bkg_name(bkg_config)}_rate_multiplier"
-                            if bkg_config.get("shared_rate", False)
-                            else f"{experiment_config['experiment_name']}_{get_bkg_name(bkg_config)}_rate_multiplier"
+                        self._get_rate_name(
+                            bkg_config, experiment_config["experiment_name"]
                         )
                     ]
                     * livetime
                     * bkg_config["rate_nominal"],
                     alea_model.minuit_object.errors[
-                        (
-                            f"{get_bkg_name(bkg_config)}_rate_multiplier"
-                            if bkg_config.get("shared_rate", False)
-                            else f"{experiment_config['experiment_name']}_{get_bkg_name(bkg_config)}_rate_multiplier"
+                        self._get_rate_name(
+                            bkg_config, experiment_config["experiment_name"]
                         )
                     ]
                     * livetime
@@ -881,7 +878,8 @@ class Context(object):
             self.output_path, template_folder, template_file_name
         )
         bkg_mh = template_to_multihist(
-            template_file_path, hist_name=shaped_bkg_config["shaped_bkg_name"]
+            template_file_path,
+            hist_name=replace_alias(shaped_bkg_config)["shaped_bkg_name"],
         )
         return bkg_mh
 
@@ -987,7 +985,9 @@ class Context(object):
                 template_file_path = os.path.join(
                     self.output_path, template_folder, template_file_name
                 )
-                bkg_mh = template_to_multihist(template_file_path, hist_name=bkg_name)
+                bkg_mh = template_to_multihist(
+                    template_file_path, hist_name=replace_alias(bkg_config)["bkg_name"]
+                )
                 # mh.plot()
                 return bkg_mh
         raise ValueError(f"Bkg {bkg_name} not found for experiment {experiment_name}.")

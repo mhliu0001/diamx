@@ -101,6 +101,17 @@ def test_xenonnt_sr0_and_1_context(tmp_path):
     st.run_inference(stabilize_fit=False, exact_asymptotic=False)
     st.print_best_fit(200)
 
+def test_xenonnt_sr0_and_1_dec_context(tmp_path):
+    st = diamx.Context(
+        config_preprocess("xenonnt_sr0_and_1_wimp_config_dec.json"), tmp_path
+    )
+    st.register_experiment(diamx.experiments.XENONnTSR0)
+    st.register_experiment(diamx.experiments.XENONnTSR1a)
+    st.register_experiment(diamx.experiments.XENONnTSR1b)
+    st.generate_templates()
+    st.run_inference(stabilize_fit=False, exact_asymptotic=False)
+    st.print_best_fit(200)
+
 
 def test_lz_ws2022_context(tmp_path):
     st = diamx.Context(config_preprocess("lz_ws2022_wimp_config.json"), tmp_path)

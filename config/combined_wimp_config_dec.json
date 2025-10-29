@@ -1,0 +1,400 @@
+{
+    "experiments": [
+        {
+            "experiment_name": "xenonnt_sr0",
+            "livetime": 0.2605479452054794,
+            "fiducial_mass": 4.18,
+            "data": "xenonnt_sr0_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(0, 100, 101)",
+                "cs2": "np.logspace(2.6020599913279625, 4.1, 81)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "er",
+                    "rate_nominal": 497.02944269190334,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_neutron",
+                    "rate_nominal": 2.6866456361724502,
+                    "rate_uncertainty": 0.4,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "ac",
+                    "rate_nominal": 3.838065194532072,
+                    "args": {
+                        "template_path": "xenonnt_sr0_ac_template_contour_driven_400PE.h5",
+                        "hist_name": "cs1-cs2"
+                    }
+                },
+                {
+                    "bkg_name": "surface",
+                    "rate_nominal": 3.838065194532072,
+                    "args": {
+                        "template_path": "xenonnt_sr0_surface_template_contour_driven_400PE.h5",
+                        "hist_name": "cs1-cs2"
+                    }
+                }
+            ],
+            "shaped_bkgs": [
+                {
+                    "shaped_bkg_name": "xe124",
+                    "shape_parameters": [
+                        {
+                            "shape_parameter_name": "ll_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.60, 0.91, 0.02)",
+                            "shape_parameter_nominal": 0.80,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.60, 0.90],
+                            "shape_parameter_shared": true
+                        },
+                        {
+                            "shape_parameter_name": "lm_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.60, 0.91, 0.02)",
+                            "shape_parameter_nominal": 0.72,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.60, 0.90],
+                            "shape_parameter_shared": true
+                        }
+                    ],
+                    "rate_nominal": 17.271293375394325,
+                    "rate_uncertainty": 2.6866456361724502,
+                    "args": {}
+                }
+            ],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        },
+        {
+            "experiment_name": "xenonnt_sr1a",
+            "livetime": 0.1824657534246575,
+            "fiducial_mass": 4.00,
+            "data": "xenonnt_sr1a_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(0, 100, 101)",
+                "cs2": "np.logspace(2.6020599913279625, 4.1, 81)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "er_flat",
+                    "rate_nominal": 2338.796955132076,
+                    "rate_uncertainty": 163.17188059060996,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "tritium",
+                    "rate_nominal": 339.78978978978984,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "ar37",
+                    "rate_nominal": 317.8678678678679,
+                    "rate_uncertainty": 32.88288288288289,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_neutron",
+                    "rate_nominal": 2.575825825825826,
+                    "rate_uncertainty": 0.4,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_sr1_ac",
+                    "rate_nominal": 11.6,
+                    "rate_uncertainty": 0.085,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {
+                        "template_path": "xenonnt_sr1b_ac_template_contour_driven_400PE.h5",
+                        "hist_name": "cs1-cs2"
+                    }
+                }
+            ],
+            "shaped_bkgs": [
+                {
+                    "shaped_bkg_name": "xenonnt_sr1_xe124",
+                    "shaped_bkg_name_alias": "xe124",
+                    "shape_parameters": [
+                        {
+                            "shape_parameter_name": "ll_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.60, 0.91, 0.02)",
+                            "shape_parameter_nominal": 0.80,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.60, 0.90],
+                            "shape_parameter_shared": true
+                        },
+                        {
+                            "shape_parameter_name": "lm_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.60, 0.91, 0.02)",
+                            "shape_parameter_nominal": 0.72,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.60, 0.90],
+                            "shape_parameter_shared": true
+                        }
+                    ],
+                    "rate_nominal": 17.80965147453083,
+                    "rate_uncertainty": 2.739946380697051,
+                    "shared_rate": true,
+                    "args": {}
+                }
+            ],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        },
+        {
+            "experiment_name": "xenonnt_sr1b",
+            "livetime": 0.3284931506849315,
+            "fiducial_mass": 4.00,
+            "data": "xenonnt_sr1b_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(0, 100, 101)",
+                "cs2": "np.logspace(2.6020599913279625, 4.1, 81)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "er_flat",
+                    "rate_nominal": 441.8650774662532,
+                    "rate_uncertainty": 32.18884670283963,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "tritium",
+                    "rate_nominal": 307.46455379482904,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_neutron",
+                    "rate_nominal": 2.1309424520433695,
+                    "rate_uncertainty": 0.4,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xenonnt_sr1_ac",
+                    "rate_nominal": 11.6,
+                    "rate_uncertainty": 0.085,
+                    "rate_relative_uncertainty": true,
+                    "shared_rate": true,
+                    "args": {
+                        "template_path": "xenonnt_sr1b_ac_template_contour_driven_400PE.h5",
+                        "hist_name": "cs1-cs2"
+                    }
+                }
+            ],
+            "shaped_bkgs": [
+                {
+                    "shaped_bkg_name": "xenonnt_sr1_xe124",
+                    "shaped_bkg_name_alias": "xe124",
+                    "shape_parameters": [
+                        {
+                            "shape_parameter_name": "ll_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.60, 0.91, 0.02)",
+                            "shape_parameter_nominal": 0.80,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.60, 0.90],
+                            "shape_parameter_shared": true
+                        },
+                        {
+                            "shape_parameter_name": "lm_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.60, 0.91, 0.02)",
+                            "shape_parameter_nominal": 0.72,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.60, 0.90],
+                            "shape_parameter_shared": true
+                        }
+                    ],
+                    "rate_nominal": 17.80965147453083,
+                    "rate_uncertainty": 2.739946380697051,
+                    "shared_rate": true,
+                    "args": {}
+                }
+            ],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        },
+        {
+            "experiment_name": "lz_ws2022",
+            "livetime": 0.1643835616438356,
+            "fiducial_mass": 5.5,
+            "data": "lz_ws2022_wimp_data.csv",
+            "roi": {
+                "s1c": "np.linspace(3, 80, 78)",
+                "s2c": "np.logspace(2.7781512503836434, 5, 81)"
+            },
+            "multiprocess_threads": 2,
+            "bkgs": [
+                {
+                    "bkg_name": "beta",
+                    "rate_nominal": 1307.9166666666667,
+                    "rate_uncertainty": 219.0,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "neutrino",
+                    "rate_nominal": 167.29166666666669,
+                    "rate_uncertainty": 9.733333333333334,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xe127",
+                    "rate_nominal": 55.96666666666667,
+                    "rate_uncertainty": 4.866666666666667,
+                    "args": {
+                        "l_quenching_factor": 1.0
+                    }
+                },
+                {
+                    "bkg_name": "xe124",
+                    "rate_nominal": 30.416666666666668,
+                    "rate_uncertainty": 8.516666666666666,
+                    "args": {
+                        "ll_quenching_factor": 1.0,
+                        "lm_quenching_factor": 1.0
+                    }
+                },
+                {
+                    "bkg_name": "xe136",
+                    "rate_nominal": 91.85833333333333,
+                    "rate_uncertainty": 14.6,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "ar37",
+                    "rate_nominal": 304.1666666666667,
+                    "rate_fit_limits": [0, 1752.0],
+                    "args": {}
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        },
+        {
+            "experiment_name": "lz_ws2024",
+            "livetime": 0.6027397260273972,
+            "fiducial_mass": 5.5,
+            "data": "lz_ws2024_wimp_data.csv",
+            "roi": {
+                "s1c": "np.linspace(3, 80, 78)",
+                "s2c": "np.logspace(2.8095597146352675, 4.5, 81)"
+            },
+            "multiprocess_threads": 2,
+            "bkgs": [
+                {
+                    "bkg_name": "pb214",
+                    "rate_nominal": 1232.7045454545455,
+                    "rate_uncertainty": 146.0,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "kr85_ar39_detgamma",
+                    "rate_nominal": 268.7727272727273,
+                    "rate_uncertainty": 36.5,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "solar_neutrino_er",
+                    "rate_nominal": 169.22727272727275,
+                    "rate_uncertainty": 9.954545454545455,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "pb212_po218",
+                    "rate_nominal": 104.025,
+                    "rate_uncertainty": 12.443181818181818,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "tritium_c14",
+                    "rate_nominal": 96.725,
+                    "rate_uncertainty": 5.475,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xe136",
+                    "rate_nominal": 92.24545454545455,
+                    "rate_uncertainty": 13.770454545454548,
+                    "args": {}
+                },
+                {
+                    "bkg_name": "xe127_xe125",
+                    "rate_nominal": 5.3090909090909095,
+                    "rate_uncertainty": 0.9954545454545455,
+                    "args": {
+                        "l_quenching_factor": 0.87
+                    }
+                },
+                {
+                    "bkg_name": "ac",
+                    "rate_nominal": 4.6454545454545455,
+                    "rate_uncertainty": 0.9954545454545455,
+                    "args": {
+                        "template_path": "lz_ws2024_ac_template_contour_driven.h5",
+                        "hist_name": "s1c-s2c"
+                    }
+                }
+            ],
+            "shaped_bkgs": [
+                {
+                    "shaped_bkg_name": "xe124",
+                    "shape_parameters": [
+                        {
+                            "shape_parameter_name": "lz_ll_quenching_factor",
+                            "shape_parameter_name_alias": "ll_quenching_factor",
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.65, 0.88, 0.02)",
+                            "shape_parameter_nominal": 0.71,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [0.65, 0.87]
+                        }
+                    ],
+                    "rate_nominal": 32.18636363636364,
+                    "rate_uncertainty": 6.470454545454546,
+                    "args": {
+                        "lm_quenching_factor": 0.87
+                    }
+                }
+            ],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        }
+    ],
+    "signal": {
+        "signal_name": "wimp",
+        "rate_fit_limits": [0, 3000],
+        "rate_parameter_interval_bounds": [0, 3000],
+        "parameter_name": "mass",
+        "parameter_range": "[10, 50, 100, 200, 500, 1000, 2500, 5000, 10000]",
+        "args": {
+            "signal_spectrum_path": "/home/mhliu/Documents/diamx/notebooks/diamx_output/spectrum/wimp_{mass:d}GeV.csv"
+        }
+    }
+}
