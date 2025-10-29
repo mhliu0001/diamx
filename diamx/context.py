@@ -1223,7 +1223,7 @@ class Context(object):
             The value of the shape parameter for shaped backgrounds. Required if the background is shaped.
             Otherwise it should be None.
         mode : list of str
-            Modes for plotting. Options are "histogram" and "contour".
+            Modes for plotting. Options are "histogram", "contour", and "contourf".
         histogram_kwargs : dict
             Additional keyword arguments for the histogram plot.
         contour_kwargs : dict
@@ -1269,7 +1269,7 @@ class Context(object):
         bkg_to_include : list of str, optional
             List of background names to include in the total background model. If None, all backgrounds are included.
         mode : list of str
-            Modes for plotting. Options are "histogram" and "contour".
+            Modes for plotting. Options are "histogram", "contour", and "contourf".
         histogram_kwargs : dict
             Additional keyword arguments for the histogram plot.
         contour_kwargs : dict
@@ -1315,7 +1315,7 @@ class Context(object):
         signal_parameter_value : float
             The value of the signal parameter to use for the template.
         mode : list of str
-            Modes for plotting. Options are "histogram" and "contour".
+            Modes for plotting. Options are "histogram", "contour", and "contourf".
         histogram_kwargs : dict
             Additional keyword arguments for the histogram plot.
         contour_kwargs : dict
