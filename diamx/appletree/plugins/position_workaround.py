@@ -39,10 +39,10 @@ class PositionSpectraWorkaround(Plugin):
     @partial(jit, static_argnums=(0,))
     def simulate(self, key, parameters, energy):
         key, z = randgen.uniform(
-            key, self.z_min.value, self.z_max.value, shape=(10000,)
+            key, self.z_min.value, self.z_max.value, shape=energy.shape
         )
-        key, r2 = randgen.uniform(key, 0, self.r_max.value**2, shape=(10000,))
-        key, theta = randgen.uniform(key, 0, 2 * jnp.pi, shape=(10000,))
+        key, r2 = randgen.uniform(key, 0, self.r_max.value**2, shape=energy.shape)
+        key, theta = randgen.uniform(key, 0, 2 * jnp.pi, shape=energy.shape)
 
         r = jnp.sqrt(r2)
         x = r * jnp.cos(theta)
