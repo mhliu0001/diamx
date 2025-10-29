@@ -1127,9 +1127,10 @@ class Context(object):
     def _plot_template(
         self,
         mh,
-        mode=["histogram", "contour"],
+        mode=["histogram", "contour", "contourf"],
         histogram_kwargs=None,
         contour_kwargs=None,
+        contourf_kwargs=None,
     ):
         """
         Plot the template contours for a given histogram object.
@@ -1139,11 +1140,13 @@ class Context(object):
         mh : Histdd
             The Histdd object containing the template data.
         mode : list of str
-            Modes for plotting. Options are "histogram" and "contour".
+            Modes for plotting. Options are "histogram", "contour", and "contourf".
         histogram_kwargs : dict
             Additional keyword arguments for the histogram plot.
         contour_kwargs : dict
             Additional keyword arguments for the contour plot.
+        contourf_kwargs : dict
+            Additional keyword arguments for the contourf plot.
 
         Returns
         -------
@@ -1151,6 +1154,8 @@ class Context(object):
             The QuadMesh object for the histogram plot.
         contours : ContourSet
             The ContourSet object for the contour plot.
+        contourfs : QuadContourSet
+            The QuadContourSet object for the contourf plot.
         """
         H = mh.histogram
         xcenters, ycenters = mh.bin_centers()
@@ -1185,8 +1190,14 @@ class Context(object):
             contours = plt.contour(X, Y, H, levels=[level95, level68], **contour_kwargs)
         else:
             contours = None
+        if "contourf" in mode:
+            contourfs = plt.contourf(
+                X, Y, H, levels=[level95, level68], **contourf_kwargs
+            )
+        else:
+            contourfs = None
 
-        return quadmesh, contours
+        return quadmesh, contours, contourfs
 
     def plot_bkg_template(
         self,
@@ -1196,6 +1207,7 @@ class Context(object):
         mode=["histogram", "contour"],
         histogram_kwargs={},
         contour_kwargs={},
+        contourf_kwargs={},
     ):
         """
         Plot the background template for a given experiment and background name.
@@ -1211,11 +1223,13 @@ class Context(object):
             The value of the shape parameter for shaped backgrounds. Required if the background is shaped.
             Otherwise it should be None.
         mode : list of str
-            Modes for plotting. Options are "histogram" and "contour".
+            Modes for plotting. Options are "histogram", "contour", and "contourf".
         histogram_kwargs : dict
             Additional keyword arguments for the histogram plot.
         contour_kwargs : dict
             Additional keyword arguments for the contour plot.
+        contourf_kwargs : dict
+            Additional keyword arguments for the contourf plot.
 
         Returns
         -------
@@ -1223,9 +1237,13 @@ class Context(object):
             The QuadMesh object for the histogram plot.
         contours : ContourSet
             The ContourSet object for the contour plot.
+        contourfs : QuadContourSet
+            The QuadContourSet object for the contourf plot.
         """
         mh = self.get_bkg_template(experiment_name, bkg_name, shape_parameter_value)
-        return self._plot_template(mh, mode, histogram_kwargs, contour_kwargs)
+        return self._plot_template(
+            mh, mode, histogram_kwargs, contour_kwargs, contourf_kwargs
+        )
 
     def plot_best_fit_bkg_mh(
         self,
@@ -1235,6 +1253,7 @@ class Context(object):
         mode=["histogram", "contour"],
         histogram_kwargs={},
         contour_kwargs={},
+        contourf_kwargs={},
     ):
         """
         Plot the total best-fit background model histogram for a given experiment and signal parameter value.
@@ -1250,11 +1269,13 @@ class Context(object):
         bkg_to_include : list of str, optional
             List of background names to include in the total background model. If None, all backgrounds are included.
         mode : list of str
-            Modes for plotting. Options are "histogram" and "contour".
+            Modes for plotting. Options are "histogram", "contour", and "contourf".
         histogram_kwargs : dict
             Additional keyword arguments for the histogram plot.
         contour_kwargs : dict
             Additional keyword arguments for the contour plot.
+        contourf_kwargs : dict
+            Additional keyword arguments for the contourf plot.
 
         Returns
         -------
@@ -1262,6 +1283,8 @@ class Context(object):
             The QuadMesh object for the histogram plot.
         contours : ContourSet
             The ContourSet object for the contour plot.
+        contourfs : QuadContourSet
+            The QuadContourSet object for the contourf plot.
         """
         bkg_mh = self.get_best_fit_bkg_mh(
             experiment_name,
@@ -1269,7 +1292,9 @@ class Context(object):
             bkg_to_include=bkg_to_include,
             stabilize_fit=True,
         )
-        return self._plot_template(bkg_mh, mode, histogram_kwargs, contour_kwargs)
+        return self._plot_template(
+            bkg_mh, mode, histogram_kwargs, contour_kwargs, contourf_kwargs
+        )
 
     def plot_signal_template(
         self,
@@ -1278,6 +1303,7 @@ class Context(object):
         mode=["histogram", "contour"],
         histogram_kwargs={},
         contour_kwargs={},
+        contourf_kwargs={},
     ):
         """
         Plot the signal template for a given experiment and signal parameter value.
@@ -1289,11 +1315,13 @@ class Context(object):
         signal_parameter_value : float
             The value of the signal parameter to use for the template.
         mode : list of str
-            Modes for plotting. Options are "histogram" and "contour".
+            Modes for plotting. Options are "histogram", "contour", and "contourf".
         histogram_kwargs : dict
             Additional keyword arguments for the histogram plot.
         contour_kwargs : dict
             Additional keyword arguments for the contour plot.
+        contourf_kwargs : dict
+            Additional keyword arguments for the contourf plot.
 
         Returns
         -------
@@ -1301,9 +1329,13 @@ class Context(object):
             The QuadMesh object for the histogram plot.
         contours : ContourSet
             The ContourSet object for the contour plot.
+        contourfs : QuadContourSet
+            The QuadContourSet object for the contourf plot.
         """
         mh = self.get_signal_template(experiment_name, signal_parameter_value)
-        self._plot_template(mh, mode, histogram_kwargs, contour_kwargs)
+        return self._plot_template(
+            mh, mode, histogram_kwargs, contour_kwargs, contourf_kwargs
+        )
 
     def get_best_fit_local_pdf(
         self, experiment_name, signal_parameter_value, data_points, rtol=1e-10

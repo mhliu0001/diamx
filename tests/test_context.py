@@ -79,6 +79,17 @@ def test_xenonnt_sr0_context(tmp_path):
         mode=["contour"],
         contour_kwargs={"colors": ["orange", "orange"], "linestyles": ["--", "-"]},
     )
+    st.plot_best_fit_bkg_mh(
+        "xenonnt_sr0",
+        200,
+        mode=["contourf"],
+        bkg_to_include=[
+            "er",
+            "neutron",
+        ],
+        histogram_kwargs={"norm": LogNorm()},
+        contourf_kwargs={"colors": ["green", "green"], "alpha": [0.1, 0.2]},
+    )
     data = st.experiment_instances[0].get_data()
     local_pdf_raw = st.get_best_fit_local_pdf(
         experiment_name="xenonnt_sr0",
@@ -100,6 +111,7 @@ def test_xenonnt_sr0_and_1_context(tmp_path):
     st.generate_templates()
     st.run_inference(stabilize_fit=False, exact_asymptotic=False)
     st.print_best_fit(200)
+
 
 def test_xenonnt_sr0_and_1_dec_context(tmp_path):
     st = diamx.Context(
