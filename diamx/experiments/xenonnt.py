@@ -58,7 +58,7 @@ class XENONnT(Experiment):
 
     experiment_name = None
     default_batch_size = int(1e7)
-    default_eff_batch_size = int(1e4)
+    default_eff_batch_size = int(1e7)
     default_instruct_file = {
         "er_mono": "xenonnt_sr0_er_mono.json",
         "er_flat": "xenonnt_sr0_er_flat.json",
