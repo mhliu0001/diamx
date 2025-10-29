@@ -1237,6 +1237,8 @@ class Context(object):
             The QuadMesh object for the histogram plot.
         contours : ContourSet
             The ContourSet object for the contour plot.
+        contourfs : QuadContourSet
+            The QuadContourSet object for the contourf plot.
         """
         mh = self.get_bkg_template(experiment_name, bkg_name, shape_parameter_value)
         return self._plot_template(
@@ -1281,6 +1283,8 @@ class Context(object):
             The QuadMesh object for the histogram plot.
         contours : ContourSet
             The ContourSet object for the contour plot.
+        contourfs : QuadContourSet
+            The QuadContourSet object for the contourf plot.
         """
         bkg_mh = self.get_best_fit_bkg_mh(
             experiment_name,
@@ -1329,7 +1333,9 @@ class Context(object):
             The QuadContourSet object for the contourf plot.
         """
         mh = self.get_signal_template(experiment_name, signal_parameter_value)
-        self._plot_template(mh, mode, histogram_kwargs, contour_kwargs, contourf_kwargs)
+        return self._plot_template(
+            mh, mode, histogram_kwargs, contour_kwargs, contourf_kwargs
+        )
 
     def get_best_fit_local_pdf(
         self, experiment_name, signal_parameter_value, data_points, rtol=1e-10
