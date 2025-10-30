@@ -51,6 +51,7 @@ def config_preprocess(
         ] = batch_size
     new_config["signal"]["parameter_range"] = parameter_range
     new_config["signal"]["args"]["batch_size"] = batch_size
+    new_config["signal"]["args"]["eff_batch_size"] = batch_size
     new_config["signal"]["args"]["signal_spectrum_path"] = os.path.abspath(
         os.path.join(diamx_path, "data", "wimp_{mass:d}GeV.csv")
     )
