@@ -267,8 +267,11 @@ class LZ(Experiment):
             )
             signal_spectrum_map.build()
             key = jax.random.PRNGKey(0)
+            eff_batch_size = signal_config["args"].get(
+                "eff_batch_size", self.default_eff_batch_size
+            )
             key, probability = randgen.uniform(
-                key, 0.0, 1.0, shape=(int(self.default_eff_batch_size),)
+                key, 0.0, 1.0, shape=(int(eff_batch_size),)
             )
             sampled_energies = np.array(signal_spectrum_map.apply(probability))
 
