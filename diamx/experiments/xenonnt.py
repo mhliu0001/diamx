@@ -9,6 +9,7 @@ import appletree as apt
 import numpy as np
 import jax
 from jax import numpy as jnp
+from jax.tree_util import tree_map
 from multihist import Histdd
 import inference_interface
 from diamx.experiment import Experiment
@@ -123,6 +124,7 @@ class XENONnT(Experiment):
         yield_model,
         param_file_path,
         runmode,
+        max_batch_size=int(1e7),
     ):
         with HiddenPrints():  # suppress annoying appletree print
             supported_runmodes = ["er_mono", "er_flat", "er_bkg", "neutron", "nr"]
@@ -194,7 +196,44 @@ class XENONnT(Experiment):
             component.deduce()
             component.compile()
             key = apt.get_key()
-            key, df_apt_sim = component.simulate(key, batch_size, parameters)
+
+            if batch_size <= max_batch_size:
+                key, df_apt_sim = component.simulate(key, batch_size, parameters)
+            else:
+                n_batches = batch_size // max_batch_size
+                remainder = batch_size % max_batch_size
+                df_apt_sim_lists = None
+                for _ in range(n_batches):
+                    key, df_apt_sim_batch = component.simulate(
+                        key, max_batch_size, parameters
+                    )
+                    df_apt_sim_batch = jax.device_get(df_apt_sim_batch)
+                    df_apt_sim_lists_batch = tree_map(
+                        lambda x: np.asarray(x), df_apt_sim_batch
+                    )
+
+                    if df_apt_sim_lists is None:
+                        df_apt_sim_lists = df_apt_sim_lists_batch
+                    else:
+                        df_apt_sim_lists = tree_map(
+                            lambda x, y: np.concatenate([x, y], axis=0),
+                            df_apt_sim_lists,
+                            df_apt_sim_lists_batch,
+                        )
+                if remainder > 0:
+                    key, df_apt_sim_remainder = component.simulate(
+                        key, remainder, parameters
+                    )
+                    df_apt_sim_remainder = jax.device_get(df_apt_sim_remainder)
+                    df_apt_sim_remainder = tree_map(
+                        lambda x: np.asarray(x), df_apt_sim_remainder
+                    )
+                    df_apt_sim_lists = tree_map(
+                        lambda x, y: np.concatenate([x, y], axis=0),
+                        df_apt_sim_lists,
+                        df_apt_sim_remainder,
+                    )
+                df_apt_sim = df_apt_sim_lists
 
             # clear all cache
             apt.share.clear_cache()
