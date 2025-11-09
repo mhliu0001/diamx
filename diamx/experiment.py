@@ -233,7 +233,11 @@ class Experiment:
                 template_folder=template_folder,
                 generate_template=self.generate_template,
             )
-            tasks = self.config["bkgs"]
+            tasks = [
+                bkg_config
+                for bkg_config in self.config["bkgs"]
+                if "share_template_with" not in bkg_config
+            ]
             with ctx.Pool(processes=processes, maxtasksperchild=1) as pool:
                 it = pool.imap_unordered(func, tasks, chunksize=1)
                 for _ in tqdm(
@@ -245,7 +249,11 @@ class Experiment:
         else:
             # Do not use multiprocessing, especially when using JAX like in appletree
             for bkg_config in tqdm(
-                self.config["bkgs"],
+                [
+                    bkg_config
+                    for bkg_config in self.config["bkgs"]
+                    if "share_template_with" not in bkg_config
+                ],
                 f"Generating background templates for {self.experiment_name}",
             ):
                 process_bkg_template(
@@ -255,6 +263,51 @@ class Experiment:
                     output_path=self.output_path,
                     template_folder=template_folder,
                     generate_template=self.generate_template,
+                )
+        # Handle shared templates
+        for bkg_config in self.config["bkgs"]:
+            if "share_template_with" in bkg_config:
+                shared_bkg_name = bkg_config["share_template_with"]
+                if bkg_config["bkg_name"] == shared_bkg_name:
+                    raise ValueError(
+                        f"Background {bkg_config['bkg_name']} cannot share template with itself."
+                    )
+                bkg_config_to_share = None
+                for _bkg_config in self.config["bkgs"]:
+                    if _bkg_config["bkg_name"] == shared_bkg_name:
+                        bkg_config_to_share = _bkg_config
+                        break
+                if bkg_config_to_share is None:
+                    raise ValueError(
+                        f"Background {shared_bkg_name} to share template with is not found."
+                    )
+                if "share_template_with" in bkg_config_to_share:
+                    raise ValueError(
+                        f"Background {shared_bkg_name} to share template with "
+                        "cannot itself share template with another background."
+                    )
+                original_file_hash = create_hash(
+                    self.config["roi"], **bkg_config_to_share.get("args", {})
+                )
+                original_template_file_name = f"{self.experiment_name}_bkg_{shared_bkg_name}_{original_file_hash}.ii.h5"
+                new_file_hash = create_hash(
+                    self.config["roi"], **bkg_config.get("args", {})
+                )
+                new_template_file_name = f"{self.experiment_name}_bkg_{bkg_config['bkg_name']}_{new_file_hash}.ii.h5"
+                self.get_template_from_file(
+                    name=bkg_config["bkg_name"],
+                    rate=bkg_config["rate_nominal"],
+                    template_file_original=os.path.join(
+                        self.output_path,
+                        template_folder,
+                        original_template_file_name,
+                    ),
+                    hist_name=shared_bkg_name,
+                    template_file_path=os.path.join(
+                        self.output_path,
+                        template_folder,
+                        new_template_file_name,
+                    ),
                 )
 
     def get_shaped_bkg_templates(self):

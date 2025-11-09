@@ -9,7 +9,7 @@
                 "s1c": "np.linspace(3, 80, 78)",
                 "s2c": "np.logspace(2.7781512503836434, 5, 81)"
             },
-            "multiprocess_threads": 2,
+            "multiprocess_threads": 8,
             "bkgs": [
                 {
                     "bkg_name": "beta",
@@ -21,6 +21,7 @@
                     "bkg_name": "neutrino",
                     "rate_nominal": 164.85833333333335,
                     "rate_uncertainty": 9.733333333333334,
+                    "share_template_with": "beta",
                     "args": {}
                 },
                 {
@@ -28,7 +29,7 @@
                     "rate_nominal": 55.96666666666667,
                     "rate_uncertainty": 4.866666666666667,
                     "args": {
-                        "l_quenching_factor": 1.0
+                        "l_quenching_factor": 0.88
                     }
                 },
                 {
