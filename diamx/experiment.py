@@ -273,6 +273,11 @@ class Experiment:
                     if _bkg_config["bkg_name"] == shared_bkg_name:
                         bkg_config_to_share = _bkg_config
                         break
+                if "share_template_with" in bkg_config_to_share:
+                    raise ValueError(
+                        f"Background {shared_bkg_name} to share template with "
+                        "cannot itself share template with another background."
+                    )
                 if bkg_config_to_share is None:
                     raise ValueError(
                         f"Background {shared_bkg_name} to share template with is not found."
@@ -284,7 +289,7 @@ class Experiment:
                 new_file_hash = create_hash(
                     self.config["roi"], **bkg_config.get("args", {})
                 )
-                new_template_file_name = f"{self.experiment_name}_bkg_{shared_bkg_name}_{new_file_hash}.ii.h5"
+                new_template_file_name = f"{self.experiment_name}_bkg_{bkg_config['bkg_name']}_{new_file_hash}.ii.h5"
                 self.get_template_from_file(
                     name=bkg_config["bkg_name"],
                     rate=bkg_config["rate_nominal"],
