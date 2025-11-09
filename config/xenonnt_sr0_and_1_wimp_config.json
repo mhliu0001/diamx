@@ -13,7 +13,9 @@
                 {
                     "bkg_name": "er",
                     "rate_nominal": 514.3007360672976,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "xenonnt_neutron",
@@ -21,7 +23,9 @@
                     "rate_uncertainty": 0.4,
                     "rate_relative_uncertainty": true,
                     "shared_rate": true,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "ac",
@@ -61,12 +65,16 @@
                     "bkg_name": "er_flat",
                     "rate_nominal": 2356.606606606607,
                     "rate_uncertainty": 164.41441441441444,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "tritium",
                     "rate_nominal": 339.78978978978984,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "ar37",
@@ -80,7 +88,9 @@
                     "rate_uncertainty": 0.4,
                     "rate_relative_uncertainty": true,
                     "shared_rate": true,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "xenonnt_sr1_ac",
@@ -115,12 +125,16 @@
                     "bkg_name": "er_flat",
                     "rate_nominal": 459.674728940784,
                     "rate_uncertainty": 33.48623853211009,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "tritium",
                     "rate_nominal": 307.46455379482904,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "xenonnt_neutron",
@@ -128,7 +142,9 @@
                     "rate_uncertainty": 0.4,
                     "rate_relative_uncertainty": true,
                     "shared_rate": true,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "xenonnt_sr1_ac",

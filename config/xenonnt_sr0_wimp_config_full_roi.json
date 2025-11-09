@@ -13,14 +13,18 @@
                 {
                     "bkg_name": "er",
                     "rate_nominal": 514.3007360672976,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "neutron",
                     "rate_nominal": 4.221871713985279,
                     "rate_uncertainty": 0.5,
                     "rate_relative_uncertainty": true,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "ac",
