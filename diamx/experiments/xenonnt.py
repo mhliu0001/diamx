@@ -208,9 +208,7 @@ class XENONnT(Experiment):
                         key, max_batch_size, parameters
                     )
                     df_apt_sim_batch = jax.device_get(df_apt_sim_batch)
-                    df_apt_sim_lists_batch = tree_map(
-                        lambda x: np.asarray(x), df_apt_sim_batch
-                    )
+                    df_apt_sim_lists_batch = tree_map(np.asarray, df_apt_sim_batch)
 
                     if df_apt_sim_lists is None:
                         df_apt_sim_lists = df_apt_sim_lists_batch
@@ -225,14 +223,15 @@ class XENONnT(Experiment):
                         key, remainder, parameters
                     )
                     df_apt_sim_remainder = jax.device_get(df_apt_sim_remainder)
-                    df_apt_sim_remainder = tree_map(
-                        lambda x: np.asarray(x), df_apt_sim_remainder
-                    )
-                    df_apt_sim_lists = tree_map(
-                        lambda x, y: np.concatenate([x, y], axis=0),
-                        df_apt_sim_lists,
-                        df_apt_sim_remainder,
-                    )
+                    df_apt_sim_remainder = tree_map(np.asarray, df_apt_sim_remainder)
+                    if df_apt_sim_lists is None:
+                        df_apt_sim_lists = df_apt_sim_remainder
+                    else:
+                        df_apt_sim_lists = tree_map(
+                            lambda x, y: np.concatenate([x, y], axis=0),
+                            df_apt_sim_lists,
+                            df_apt_sim_remainder,
+                        )
                 df_apt_sim = df_apt_sim_lists
 
             # clear all cache

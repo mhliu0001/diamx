@@ -266,7 +266,7 @@ class Experiment:
                 )
         # Handle shared templates
         for bkg_config in self.config["bkgs"]:
-            if "share_template" in bkg_config:
+            if "share_template_with" in bkg_config:
                 shared_bkg_name = bkg_config["share_template_with"]
                 bkg_config_to_share = None
                 for _bkg_config in self.config["bkgs"]:
@@ -280,7 +280,7 @@ class Experiment:
                 original_file_hash = create_hash(
                     self.config["roi"], **bkg_config_to_share.get("args", {})
                 )
-                original_template_file_name = f"{self.experiment_name}_bkg_{bkg_config['bkg_name']}_{original_file_hash}.ii.h5"
+                original_template_file_name = f"{self.experiment_name}_bkg_{shared_bkg_name}_{original_file_hash}.ii.h5"
                 new_file_hash = create_hash(
                     self.config["roi"], **bkg_config.get("args", {})
                 )

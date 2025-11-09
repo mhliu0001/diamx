@@ -255,6 +255,7 @@
                     "bkg_name": "neutrino",
                     "rate_nominal": 167.29166666666669,
                     "rate_uncertainty": 9.733333333333334,
+                    "share_template_with": "beta",
                     "args": {}
                 },
                 {
@@ -315,18 +316,21 @@
                     "bkg_name": "kr85_ar39_detgamma",
                     "rate_nominal": 268.7727272727273,
                     "rate_uncertainty": 36.5,
+                    "share_template_with": "pb214",
                     "args": {}
                 },
                 {
                     "bkg_name": "solar_neutrino_er",
                     "rate_nominal": 169.22727272727275,
                     "rate_uncertainty": 9.954545454545455,
+                    "share_template_with": "pb214",
                     "args": {}
                 },
                 {
                     "bkg_name": "pb212_po218",
                     "rate_nominal": 104.025,
                     "rate_uncertainty": 12.443181818181818,
+                    "share_template_with": "pb214",
                     "args": {}
                 },
                 {
