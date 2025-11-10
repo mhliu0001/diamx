@@ -15,7 +15,9 @@
                     "bkg_name": "beta",
                     "rate_nominal": 1307.9166666666667,
                     "rate_uncertainty": 219.0,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "neutrino",
@@ -45,7 +47,9 @@
                     "bkg_name": "xe136",
                     "rate_nominal": 91.85833333333333,
                     "rate_uncertainty": 14.6,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "ar37",
