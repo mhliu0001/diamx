@@ -271,7 +271,7 @@
                 },
                 {
                     "bkg_name": "neutrino",
-                    "rate_nominal": 167.29166666666669,
+                    "rate_nominal": 164.85833333333335,
                     "rate_uncertainty": 9.733333333333334,
                     "share_template_with": "beta",
                     "args": {}
@@ -281,7 +281,7 @@
                     "rate_nominal": 55.96666666666667,
                     "rate_uncertainty": 4.866666666666667,
                     "args": {
-                        "l_quenching_factor": 1.0
+                        "l_quenching_factor": 0.88
                     }
                 },
                 {
@@ -289,8 +289,8 @@
                     "rate_nominal": 30.416666666666668,
                     "rate_uncertainty": 8.516666666666666,
                     "args": {
-                        "ll_quenching_factor": 1.0,
-                        "lm_quenching_factor": 1.0
+                        "ll_quenching_factor": 0.88,
+                        "lm_quenching_factor": 0.88
                     }
                 },
                 {
@@ -359,7 +359,9 @@
                     "bkg_name": "tritium_c14",
                     "rate_nominal": 96.725,
                     "rate_uncertainty": 5.475,
-                    "args": {}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "xe136",
@@ -374,7 +376,7 @@
                     "rate_nominal": 5.3090909090909095,
                     "rate_uncertainty": 0.9954545454545455,
                     "args": {
-                        "l_quenching_factor": 0.87
+                        "l_quenching_factor": 0.88
                     }
                 },
                 {
@@ -404,7 +406,7 @@
                     "rate_nominal": 32.18636363636364,
                     "rate_uncertainty": 6.470454545454546,
                     "args": {
-                        "lm_quenching_factor": 0.87
+                        "lm_quenching_factor": 0.88
                     }
                 }
             ],

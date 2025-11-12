@@ -9,7 +9,7 @@
                 "s1c": "np.linspace(3, 80, 78)",
                 "s2c": "np.logspace(2.7781512503836434, 5, 81)"
             },
-            "multiprocess_threads": 16,
+            "multiprocess_threads": 2,
             "bkgs": [
                 {
                     "bkg_name": "beta",
@@ -31,7 +31,7 @@
                     "rate_nominal": 55.96666666666667,
                     "rate_uncertainty": 4.866666666666667,
                     "args": {
-                        "l_quenching_factor": 1.0
+                        "l_quenching_factor": 0.88
                     }
                 },
                 {
@@ -39,8 +39,8 @@
                     "rate_nominal": 30.416666666666668,
                     "rate_uncertainty": 8.516666666666666,
                     "args": {
-                        "ll_quenching_factor": 1.0,
-                        "lm_quenching_factor": 1.0
+                        "ll_quenching_factor": 0.88,
+                        "lm_quenching_factor": 0.88
                     }
                 },
                 {
@@ -74,7 +74,7 @@
                 "s1c": "np.linspace(3, 80, 78)",
                 "s2c": "np.logspace(2.8095597146352675, 4.5, 81)"
             },
-            "multiprocess_threads": 16,
+            "multiprocess_threads": 2,
             "bkgs": [
                 {
                     "bkg_name": "pb214",
