@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "diamx"
-version = "0.1.0"
+version = "0.2.0"
 description="Dark matter Inference of Alternative Models with Xenon-based detectors"
 readme = "README.md"
 license = "Apache-2.0"
