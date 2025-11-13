@@ -101,6 +101,7 @@ def _pool_task(pool_parameters):
                 best_fit, max_ll = alea_model.fit(
                     stabilized_parameter=stabilized_parameter
                 )
+                best_fit_value = best_fit[poi_name]
 
                 if exact_asymptotic:
                     lower, upper = alea_model.confidence_interval_asymptotic(
@@ -122,12 +123,12 @@ def _pool_task(pool_parameters):
                 significance = float(
                     np.sqrt(2.0 * (np.clip(max_ll - ll_zero, 0, None)))
                 )
-                return np.array([lower, upper, significance], float)
+                return np.array([lower, upper, significance, best_fit_value], float)
 
             # …then wrap it with the *current* timeout value.
             do_fit_with_timeout = timeout(timeout_seconds)(do_fit)
 
-            lower, upper, significance = do_fit_with_timeout(
+            lower, upper, significance, best_fit_value = do_fit_with_timeout(
                 alea_model,
                 poi_name,
                 stabilized_parameter,
@@ -138,7 +139,8 @@ def _pool_task(pool_parameters):
             )
 
         return np.array(
-            [signal_parameter_value, lower, upper, significance], dtype=float
+            [signal_parameter_value, lower, upper, significance, best_fit_value],
+            dtype=float,
         )
     except Exception:
         tb = traceback.format_exc(limit=8)
