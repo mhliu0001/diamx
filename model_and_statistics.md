@@ -2,7 +2,7 @@
 
 # Signal & Background Modeling and Statistical Inference in `diamx`
 
-**Minghao Liu, June 11, 2025**
+**Minghao Liu, Nov 11, 2025**
 
 [TOC]
 
@@ -300,7 +300,7 @@ f(\tilde{t}_{\mu}|\mu^\prime=\mu) = \begin{cases}
 \frac{1}{2}\frac{1}{\sqrt{2\pi}} \frac{1}{\sqrt{\tilde{t}_{\mu}}}e^{-\tilde{t}_{\mu}/2} + \frac{1}{\sqrt{2\pi} (2\mu/\sigma)}\mathrm{exp}\left[-\frac{1}{2}\frac{(\tilde{t}_{\mu}+\mu^2/\sigma^2)^2}{(2\mu/\sigma)^2}\right], \quad  \tilde{t}_{\mu} > \mu^2/\sigma^2
 \end{cases}
 $$
-In `diamx` we use the test statistic $\tilde{t}_{\mu}$, but use the $\chi^2$ distribution as $t_{\mu}$. In principle we can estimate $\sigma$ with an Asimov dataset, but for simplicity we assume that $\tilde{t}_{\mu}$ is similar to $t_{\mu}$, so that $\sigma$ does not enter the expression.
+In `diamx` we use the test statistic $\tilde{t}_{\mu}$, and estimate $\sigma$ with an Asimov dataset (`exact_asymptotic=True`).
 
 ### Confidence Intervals
 
@@ -364,7 +364,7 @@ Fig. 2 shows the comparison between the contours from literature and the contour
 
 | <img src="plots/xenonnt_sr0_cs1_cs2_contours.png" style="zoom:25%;" /> |
 | :----------------------------------------------------------: |
-| **Fig. 4.1:** The contours for different backgrounds modeled in `diamx` for XENONnT SR0. Black points show the digitized events extracted from [[1]](#xenonnt_sr0). Dark and light, blue, orange, purple and green shading show the regions containing 68% and 95% of the events from ER, neutron, AC and surface, respectively. The shading comes from Fig. 3 in [[1]](#xenonnt_sr0). Note that the 68% contour for the neutron background is not available. The solid and dashed lines of the same color show the same quantiles calculated with `diamx`, while the contours for the surface background are disabled because contours are not well-defined for a piecewise-uniform distribution. The figure also shows a horizontal dashed line corresponding to cS2=400PE, below which the NR model is not valid, shown by the apparent discrepancy between literature contours and `diamx` contours. |
+| **Fig. 4.1:** The contours for different backgrounds modeled in `diamx` for XENONnT SR0. The pie charts show the digitized events extracted from [[1]](#xenonnt_sr0), and the respective fraction of the components. Dark and light, blue, orange, purple and green shading show the regions containing 68% and 95% of the events from ER, neutron, AC and surface, respectively. The shading comes from Fig. 3 in [[1]](#xenonnt_sr0). Note that the 68% contour for the neutron background is not available. The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. The figure also shows a horizontal dashed line corresponding to cS2=400PE, below which the NR model is not valid, shown by the apparent discrepancy between literature contours and `diamx` contours. |
 
 To deal with this problem, we add another ROI cut and require that the events should have cS2 > 400PE. This cut also has the benefit of reducing effects from surface and AC events, where the model in `diamx` may not be accurate. 
 
@@ -379,11 +379,11 @@ Table 4.1 shows the nominal and best-fit expected number of events for each mode
 |   CE$\nu$NS    |   $0.23 \pm 0.06$    |        --         |    $0.23 \pm 0.06$    |         --         |
 |       AC       |    $4.3 \pm 0.9$     | $1$ (placeholder) |  $4.4^{+0.9}_{-0.8}$  |   $0.0 \pm 0.7$    |
 |    Surface     |      $14 \pm 3$      | $1$ (placeholder) |      $12 \pm 2$       |   $3.0 \pm 1.7$    |
-|      WIMP      |          --          |        --         |         $2.6$         |       $3.1$        |
+|      WIMP      |          --          |        --         |         $2.6$         |       $3.2$        |
 
 | <img src="plots/xenonnt_sr0_wimp_ci_400PE.png" alt="xenonnt_sr0_wimp_ci_400PE.png" style="zoom:25%;" /> |
 | :----------------------------------------------------------: |
-| **Fig. 4.2:** Upper limit on spin-independent WIMP-nucleon cross section at 90% confidence level as a function of the WIMP mass from the XENONnT SR0 results. The orange line shows the literature value without applying power constraints, and the blue line shows the upper limit from `diamx`. The limits matches well at masses above 40 GeV/c${}^2$. |
+| **Fig. 4.2:** Upper limit on spin-independent WIMP-nucleon cross section at 90% confidence level as a function of the WIMP mass from the XENONnT SR0 results. The orange line shows the literature value without applying power constraints, and the blue line shows the upper limit from `diamx`. |
 
 ### XENONnT SR1
 
@@ -398,7 +398,7 @@ Fig. 4.3 shows the comparison between the contours from literature and the conto
 
 | <img src="plots/xenonnt_sr1a_cs1_cs2_contours.png" style="zoom:12.5%;" /> <img src="plots/xenonnt_sr1b_cs1_cs2_contours.png" style="zoom:12.5%;" /> |
 | :----------------------------------------------------------: |
-| **Fig. 4.3:** The contours for different backgrounds / signal modeled in `diamx` for XENONnT SR1a (left), and XENONnT SR1b (right). Black points show the digitized events extracted from [[2]](#xenonnt_sr1). Dark and light, blue, orange and purple shading show the regions containing 68% and 95% of the events from ER, 200 GeV/c${}^2$ WIMP and AC, respectively. The shading comes from Fig. 2 in [[2]](#xenonnt_sr1). The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. The figure also shows a horizontal dashed line corresponding to cS2=400PE, below which the NR model is not valid, shown by the apparent discrepancy between literature contours and `diamx` contours. |
+| **Fig. 4.3:** The contours for different backgrounds / signal modeled in `diamx` for XENONnT SR1a (left), and XENONnT SR1b (right). Pie charts show the digitized events extracted from [[2]](#xenonnt_sr1), and the fractions of different components in the best-fit model. Dark and light, blue, red and purple shading show the regions containing 68% and 95% of the events from ER, 200 GeV/c${}^2$ WIMP and AC, respectively. The shading comes from Fig. 2 in [[2]](#xenonnt_sr1). The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. |
 
 Table 4.2a-c shows the comparison between expected number of events from literature and from `diamx`. The results agree well, except for deviations in ${}^3$H like and ${}^{37}$Ar components in SR1a and SR1b, which are still within uncertainty and likely caused by loss of events when extracting data points. Fig. 5 shows the upper limit for spin-independent WIMP-nucleon cross section at a 90% confidence level. The `diamx` upper limit agrees well with literature values at WIMP mass larger than 50 GeV/c${}^2$. 
 
@@ -435,7 +435,7 @@ Table 4.2a-c shows the comparison between expected number of events from literat
 |     Component Name      | Nominal (literature) | Nominal (`diamx`) | Best fit (literature) | Best fit (`diamx`) |
 | :---------------------: | :------------------: | :---------------: | :-------------------: | :----------------: |
 |        ER (flat)        |     $151 \pm 11$     |   $151 \pm 11$    |     $154 \pm 10$      |    $156 \pm 10$    |
-|    ER (${}^3$H like)    |        $101$         |       $101$       |   $80^{+18}_{-17}$    |    $70 \pm 17$     |
+|    ER (${}^3$H like)    |        $101$         |       $101$       |   $80^{+18}_{-17}$    |    $69 \pm 17$     |
 |    ER (${}^{37}$Ar)     |          --          |        --         |          --           |         --         |
 |         Neutron         |    $0.7 \pm 0.3$     |    $0.7\pm0.3$    |     $0.7 \pm 0.3$     |   $0.7 \pm 0.3$    |
 |    CE$\nu$NS (solar)    |  $0.019 \pm 0.006$   |        --         |   $0.019 \pm 0.006$   |         --         |
@@ -444,7 +444,7 @@ Table 4.2a-c shows the comparison between expected number of events from literat
 |         Surface         |   $0.77 \pm 0.09$    |        --         |    $0.76 \pm 0.09$    |         --         |
 | WIMP (200 GeV/c$^{2}$)  |          --          |        --         |         $2.1$         |       $2.2$        |
 
-| <img src="plots/xenonnt_sr1_wimp_ci_400PE.png" alt="xenonnt_sr1_wimp_ci_400PE.png" style="zoom:25%;" /> |
+| <img src="plots/xenonnt_sr1_wimp_ci.png" alt="xenonnt_sr1_wimp_ci.png" style="zoom:25%;" /> |
 | :----------------------------------------------------------: |
 | **Fig. 4.4:** Upper limit on spin-independent WIMP-nucleon cross section at 90% confidence level as a function of the WIMP mass from the XENONnT SR0 & 1 results. The orange line shows the literature value without applying power constraints, and the blue line shows the upper limit from `diamx`. The limits matches well at masses above 50 GeV/c${}^2$. |
 
@@ -463,7 +463,7 @@ The following background components are modeled:
 
 | <img src="plots/lz_ws2022_s1c_s2c_contours.png" style="zoom:25%;" /> |
 | :----------------------------------------------------------: |
-| **Fig. 4.5:** The $1\sigma$ and $2\sigma$ contours for different backgrounds modeled in `diamx` for LZ WS2022. Black points show the digitized events extracted from [[3]](#lz_ws2022). Dark and light, blue, black, and orange shading show the regions containing 68% and 95% of the events from background (best-fit), ${}^{37}$Ar and 30 GeV/c${}^2$ WIMP, respectively. The shading comes from Fig. 4 in [[3]](#lz_ws2022). The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. |
+| **Fig. 4.5:** The $1\sigma$ and $2\sigma$ contours for different backgrounds modeled in `diamx` for LZ WS2022. Pie charts show the digitized events extracted from [[3]](#lz_ws2022) and the fractions of different components in the best-fit model. Dark and light, blue, green, and red shading show the regions containing 68% and 95% of the events from ER background (best-fit), ${}^{37}$Ar and 30 GeV/c${}^2$ WIMP, respectively. The shading comes from Fig. 4 in [[3]](#lz_ws2022). The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. |
 
 Table 4.3 shows the comparison between expected number of events from literature and from `diamx`, which shows good agreement. Fig. 4.6 shows the upper limit of WIMP-nucleon scattering cross section. The upper limits for WIMP mass larger than 80 GeV/c${}^{2}$ align well with the published results.
 
@@ -473,12 +473,12 @@ Table 4.3 shows the comparison between expected number of events from literature
 | :---------------------: | :------------------: | :----------------: | :-------------------: | :----------------: |
 | $\beta$ decays + Det ER |     $215 \pm 36$     |    $215 \pm 36$    |     $222 \pm 16$      |    $224 \pm 16$    |
 |        $\nu$ ER         |    $27.1 \pm 1.6$    |   $27.1 \pm 1.6$   |    $27.2 \pm 1.6$     |   $27.1 \pm 1.6$   |
-|      ${}^{127}$Xe       |    $9.2 \pm 0.8$     |   $9.2 \pm 0.8$    |     $9.3 \pm 0.8$     |   $9.2 \pm 0.8$    |
+|      ${}^{127}$Xe       |    $9.2 \pm 0.8$     |   $9.2 \pm 0.8$    |     $9.3 \pm 0.8$     |   $9.3 \pm 0.8$    |
 |      ${}^{124}$Xe       |    $5.0 \pm 1.4$     |   $5.0 \pm 1.4$    |     $5.2 \pm 1.4$     |   $5.3 \pm 1.4$    |
-|      ${}^{136}$Xe       |    $15.1 \pm 2.4$    |   $15.1 \pm 2.4$   |    $15.2 \pm 2.4$     |   $15.1 \pm 2.4$   |
+|      ${}^{136}$Xe       |    $15.1 \pm 2.4$    |   $15.1 \pm 2.4$   |    $15.2 \pm 2.4$     |   $15.2 \pm 2.4$   |
 |    ${}^8$B CE$\nu$NS    |   $0.14 \pm 0.01$    |         --         |    $0.15 \pm 0.01$    |         --         |
 |       Accidentals       |    $1.2 \pm 0.3$     |         --         |     $1.2 \pm 0.3$     |         --         |
-|       ${}^{37}$Ar       |      $[0, 288]$      | $50$ (placeholder) | $52.5^{+9.6}_{-8.9}$  |   $50.3 \pm 9.1$   |
+|       ${}^{37}$Ar       |      $[0, 288]$      | $50$ (placeholder) | $52.5^{+9.6}_{-8.9}$  |   $50.5 \pm 9.1$   |
 |    Detector neutrons    |     $0.0^{+0.2}$     |         --         |     $0.0^{+0.2}$      |         --         |
 |   30 GeV/c${}^2$ WIMP   |          --          |         --         |     $0.0^{+0.6}$      |       $0.0$        |
 
@@ -496,27 +496,27 @@ For LZ WS2024 we model the following components:
 * ${}^{212}$Pb + ${}^{218}$Po $\beta$s: flat ER spectrum
 * Tritium + $^{14}$C $\beta$s: assuming event ratio of 8:1 (introduced by calibration with tritiated methane). Tritium spectrum comes from KATRIN [[12]](#katrin_tritium), and ${}^{14}$C spectrum is calculated with BetaShape [[14]](#beta_shape).
 * ${}^{136}$Xe 2$\nu$bb: 2$\nu$bb spectrum, from [nucleartheory.yale.edu](https://nucleartheory.yale.edu/double-beta-decay-phase-space-factors) [[13]](#xe136_double_beta).
-* ${}^{124}$Xe DEC: 10.00 keV LL shell double electron capture (1.4%) and 5.98 keV LM shell double electron capture (0.8%). The LM shell double electron capture uses a charge yield ratio of 0.87, while $Q_{LL}/Q_{\beta}$  is treated as a free shape parameter within $[0.65, 0.87]$.
-* ${}^{127}$Xe + ${}^{125}$Xe EC: 5.2 keV L-shell electron capture, with lowered charge yield $Q_{L}/Q_{\beta}=0.87$.
+* ${}^{124}$Xe DEC: 10.00 keV LL shell double electron capture (1.4%) and 5.98 keV LM shell double electron capture (0.8%). The LM shell double electron capture uses a charge yield ratio of 0.88, while $Q_{LL}/Q_{\beta}$  is treated as a free shape parameter within $[0.65, 0.87]$.
+* ${}^{127}$Xe + ${}^{125}$Xe EC: 5.2 keV L-shell electron capture, with lowered charge yield $Q_{L}/Q_{\beta}=0.88$.
 * AC: modeled using Gaussian-like profile from contours.
 
 The contours from `diamx` and from literature are compared in Fig. 4.7. 
 
 | <img src="plots/lz_ws2024_s1c_s2c_contours.png" style="zoom:25%;" /> |
 | :----------------------------------------------------------: |
-| **Fig. 4.7:** The contours for different backgrounds / signal modeled in `diamx` for LZ WS2024. Black points show the digitized events extracted from [[4]](#lz_ws2024). Dark and light, blue, orange, purple, and black shading show the regions containing 68% and 95% of the events from ER background (best-fit), 40 GeV/c${}^2$ WIMP, accidental coincidence, and ${}^{124}$Xe (best-fit), respectively. The shading comes from Fig. 3 in [[4]](#lz_ws2024). The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. The contours of the AC template does not fully match because of a different ROI selection. |
+| **Fig. 4.7:** The contours for different backgrounds / signal modeled in `diamx` for LZ WS2024. Pie charts show the digitized events extracted from [[4]](#lz_ws2024), and the fractions of different components in the best-fit model. Dark and light, blue, red, purple, and black shading show the regions containing 68% and 95% of the events from ER background (best-fit), 40 GeV/c${}^2$ WIMP, accidental coincidence, and ${}^{124}$Xe (best-fit), respectively. The shading comes from Fig. 3 in [[4]](#lz_ws2024). The solid and dashed lines of the same color show the same quantiles calculated with `diamx`. The contours of the AC template does not fully match because of a different ROI selection. |
 
-Table 4.4 shows the comparison between expected number of events from literature and from `diamx`, which shows good agreement. Fig. 4.8 shows the upper limit of WIMP-nucleon scattering cross section. The upper limit from literature at high WIMP mass is significantly lower than calculated from `diamx`, which is likely caused by lack of radon tagging model in `diamx`. The best-fit $Q_{LL}/Q_{\beta} = 0.69 \pm 0.02$, which agrees with the published result $0.70 \pm 0.04$. 
+Table 4.4 shows the comparison between expected number of events from literature and from `diamx`, which shows good agreement. Fig. 4.8 shows the upper limit of WIMP-nucleon scattering cross section. The upper limit from literature at high WIMP mass is significantly lower than calculated from `diamx`, which is likely caused by lack of radon tagging model in `diamx`. The best-fit $Q_{LL}/Q_{\beta} = 0.69 \pm 0.03$, which agrees with the published result $0.70 \pm 0.04$. 
 
 **Table 4.4:** Number of events for each model component for LZ WS2024 in a combined fit of LZ WS2022 + LZ WS2024. The “nominal” columns show expectation values and uncertainties before fitting, and the "best-fit" columns show best-fit expectation values and uncertainties for a free fit including a 40 GeV/c${}^2$ WIMP signal component. The values in the "literature" column comes from Tab. I of [[4]](#lz_ws2024), while the  `diamx` columns contain results calculated from `diamx`.
 
 |                   Component Name                    | Nominal (literature) | Nominal (`diamx`) | Best fit (literature) | Best fit (`diamx`) |
 | :-------------------------------------------------: | :------------------: | :---------------: | :-------------------: | :----------------: |
-|                ${}^{214}$Pb $\beta$s                |     $743 \pm 88$     |   $743 \pm 88$    |     $733 \pm 34$      |    $750 \pm 39$    |
+|                ${}^{214}$Pb $\beta$s                |     $743 \pm 88$     |   $743 \pm 88$    |     $733 \pm 34$      |    $749 \pm 39$    |
 | ${}^{85}$Kr + ${}^{39}$Ar $\beta$s + det. $\gamma$s |     $162 \pm 22$     |   $162 \pm 22$    |     $161 \pm 21$      |    $163 \pm 21$    |
 |                   Solar $\nu$ ER                    |     $102 \pm 6$      |    $102 \pm 6$    |      $102 \pm 6$      |    $102 \pm 6$     |
-|        ${}^{212}$Pb + ${}^{218}$Po $\beta$s         |    $62.7 \pm 7.5$    |  $62.7 \pm 7.5$   |    $63.7 \pm 7.4$     |   $62.7 \pm 7.5$   |
-|             Tritium + $^{14}$C $\beta$s             |    $58.3 \pm 3.3$    |  $58.3 \pm 3.3$   |    $59.7 \pm 3.3$     |   $58.3 \pm 3.3$   |
+|        ${}^{212}$Pb + ${}^{218}$Po $\beta$s         |    $62.7 \pm 7.5$    |  $62.7 \pm 7.5$   |    $63.7 \pm 7.4$     |   $62.8 \pm 7.5$   |
+|             Tritium + $^{14}$C $\beta$s             |    $58.3 \pm 3.3$    |  $58.3 \pm 3.3$   |    $59.7 \pm 3.3$     |   $58.4 \pm 3.3$   |
 |                ${}^{136}$Xe 2$\nu$bb                |    $55.6 \pm 8.3$    |  $55.6 \pm 8.3$   |    $55.8 \pm 8.2$     |   $55.5 \pm 8.2$   |
 |                  ${}^{124}$Xe DEC                   |    $19.4 \pm 3.9$    |  $19.4 \pm 3.9$   |    $21.4 \pm 3.6$     |   $21.5 \pm 3.5$   |
 |           ${}^{127}$Xe + ${}^{125}$Xe EC            |    $3.2 \pm 0.6$     |   $3.2 \pm 0.6$   |     $2.7 \pm 0.6$     |   $3.2 \pm 0.6$    |
