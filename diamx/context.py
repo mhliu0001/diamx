@@ -639,9 +639,12 @@ class Context(object):
 
                 alea_model.data = self.get_data(alea_model, alea_config)
 
-            _, max_ll = alea_model.fit(
+            best_fit, max_ll = alea_model.fit(
                 stabilized_parameter=stabilized_parameter, fit_strategy=fit_strategy
             )
+            best_fit_value = best_fit[
+                f"{self.config['signal']['signal_name']}_rate_multiplier"
+            ]
             if exact_asymptotic:
                 assert (
                     confidence_interval_kind == "central"
@@ -675,7 +678,13 @@ class Context(object):
 
             ci_and_discovery.append(
                 np.array(
-                    [signal_parameter_value, lower_limit, upper_limit, significance]
+                    [
+                        signal_parameter_value,
+                        lower_limit,
+                        upper_limit,
+                        significance,
+                        best_fit_value,
+                    ]
                 )
             )
 
