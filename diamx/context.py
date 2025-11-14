@@ -2,6 +2,7 @@ import hashlib
 import json
 from json import JSONDecodeError
 import os
+import tempfile
 import diamx.experiment
 import numpy as np
 import pandas as pd
@@ -275,7 +276,7 @@ class Context(object):
             # Stored as list of (key, value) pairs to handle non-string dict keys.
             eff_unc_hash = hashlib.sha256(
                 json.dumps(self.config["signal"], sort_keys=True).encode("utf-8")
-            ).hexdigest()[:12]
+            ).hexdigest()  # Use full hash to minimize collision risk
             eff_unc_file_name = os.path.join(
                 self.output_path, f"{experiment_name}_eff_unc_{eff_unc_hash}.json"
             )
@@ -294,11 +295,38 @@ class Context(object):
                 eff_unc = experiment_instance.get_eff_uncertainty(self.config["signal"])
                 # Store as list of pairs to avoid JSON string keys
                 eff_unc_list = list(eff_unc.items())
+                
+                # Clean up old cache files for this experiment to prevent accumulation
+                old_cache_pattern = os.path.join(
+                    self.output_path, f"{experiment_name}_eff_unc_*.json"
+                )
+                for old_cache_file in glob(old_cache_pattern):
+                    if old_cache_file != eff_unc_file_name:
+                        try:
+                            os.remove(old_cache_file)
+                        except OSError:
+                            pass  # Ignore errors when removing old cache files
+                
+                # Use atomic write operation to prevent corruption from concurrent access
                 try:
-                    with open(eff_unc_file_name, "w") as f:
-                        json.dump(eff_unc_list, f)
+                    with tempfile.NamedTemporaryFile(
+                        mode='w', 
+                        dir=self.output_path, 
+                        delete=False,
+                        suffix='.tmp'
+                    ) as tmp_file:
+                        json.dump(eff_unc_list, tmp_file)
+                        tmp_file_name = tmp_file.name
+                    # Atomic rename operation
+                    os.replace(tmp_file_name, eff_unc_file_name)
                 except IOError as e:
                     warnings.warn(f"Failed to write efficiency uncertainty file: {e}")
+                    # Clean up temporary file if it exists
+                    try:
+                        if 'tmp_file_name' in locals():
+                            os.remove(tmp_file_name)
+                    except OSError:
+                        pass
 
             alea_config["parameter_definition"][
                 f"{experiment_name}_signal_efficiency"
