@@ -1,3 +1,4 @@
+import hashlib
 import json
 from json import JSONDecodeError
 import os
@@ -268,16 +269,44 @@ class Context(object):
                         shape_parameter_name
                     ] = shape_parameter_alea_config
 
-            # Efficiency
+            # Efficiency uncertainty calculation can be computationally expensive.
+            # Cache results based on a hash of the signal configuration to avoid
+            # redundant computation. Cache is invalidated when signal config changes.
+            # Stored as list of (key, value) pairs to handle non-string dict keys.
+            eff_unc_hash = hashlib.sha256(
+                json.dumps(self.config["signal"], sort_keys=True).encode("utf-8")
+            ).hexdigest()[:12]
+            eff_unc_file_name = os.path.join(
+                self.output_path, f"{experiment_name}_eff_unc_{eff_unc_hash}.json"
+            )
+            read_cache_success = False
+            if os.path.exists(eff_unc_file_name):
+                try:
+                    with open(eff_unc_file_name, "r") as f:
+                        eff_unc_list = json.load(f)
+                    eff_unc = dict(eff_unc_list)
+                    read_cache_success = True
+                except (IOError, JSONDecodeError) as e:
+                    warnings.warn(
+                        f"Failed to read efficiency uncertainty file: {e}. Falling back to recomputation."
+                    )
+            if not read_cache_success:
+                eff_unc = experiment_instance.get_eff_uncertainty(self.config["signal"])
+                # Store as list of pairs to avoid JSON string keys
+                eff_unc_list = list(eff_unc.items())
+                try:
+                    with open(eff_unc_file_name, "w") as f:
+                        json.dump(eff_unc_list, f)
+                except IOError as e:
+                    warnings.warn(f"Failed to write efficiency uncertainty file: {e}")
+
             alea_config["parameter_definition"][
                 f"{experiment_name}_signal_efficiency"
             ] = {
                 "conditioning_parameter_name": self.config["signal"]["parameter_name"],
                 "nominal_value": 1.0,
                 "ptype": "efficiency",
-                "uncertainty": experiment_instance.get_eff_uncertainty(
-                    self.config["signal"]
-                ),
+                "uncertainty": eff_unc,
                 "relative_uncertainty": True,
                 "fittable": experiment_instance.config["eff"].get("fittable", True),
                 "fit_limits": experiment_instance.config["eff"]["fit_limits"],
