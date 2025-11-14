@@ -1,3 +1,4 @@
+import hashlib
 import json
 from json import JSONDecodeError
 import os
@@ -269,15 +270,31 @@ class Context(object):
                     ] = shape_parameter_alea_config
 
             # Efficiency
+            eff_unc_hash = hashlib.sha256(
+                json.dumps(self.config["signal"], sort_keys=True).encode("utf-8")
+            ).hexdigest()[:12]
+            eff_unc_file_name = os.path.join(
+                self.output_path, f"{experiment_name}_eff_unc_{eff_unc_hash}.json"
+            )
+            if not os.path.exists(eff_unc_file_name):
+                eff_unc = experiment_instance.get_eff_uncertainty(self.config["signal"])
+                # Store as list of pairs to avoid JSON string keys
+                eff_unc_list = list(eff_unc.items())
+                with open(eff_unc_file_name, "w") as f:
+                    json.dump(eff_unc_list, f)
+            else:
+                with open(eff_unc_file_name, "r") as f:
+                    eff_unc_list = json.load(f)
+                # Convert back to dict; keys preserve type (int/float/str)
+                eff_unc = dict(eff_unc_list)
+
             alea_config["parameter_definition"][
                 f"{experiment_name}_signal_efficiency"
             ] = {
                 "conditioning_parameter_name": self.config["signal"]["parameter_name"],
                 "nominal_value": 1.0,
                 "ptype": "efficiency",
-                "uncertainty": experiment_instance.get_eff_uncertainty(
-                    self.config["signal"]
-                ),
+                "uncertainty": eff_unc,
                 "relative_uncertainty": True,
                 "fittable": experiment_instance.config["eff"].get("fittable", True),
                 "fit_limits": experiment_instance.config["eff"]["fit_limits"],
