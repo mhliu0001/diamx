@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/iostream.h>
 #include "nestDiamxCore.hh"
 
 #define STRINGIFY(x) #x
@@ -60,17 +61,61 @@ PYBIND11_MODULE(nestDiamx, m) {
         });
 
 
-    m.def("lz_model", &LZModel,
-          "Return the s1c_phd and s2c_phd with LZ model.\n"
-          "Parameters:\n"
-          "  detector_name (str): Specifies which LZ detector to use. Can be 'lz_ws2022', 'lz_sr1' or 'lz_ws2024'.\n"
-          "  type (str): Interaction type. Supported types are 'NR', 'ER', 'DEC', 'beta'.\n"
-          "  seed (uint64): Seed. If 0, use current time.\n"
-          "  spectrumFileName (str): Spectrum to be used in energy sampling. Must be a csv file.\n"
-          "  numEvts (uint64): Number of simulated events.\n"
-          "Returns:\n"
-          "  InferenceObservableArray: class (not dict) with two attributes:\n"
-          "    s1c_phd (list): corrected S1 in LZ phd units.\n"
-          "    s2c_phd (list): corrected S2 in LZ phd units.\n"
+    // m.def("lz_model", &LZModel,
+    //       "Return the s1c_phd and s2c_phd with LZ model.\n"
+    //       "Parameters:\n"
+    //       "  detector_name (str): Specifies which LZ detector to use. Can be 'lz_ws2022', 'lz_sr1' or 'lz_ws2024'.\n"
+    //       "  type (str): Interaction type. Supported types are 'NR', 'ER', 'DEC', 'beta'.\n"
+    //       "  seed (uint64): Seed. If 0, use current time.\n"
+    //       "  spectrumFileName (str): Spectrum to be used in energy sampling. Must be a csv file.\n"
+    //       "  numEvts (uint64): Number of simulated events.\n"
+    //       "Returns:\n"
+    //       "  InferenceObservableArray: class (not dict) with two attributes:\n"
+    //       "    s1c_phd (list): corrected S1 in LZ phd units.\n"
+    //       "    s2c_phd (list): corrected S2 in LZ phd units.\n"
+    // );
+    m.def(
+        "lz_model",
+        [](const std::string& detector_name,
+        const std::string& type,
+        std::uint64_t seed,
+        const std::string& spectrumFileName,
+        std::uint64_t numEvts,
+        double dec_quenching_factor)
+        {
+            namespace py = pybind11;
+
+            // Redirect stderr to an in-memory buffer (StringIO) we don't use
+            auto io = py::module_::import("io");
+            auto buffer = io.attr("StringIO")();  // acts like a file object with write()
+
+            py::scoped_ostream_redirect redirect_cerr(
+                std::cerr,  // C++ stream
+                buffer      // Python file-like object
+            );
+
+            // Call the real implementation
+            return LZModel(
+                detector_name,
+                type,
+                seed,
+                spectrumFileName,
+                numEvts,
+                dec_quenching_factor
+            );
+        },
+        "Return the s1c_phd and s2c_phd with LZ model.\n"
+        "Parameters:\n"
+        "  detector_name (str): Specifies which LZ detector to use. Can be 'lz_ws2022', 'lz_sr1' or 'lz_ws2024'.\n"
+        "  type (str): Interaction type. Supported types are 'NR', 'ER', 'DEC', 'beta'.\n"
+        "  seed (uint64): Seed. If 0, use current time.\n"
+        "  spectrumFileName (str): Spectrum to be used in energy sampling. Must be a csv file.\n"
+        "  numEvts (uint64): Number of simulated events.\n"
+        "  dec_quenching_factor (float): Quenching factor for decay events (DEC and EC).\n"
+        "Returns:\n"
+        "  InferenceObservableArray: class (not dict) with three attributes:\n"
+        "    s1c_phd (list): corrected S1 in LZ phd units.\n"
+        "    s2c_phd (list): corrected S2 in LZ phd units.\n"
+        "    energy_rec (list): reconstructed energy.\n"
     );
 }

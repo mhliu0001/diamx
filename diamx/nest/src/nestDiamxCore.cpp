@@ -28,7 +28,8 @@ InferenceObservableArray LZModel(
 ) {
     // Overriding default verbosity and maxS2
     int verbosity_lzmodel = -1;
-    maxS2 = 4e4;
+    maxS2 = 1e6;
+    maxS1 = 1500;
 
     InferenceObservableArray InferenceObservable;
 
