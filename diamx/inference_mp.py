@@ -158,7 +158,7 @@ def run_inference_pool(
     output_file_name=None,
     processes=None,
     chunksize=1,
-    maxtasksperchild=None,
+    maxtasksperchild=5,
     show_progress=True,
     start_method="spawn",
     timeout_seconds=3600,
@@ -190,7 +190,12 @@ def run_inference_pool(
     chunksize : int, optional
         Number of tasks per worker chunk (default: 1).
     maxtasksperchild : int or None, optional
-        Maximum tasks per worker process before recycling (default: None).
+        Maximum tasks per worker process before recycling (default: 5). Worker
+        processes are recycled after this many fits so that any memory retained
+        per fit (e.g. template histograms held by Minuit reference cycles) is
+        returned to the OS instead of accumulating over the mass scan. Set to
+        None to keep workers alive for the whole pool (faster startup, higher
+        peak memory).
     show_progress : bool, optional
         Whether to show a progress bar (default: True).
     start_method : str or None, optional
