@@ -165,24 +165,23 @@ class NRIonizationP4NEST(Plugin):
         "lists 30, but 150 -- its ER value -- matches Fig. 17; see module docstring)",
     ),
 )
-class NRRecombinationP4NEST(Plugin):
-    """Recombination with the P4-NEST correction (PRD Eq. 17), then the Eq. 2
-    photon/electron split.
+class NRRecombParamsP4NEST(Plugin):
+    """Corrected mean recombination <r> and fluctuation dr (PRD Eq. 17).
 
     <r>  = clip(<r>_0 + P3(xi/xi_norm)*exp(-xi/xi_norm) + d_nr, 0, 1)
     dr   = dr_0 * a_nr
-    r    ~ Gaussian(<r>, dr) truncated to [0, 1]
-    N_e  = B(N_i, 1 - r);  N_ph = N_q - N_e
+
+    Provides ``recomb_mean`` and ``recomb_std`` as data names so they can be
+    inspected / deduced directly (the recombination-fluctuation comparison vs
+    PRD Fig. 17 reads ``recomb_std``).
     """
 
-    depends_on = ["num_quanta", "num_ion", "recomb_mean0", "recomb_std0", "energy"]
-    provides = ["num_photon", "num_electron"]
+    depends_on = ["recomb_mean0", "recomb_std0", "energy"]
+    provides = ["recomb_mean", "recomb_std"]
     parameters = ("p0_nr", "p1_nr", "p2_nr", "p3_nr", "d_nr", "a_nr")
 
     @partial(jit, static_argnums=(0,))
-    def simulate(
-        self, key, parameters, num_quanta, num_ion, recomb_mean0, recomb_std0, energy
-    ):
+    def simulate(self, key, parameters, recomb_mean0, recomb_std0, energy):
         u = energy / self.xi_norm_nr.value
         correction = _legendre_p3(
             u,
@@ -195,7 +194,22 @@ class NRRecombinationP4NEST(Plugin):
             recomb_mean0 + correction + parameters["d_nr"], 0.0, 1.0
         )
         recomb_std = recomb_std0 * parameters["a_nr"]
+        return key, recomb_mean, recomb_std
 
+
+@export
+class NRPhotonElectronP4NEST(Plugin):
+    """Photon/electron split with a Gaussian recombination fraction (PRD Eq. 2).
+
+    r    ~ Gaussian(<r>, dr) truncated to [0, 1]
+    N_e  = B(N_i, 1 - r);  N_ph = N_q - N_e
+    """
+
+    depends_on = ["num_quanta", "num_ion", "recomb_mean", "recomb_std"]
+    provides = ["num_photon", "num_electron"]
+
+    @partial(jit, static_argnums=(0,))
+    def simulate(self, key, parameters, num_quanta, num_ion, recomb_mean, recomb_std):
         key, recomb = randgen.truncate_normal(
             key, recomb_mean, recomb_std, vmin=0.0, vmax=1.0
         )
