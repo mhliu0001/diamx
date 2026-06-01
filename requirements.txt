@@ -1,5 +1,5 @@
 alea-inference
-appletree
+appletree==0.5.5
 blueice
 importlib_resources
 inference_interface
