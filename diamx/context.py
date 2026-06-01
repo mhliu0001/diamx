@@ -1,3 +1,4 @@
+import gc
 import json
 from json import JSONDecodeError
 import os
@@ -687,6 +688,18 @@ class Context(object):
                     ]
                 )
             )
+
+            # Release the per-mass model before moving on. The Minuit objective
+            # closes over alea_model (alea_model -> minuit_object -> cost ->
+            # alea_model), a cycle through iminuit's C extension that the cyclic
+            # GC does not reliably reclaim; without breaking it each mass point
+            # leaks a full set of template histograms. Then drop the references
+            # and force a collection so the templates do not accumulate over the
+            # scan.
+            alea_model.minuit_object = None
+            alea_model._likelihood = None
+            del alea_model, alea_config, best_fit
+            gc.collect()
 
         ci_and_discovery = np.array(ci_and_discovery)
         if output_file_name is None:
