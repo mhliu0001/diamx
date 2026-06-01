@@ -20,12 +20,12 @@ Appendix A Eq. (A2):
     L      = (<N_ph> + <N_e>) * W / xi
     alpha  = (<N_ph> + <N_e>) / <N_i> - 1
     <r>_0  = 1 - <N_e> / <N_i>
-    dr_0   = 0.1 * exp(-(zeta - 0.5)^2 / 0.0722),  zeta = <N_e>/(<N_e> + <N_ph>)
+    dr_0   = 0.1 * exp(-(zeta - 0.5)^2 / 0.0722),  zeta = <N_e> * W / (1000 * xi)
 
-The baseline mean yields and dr_0 reproduce PRD Fig. 17 (NR): N_ph/xi ~ 5->15
-photon/keV, N_e/xi ~ 7->3 e/keV over 3-70 keV, and dr peaking ~0.1 at ~5 keV.
-(``zeta`` is the quenched electron fraction <N_e>/(<N_e>+<N_ph>); read this way
-Eq. A2's dr_0 matches Fig. 17, whereas the literal <N_e>W/(1000 xi) does not.)
+The baseline mean yields reproduce PRD Fig. 17 (NR): N_ph/xi ~ 5->15 photon/keV,
+N_e/xi ~ 7->3 e/keV over 3-70 keV. ``zeta`` is W-based (proportional to the
+charge yield, ~0.04-0.09 for NR), per Eq. A2 -- NOT the quenched electron
+fraction <N_e>/(<N_e>+<N_ph>); the latter would make dr_0 ~10x too large.
 
 The P4-NEST modifications (Eq. 17) are applied to the recombination only:
 
@@ -105,9 +105,12 @@ class NRYieldParamsP4NEST(Plugin):
         ion_fraction = jnp.clip(ion_fraction, 0.0, 1.0)
         # Baseline mean recombination <r>_0 = 1 - <N_e>/<N_i>.
         recomb_mean0 = jnp.where(mean_ni > 0, 1.0 - mean_ne / mean_ni, 0.0)
-        # Baseline recombination fluctuation dr_0 (zeta = quenched e- fraction).
-        elec_frac = jnp.where(mean_nq > 0, mean_ne / mean_nq, 0.0)
-        recomb_std0 = 0.1 * jnp.exp(-((elec_frac - 0.5) ** 2) / 0.0722)
+        # Baseline recombination fluctuation dr_0 (PRD Eq. A2). The argument
+        # zeta = <N_e> * W / (1000 * xi) is W-based (proportional to the charge
+        # yield), NOT the quenched electron fraction <N_e>/(<N_e>+<N_ph>). With
+        # parameters["w"] in keV, <N_e> * W[eV] / (1000 * xi) = <N_e> * w / xi.
+        zeta = jnp.where(energy > 0, mean_ne * parameters["w"] / energy, 0.0)
+        recomb_std0 = 0.1 * jnp.exp(-((zeta - 0.5) ** 2) / 0.0722)
         return key, lindhard, ion_fraction, recomb_mean0, recomb_std0
 
 
