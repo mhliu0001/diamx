@@ -1,12 +1,12 @@
 {
-    "liquid_xe_density": {
+    "w": {
         "prior_type": "fixed",
-        "prior_args": {"val": 2.8619},
+        "prior_args": {"val": 0.0137},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
-        "unit": "g/cm^3",
-        "doc": "Density of liquid xenon"
+        "unit": "keV",
+        "doc": "Mean energy per quantum W (PRD Eq. 1); 13.7 eV"
     },
     "field": {
         "prior_type": "fixed",
@@ -15,133 +15,16 @@
         "init_mean": null,
         "init_std": null,
         "unit": "V/cm",
-        "doc": "PandaX-4T drift field (approximate; NR yield is ~insensitive to it, field^0.05). Confirm from PandaX refs."
+        "doc": "PandaX-4T drift field (approximate; NR yield ~insensitive, field^0.05). Confirm from PandaX refs."
     },
-    "alpha": {
+    "liquid_xe_density": {
         "prior_type": "fixed",
-        "prior_args": {"val": 11.0},
+        "prior_args": {"val": 2.8619},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 NR total-quanta amplitude (N_q = alpha*E^beta)"
-    },
-    "beta": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 1.1},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 NR total-quanta exponent"
-    },
-    "gamma": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 0.0480},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 Thomas-Imel field amplitude"
-    },
-    "delta": {
-        "prior_type": "fixed",
-        "prior_args": {"val": -0.0533},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 Thomas-Imel field exponent"
-    },
-    "epsilon": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 12.6},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 NR charge-yield parameter epsilon"
-    },
-    "zeta": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 0.3},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "keV",
-        "doc": "NESTv2 NR charge-yield parameter zeta"
-    },
-    "eta": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 2.0},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 NR charge-yield parameter eta"
-    },
-    "theta": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 0.3},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "keV",
-        "doc": "NESTv2 NR light-yield parameter theta"
-    },
-    "iota": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 2.0},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 NR light-yield parameter iota"
-    },
-    "fano_ni": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 0.4},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 ion-number Fano-like factor"
-    },
-    "fano_nex": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 0.4},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 exciton-number Fano-like factor"
-    },
-    "A": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 0.1},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "Baseline NR recombination-fluctuation amplitude dr_0 = A*exp(-(elecFrac-xi)^2/(2 omega^2)). PRD Eq A2 gives 0.1 for NR; appletree's nestv2.json uses an XENON-tuned 0.04 -- we use the PandaX/PRD value."
-    },
-    "xi": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 0.5},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 recombination-fluctuation center in electron fraction"
-    },
-    "omega": {
-        "prior_type": "fixed",
-        "prior_args": {"val": 0.19},
-        "allowed_range": null,
-        "init_mean": null,
-        "init_std": null,
-        "unit": "1",
-        "doc": "NESTv2 recombination-fluctuation width in electron fraction"
+        "unit": "g/cm^3",
+        "doc": "Liquid xenon density (PRD Eq. A2 varsigma)"
     },
     "p0_nr": {
         "prior_type": "fixed",

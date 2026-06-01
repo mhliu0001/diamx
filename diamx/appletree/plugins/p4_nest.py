@@ -1,27 +1,50 @@
 """Self-contained P4-NEST nuclear-recoil yield model for PandaX-4T.
 
-This module reproduces the NESTv2 NR scintillation/ionization model (PandaX-4T
-signal-response paper, Phys. Rev. D 110, 023029 (2024), Appendix A Eq. A2) and
-adds the two PandaX "P4-NEST" recombination modifications (Eq. 17):
+Faithful to the PandaX-4T signal-response paper (Phys. Rev. D 110, 023029
+(2024)): the quanta are sampled with the *unified* ER/NR scheme of Eqs. (1)-(2),
 
-  <r>(xi) = <r>_0(xi) + P3(xi/xi_norm; p0,p1,p2,p3) * exp(-xi/xi_norm)  [+ d_nr]
-  dr(xi)  = dr_0(xi) * A^NR
+    N_q  = B(xi / W, L)                      (Eq. 1; L = Lindhard factor)
+    N_i  = B(N_q, 1 / (1 + alpha))           (Eq. 2; alpha = <N_ex>/<N_i>)
+    r    = G(<r>, dr)                         (Eq. 2 / Sec. II; Gaussian)
+    N_e  = B(N_i, 1 - r)                      (Eq. 2)
+    N_ph = N_q - N_e                          (Eq. 2)
 
-with xi the deposited NR energy [keV], xi_norm = 30 keV (NR), P3 a 3rd-order
-Legendre polynomial, and d_nr a per-run recombination shift (0 for Run0).
+and the NR Lindhard factor L, exciton-to-ion ratio alpha, baseline mean
+recombination <r>_0 and baseline recombination fluctuation dr_0 are taken from
+Appendix A Eq. (A2):
 
-The chain is implemented directly here (rather than subclassing
-``appletree.plugins.nestv2``) so the PandaX model is decoupled from appletree's
-internal nestv2 refactors -- it depends only on appletree's stable ``randgen``
-primitives. The NESTv2 NR formulae below match appletree 0.5.5
-``plugins/nestv2.py`` (which itself is ported from NESTCollaboration/nest
-v2.3.x, NEST.cpp); the recombination fluctuation is drawn as a plain Gaussian,
-i.e. the NESTv2 skew-normal with the skewness alpha2 set to 0 (PRD Sec. II:
-"the recombination fraction is sampled from a Gaussian distribution").
+    varsigma = 0.0480 * E^(-0.0533) * (rho_Xe / 2.90)^0.30           (E = drift field)
+    <N_e>  = xi * (1 - 1/(1 + (xi/0.3)^2)) / (varsigma * sqrt(xi + 12.6))
+    <N_ph> = (11.0 * xi^1.1 - <N_e>) * (1 - 1/(1 + (xi/0.3)^2))
+    <N_i>  = 4 * (exp(<N_e> * varsigma / 4) - 1) / varsigma
+    L      = (<N_ph> + <N_e>) * W / xi
+    alpha  = (<N_ph> + <N_e>) / <N_i> - 1
+    <r>_0  = 1 - <N_e> / <N_i>
+    dr_0   = 0.1 * exp(-(zeta - 0.5)^2 / 0.0722),  zeta = <N_e>/(<N_e> + <N_ph>)
 
-The drift field is taken as a scalar ``field`` parameter (uniform field;
+The baseline mean yields and dr_0 reproduce PRD Fig. 17 (NR): N_ph/xi ~ 5->15
+photon/keV, N_e/xi ~ 7->3 e/keV over 3-70 keV, and dr peaking ~0.1 at ~5 keV.
+(``zeta`` is the quenched electron fraction <N_e>/(<N_e>+<N_ph>); read this way
+Eq. A2's dr_0 matches Fig. 17, whereas the literal <N_e>W/(1000 xi) does not.)
+
+The P4-NEST modifications (Eq. 17) are applied to the recombination only:
+
+    <r>  = clip(<r>_0 + P3(xi/xi_norm; p0,p1,p2,p3) * exp(-xi/xi_norm) + d_nr, 0, 1)
+    dr   = dr_0 * A^NR
+
+with xi_norm = 30 keV (NR), P3 a 3rd-order Legendre polynomial, d_nr a per-run
+shift (0 for Run0). The recombination fraction r is then drawn from a plain
+Gaussian (truncated to [0, 1]), i.e. the NESTv2 skew-normal with skewness 0.
+
+NOTE (convention under review): with the literal argument xi/xi_norm the
+Legendre term overshoots above ~40 keV (PRD Fig. 17 shows the P4-NEST correction
+is small over the whole 1-90 keV NR range). The exact Legendre argument /
+normalization PandaX used is still to be confirmed; ``xi_norm_nr`` and the
+helper below isolate that choice. Low-energy (WIMP) behaviour is unaffected.
+
+The drift field and work function are scalar parameters (uniform field;
 position-dependent corrections are disabled in diamx, as for the other
-experiments), following the convention of ``nr_nest_v1``.
+experiments).
 """
 
 from functools import partial
@@ -48,85 +71,74 @@ def _legendre_p3(u, p0, p1, p2, p3):
 
 
 @export
-class TotalQuantaNRP4NEST(Plugin):
-    """Mean total quanta for NR: N_q = alpha * E^beta (NESTv2)."""
+class NRYieldParamsP4NEST(Plugin):
+    """NESTv2 NR mean yields (PRD Eq. A2) -> Lindhard L, ion fraction, baseline
+    mean recombination and baseline recombination fluctuation.
 
-    depends_on = ["energy"]
-    provides = ["_Nq"]
-    parameters = ("alpha", "beta")
-
-    @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, energy):
-        _Nq = parameters["alpha"] * energy ** parameters["beta"]
-        return key, _Nq
-
-
-@export
-class ThomasImelNRP4NEST(Plugin):
-    """Thomas-Imel box parameter (NESTv2 Eq. A2 ``varsigma``).
-
-    TI = gamma * field^delta * (rho / 2.9)^0.3, with ``field`` a scalar drift
-    field [V/cm] passed as a parameter (uniform field; corrections disabled).
+    All Eq. A2 numeric constants are fixed (NEST nominal; PandaX tunes only the
+    recombination correction on top, Eq. 17), so only the drift field, density
+    and work function are exposed as parameters.
     """
 
     depends_on = ["energy"]
-    provides = ["ThomasImel"]
-    parameters = ("gamma", "delta", "liquid_xe_density", "field")
+    provides = ["lindhard", "ion_fraction", "recomb_mean0", "recomb_std0"]
+    parameters = ("w", "field", "liquid_xe_density")
 
     @partial(jit, static_argnums=(0,))
     def simulate(self, key, parameters, energy):
-        ThomasImel = jnp.ones(shape=jnp.shape(energy))
-        ThomasImel *= parameters["gamma"] * parameters["field"] ** parameters["delta"]
-        ThomasImel *= (parameters["liquid_xe_density"] / 2.9) ** 0.3
-        return key, ThomasImel
+        varsigma = (
+            0.0480
+            * parameters["field"] ** (-0.0533)
+            * (parameters["liquid_xe_density"] / 2.90) ** 0.30
+        )
+        suppression = 1.0 - 1.0 / (1.0 + (energy / 0.3) ** 2)
+        mean_ne = energy * suppression / (varsigma * jnp.sqrt(energy + 12.6))
+        mean_nph = (11.0 * energy**1.1 - mean_ne) * suppression
+        mean_nq = mean_nph + mean_ne
+        mean_ni = 4.0 * (jnp.exp(mean_ne * varsigma / 4.0) - 1.0) / varsigma
+
+        # Lindhard factor L so that <N_q> = (xi/W) * L = <N_ph> + <N_e>.
+        lindhard = jnp.where(energy > 0, mean_nq * parameters["w"] / energy, 0.0)
+        lindhard = jnp.clip(lindhard, 0.0, 1.0)
+        # Ion fraction 1/(1+alpha) = <N_i>/<N_q>.
+        ion_fraction = jnp.where(mean_nq > 0, mean_ni / mean_nq, 0.0)
+        ion_fraction = jnp.clip(ion_fraction, 0.0, 1.0)
+        # Baseline mean recombination <r>_0 = 1 - <N_e>/<N_i>.
+        recomb_mean0 = jnp.where(mean_ni > 0, 1.0 - mean_ne / mean_ni, 0.0)
+        # Baseline recombination fluctuation dr_0 (zeta = quenched e- fraction).
+        elec_frac = jnp.where(mean_nq > 0, mean_ne / mean_nq, 0.0)
+        recomb_std0 = 0.1 * jnp.exp(-((elec_frac - 0.5) ** 2) / 0.0722)
+        return key, lindhard, ion_fraction, recomb_mean0, recomb_std0
 
 
 @export
-class ChargeYieldNRP4NEST(Plugin):
-    """NR charge yield Qy (NESTv2)."""
+class NRTotalQuantaP4NEST(Plugin):
+    """Total quanta N_q = B(xi / W, L) (PRD Eq. 1)."""
 
-    depends_on = ["energy", "ThomasImel"]
-    provides = ["charge_yield"]
-    parameters = ("epsilon", "zeta", "eta")
+    depends_on = ["energy", "lindhard"]
+    provides = ["num_quanta"]
+    parameters = ("w",)
 
     @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, energy, ThomasImel):
-        charge_yield = 1 / ThomasImel / jnp.sqrt(energy + parameters["epsilon"])
-        charge_yield *= 1 - 1 / (1 + (energy / parameters["zeta"]) ** parameters["eta"])
-        charge_yield = jnp.clip(charge_yield, 0, jnp.inf)
-        return key, charge_yield
+    def simulate(self, key, parameters, energy, lindhard):
+        n_trials = jnp.clip(energy / parameters["w"], 0.0, jnp.inf)
+        n_trials = n_trials.round().astype(int)
+        key, num_quanta = randgen.binomial(key, lindhard, n_trials)
+        return key, num_quanta
 
 
 @export
-class LightYieldNRP4NEST(Plugin):
-    """NR light yield Ly = N_q/E - Qy, with low-energy suppression (NESTv2)."""
+class NRIonizationP4NEST(Plugin):
+    """Exciton/ion split N_i = B(N_q, 1/(1+alpha)) (PRD Eq. 2)."""
 
-    depends_on = ["energy", "_Nq", "charge_yield"]
-    provides = ["light_yield"]
-    parameters = ("theta", "iota")
-
-    @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, energy, _Nq, charge_yield):
-        light_yield = _Nq / energy - charge_yield
-        light_yield *= 1 - 1 / (1 + (energy / parameters["theta"]) ** parameters["iota"])
-        light_yield = jnp.clip(light_yield, 0, jnp.inf)
-        return key, light_yield
-
-
-@export
-class MeanNphNeNRP4NEST(Plugin):
-    """Mean photon / electron numbers; zeroed below NEST's validity threshold."""
-
-    depends_on = ["light_yield", "charge_yield", "energy"]
-    provides = ["_Nph", "_Ne"]
+    depends_on = ["num_quanta", "ion_fraction"]
+    provides = ["num_ion", "num_exciton"]
 
     @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, light_yield, charge_yield, energy):
-        _Nph = light_yield * energy
-        _Ne = charge_yield * energy
-        # NEST YieldResultValidity: both vanish when the total mean yield < 1.
-        mask = (_Nph + _Ne) >= 1.0
-        return key, jnp.where(mask, _Nph, 0.0), jnp.where(mask, _Ne, 0.0)
+    def simulate(self, key, parameters, num_quanta, ion_fraction):
+        key, num_ion = randgen.binomial(key, ion_fraction, num_quanta)
+        num_exciton = num_quanta - num_ion
+        return key, num_ion, num_exciton
 
 
 @export
@@ -138,31 +150,24 @@ class MeanNphNeNRP4NEST(Plugin):
         help="NR recombination-correction normalization energy [keV] (PRD Eq. 17)",
     ),
 )
-class MeanExcitonIonNRP4NEST(Plugin):
-    """Mean exciton/ion split and mean recombination fraction with the P4-NEST
-    correction added to the NESTv2 baseline <r>_0 (PRD Eq. 17).
+class NRRecombinationP4NEST(Plugin):
+    """Recombination with the P4-NEST correction (PRD Eq. 17), then the Eq. 2
+    photon/electron split.
 
-    Baseline (NESTv2): <r>_0 = 1 - (nex_ni_ratio + 1) * elecFrac = 1 - <Ne>/<Ni>.
-    P4-NEST: <r> = clip(<r>_0 + P3(xi/xi_norm)*exp(-xi/xi_norm) + d_nr, 0, 1).
+    <r>  = clip(<r>_0 + P3(xi/xi_norm)*exp(-xi/xi_norm) + d_nr, 0, 1)
+    dr   = dr_0 * a_nr
+    r    ~ Gaussian(<r>, dr) truncated to [0, 1]
+    N_e  = B(N_i, 1 - r);  N_ph = N_q - N_e
     """
 
-    depends_on = ["ThomasImel", "_Nph", "_Ne", "energy"]
-    provides = ["_Nex", "_Ni", "nex_ni_ratio", "alf", "elecFrac", "recombProb"]
-    parameters = ("p0_nr", "p1_nr", "p2_nr", "p3_nr", "d_nr")
+    depends_on = ["num_quanta", "num_ion", "recomb_mean0", "recomb_std0", "energy"]
+    provides = ["num_photon", "num_electron"]
+    parameters = ("p0_nr", "p1_nr", "p2_nr", "p3_nr", "d_nr", "a_nr")
 
     @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, ThomasImel, _Nph, _Ne, energy):
-        _Nex = (-1.0 / ThomasImel) * (
-            4.0 * jnp.exp(_Ne * ThomasImel / 4.0) - (_Ne + _Nph) * ThomasImel - 4.0
-        )
-        _Ni = (4.0 / ThomasImel) * (jnp.exp(_Ne * ThomasImel / 4.0) - 1.0)
-        nex_ni_ratio = jnp.where(_Ni > 0, _Nex / _Ni, 1.0)
-        _Nq = _Nph + _Ne
-        alf = 1.0 / (1.0 + nex_ni_ratio)
-        elecFrac = jnp.where(_Nq > 0, _Ne / _Nq, 0.0)
-        recomb_baseline = 1.0 - (nex_ni_ratio + 1.0) * elecFrac
-
-        # P4-NEST mean-recombination correction (PRD Eq. 17).
+    def simulate(
+        self, key, parameters, num_quanta, num_ion, recomb_mean0, recomb_std0, energy
+    ):
         u = energy / self.xi_norm_nr.value
         correction = _legendre_p3(
             u,
@@ -171,80 +176,14 @@ class MeanExcitonIonNRP4NEST(Plugin):
             parameters["p2_nr"],
             parameters["p3_nr"],
         ) * jnp.exp(-energy / self.xi_norm_nr.value)
-        recombProb = jnp.clip(
-            recomb_baseline + correction + parameters["d_nr"], 0.0, 1.0
+        recomb_mean = jnp.clip(
+            recomb_mean0 + correction + parameters["d_nr"], 0.0, 1.0
         )
-        return key, _Nex, _Ni, nex_ni_ratio, alf, elecFrac, recombProb
+        recomb_std = recomb_std0 * parameters["a_nr"]
 
-
-@export
-class TrueExcitonIonNRP4NEST(Plugin):
-    """Sample integer ion / exciton counts with NEST Fano-like fluctuations."""
-
-    depends_on = ["_Nph", "_Ne", "nex_ni_ratio", "alf"]
-    provides = ["Ni", "Nex", "Nq"]
-    parameters = ("fano_ni", "fano_nex")
-
-    @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, _Nph, _Ne, nex_ni_ratio, alf):
-        Nq_mean = _Nph + _Ne
-        key, Ni = randgen.truncate_normal(
-            key, Nq_mean * alf, jnp.sqrt(parameters["fano_ni"] * Nq_mean * alf), vmin=0
+        key, recomb = randgen.truncate_normal(
+            key, recomb_mean, recomb_std, vmin=0.0, vmax=1.0
         )
-        Ni = Ni.round().astype(int)
-        key, Nex = randgen.truncate_normal(
-            key,
-            Nq_mean * nex_ni_ratio * alf,
-            jnp.sqrt(parameters["fano_nex"] * Nq_mean * nex_ni_ratio * alf),
-            vmin=0,
-        )
-        Nex = Nex.round().astype(int)
-        Nq = Nex + Ni
-        return key, Ni, Nex, Nq
-
-
-@export
-class RecombFluctNRP4NEST(Plugin):
-    """Recombination-fluctuation variance with the P4-NEST scaling dr = dr_0 * A^NR.
-
-    ``omega`` is the NESTv2 baseline recombination width dr_0; it is multiplied
-    by ``a_nr`` (= A^NR, PRD Eq. 17) before forming the variance of N_e:
-        Var(Ne) = recombProb*(1-recombProb)*Ni + (a_nr*omega)^2 * Ni^2
-    (binomial term + recombination-fluctuation term).
-    """
-
-    depends_on = ["elecFrac", "recombProb", "Ni"]
-    provides = ["omega", "Variance"]
-    parameters = ("A", "xi", "omega", "a_nr")
-
-    @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, elecFrac, recombProb, Ni):
-        omega = parameters["A"] * jnp.exp(
-            -0.5 * (elecFrac - parameters["xi"]) ** 2.0 / (parameters["omega"] ** 2)
-        )
-        omega = omega * parameters["a_nr"]
-        Variance = recombProb * (1.0 - recombProb) * Ni + omega * omega * Ni * Ni
-        return key, omega, Variance
-
-
-@export
-class TruePhotonElectronNRP4NEST(Plugin):
-    """Split into photons / electrons with a Gaussian recombination fluctuation.
-
-    P4-NEST samples N_e from a Gaussian with mean (1-<r>)*Ni and the variance
-    from ``RecombFluctNRP4NEST`` -- this is the NESTv2 skew-normal draw with the
-    skewness alpha2 = 0 (verified: alpha2=0 gives widthCorrection=1,
-    muCorrection=0). N_e is clipped to [0, Ni]; N_ph keeps at least the excitons.
-    """
-
-    depends_on = ["recombProb", "Variance", "Ni", "Nex", "Nq"]
-    provides = ["num_photon", "num_electron"]
-
-    @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, recombProb, Variance, Ni, Nex, Nq):
-        key, num_electron = randgen.normal(
-            key, (1.0 - recombProb) * Ni, jnp.sqrt(Variance)
-        )
-        num_electron = jnp.clip(num_electron.round().astype(int), 0, Ni)
-        num_photon = jnp.maximum(Nq - num_electron, Nex)
+        key, num_electron = randgen.binomial(key, 1.0 - recomb, num_ion)
+        num_photon = num_quanta - num_electron
         return key, num_photon, num_electron
