@@ -1,0 +1,83 @@
+{
+    "w": {
+        "prior_type": "fixed",
+        "prior_args": {"val": 0.0137},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "keV",
+        "doc": "Mean energy per quantum W (PRD Eq. 1); 13.7 eV"
+    },
+    "field": {
+        "prior_type": "fixed",
+        "prior_args": {"val": 93.0},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "V/cm",
+        "doc": "PandaX-4T drift field. Run0 ~93 V/cm (this default); Run1 ~84 V/cm (override per run)."
+    },
+    "liquid_xe_density": {
+        "prior_type": "fixed",
+        "prior_args": {"val": 2.8619},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "g/cm^3",
+        "doc": "Liquid xenon density (NESTv2.0 ER Wq / Qy / alpha)"
+    },
+    "p0_er": {
+        "prior_type": "fixed",
+        "prior_args": {"val": 1.1},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Legendre coefficient p0 (PRD Table II, published; not yet refit)"
+    },
+    "p1_er": {
+        "prior_type": "fixed",
+        "prior_args": {"val": -3.1},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Legendre coefficient p1 (PRD Table II)"
+    },
+    "p2_er": {
+        "prior_type": "fixed",
+        "prior_args": {"val": 2.2},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Legendre coefficient p2 (PRD Table II)"
+    },
+    "p3_er": {
+        "prior_type": "fixed",
+        "prior_args": {"val": -1.7},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Legendre coefficient p3 (PRD Table II)"
+    },
+    "a_er": {
+        "prior_type": "fixed",
+        "prior_args": {"val": 1.11},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER recombination-fluctuation scaling A^ER (PRD Table II)"
+    },
+    "d_er": {
+        "prior_type": "fixed",
+        "prior_args": {"val": 0.0},
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Run1 recombination shift. 0 for Run0; for Run1 use -0.043 (Table II's d_NR -- the d_ER/d_NR values appear swapped between ER and NR, like xi_norm; to be confirmed against Fig. 17)."
+    }
+}

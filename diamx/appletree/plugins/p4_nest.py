@@ -38,17 +38,16 @@ with xi_norm = 150 keV (NR), P3 a 3rd-order Legendre polynomial, d_nr a per-run
 shift (0 for Run0). The recombination fraction r is then drawn from a plain
 Gaussian (truncated to [0, 1]), i.e. the NESTv2 skew-normal with skewness 0.
 
-NOTE (xi_norm^NR): Eq. 17 lists xi_norm^NR = 30 keV and xi_norm^ER = 150 keV, but
-with 30 keV the standard Legendre argument xi/30 exceeds 1 above 30 keV and the
-degree-3 term overshoots exp(-xi/30), driving <r> -> 0 by ~50 keV -- whereas
-PRD Fig. 17 shows the P4-NEST correction is small over the whole 1-90 keV NR
-range. Using 150 keV (the value the paper assigns to ER) keeps xi/xi_norm <= 0.6
-over the NR range, so the correction stays small everywhere and matches Fig. 17.
-We therefore use 150 keV for NR (the two xi_norm values appear to be swapped in
-Eq. 17; this is also physically sensible since the larger NR energy range needs
-the larger normalization). Tried and ruled out: shifted / domain-mapped Legendre
-conventions, which all break the low-energy correction. Standard Legendre with
-the raw argument is correct; only xi_norm needed fixing.
+NOTE (xi_norm): Eq. 17 lists xi_norm^NR = 30 keV and xi_norm^ER = 150 keV. With
+30 keV the degree-3 Legendre term overshoots exp(-xi/30) and drives <r> -> 0
+(NR by ~50 keV; ER reverses LY/QY by ~20 keV), contradicting Fig. 17 where the
+P4-NEST correction is small everywhere. 150 keV keeps the correction small and
+matches Fig. 17 for BOTH recoils. So both ER and NR use 150 keV; the paper's NR
+entry (30) is simply a typo -- this is NOT an ER<->NR swap (we initially
+suspected one, but the ER curves need 150 too, not 30). Tried and ruled out:
+shifted / domain-mapped / orthonormal Legendre conventions, which all break the
+low-energy correction. Standard Legendre with the raw argument is correct; only
+the NR xi_norm value needed fixing.
 
 The drift field and work function are scalar parameters (uniform field;
 position-dependent corrections are disabled in diamx, as for the other
@@ -59,6 +58,7 @@ from functools import partial
 
 from jax import jit
 from jax import numpy as jnp
+from jax.scipy.special import erf
 
 import appletree
 from appletree import randgen
@@ -126,8 +126,10 @@ class NRYieldParamsP4NEST(Plugin):
 
 
 @export
-class NRTotalQuantaP4NEST(Plugin):
-    """Total quanta N_q = B(xi / W, L) (PRD Eq. 1)."""
+class TotalQuantaP4NEST(Plugin):
+    """Total quanta N_q = B(xi / W, L) (PRD Eq. 1). Recoil-agnostic (ER or NR);
+    the recoil type enters only through the Lindhard factor ``lindhard`` (=1 for
+    ER) supplied by the {ER,NR}YieldParamsP4NEST plugin."""
 
     depends_on = ["energy", "lindhard"]
     provides = ["num_quanta"]
@@ -142,8 +144,8 @@ class NRTotalQuantaP4NEST(Plugin):
 
 
 @export
-class NRIonizationP4NEST(Plugin):
-    """Exciton/ion split N_i = B(N_q, 1/(1+alpha)) (PRD Eq. 2)."""
+class IonizationP4NEST(Plugin):
+    """Exciton/ion split N_i = B(N_q, 1/(1+alpha)) (PRD Eq. 2). Recoil-agnostic."""
 
     depends_on = ["num_quanta", "ion_fraction"]
     provides = ["num_ion", "num_exciton"]
@@ -161,8 +163,9 @@ class NRIonizationP4NEST(Plugin):
         name="xi_norm_nr",
         type=float,
         default=150.0,
-        help="NR recombination-correction normalization energy [keV] (PRD Eq. 17 "
-        "lists 30, but 150 -- its ER value -- matches Fig. 17; see module docstring)",
+        help="NR recombination-correction normalization energy [keV]. Eq. 17 lists "
+        "30 for NR, but 30 overshoots; both ER and NR use 150 (the NR=30 entry is a "
+        "typo, not a swap -- see module docstring).",
     ),
 )
 class NRRecombParamsP4NEST(Plugin):
@@ -198,8 +201,9 @@ class NRRecombParamsP4NEST(Plugin):
 
 
 @export
-class NRPhotonElectronP4NEST(Plugin):
+class PhotonElectronP4NEST(Plugin):
     """Photon/electron split with a Gaussian recombination fraction (PRD Eq. 2).
+    Recoil-agnostic; consumes the corrected recomb_mean/recomb_std.
 
     r    ~ Gaussian(<r>, dr) truncated to [0, 1]
     N_e  = B(N_i, 1 - r);  N_ph = N_q - N_e
@@ -216,3 +220,125 @@ class NRPhotonElectronP4NEST(Plugin):
         key, num_electron = randgen.binomial(key, 1.0 - recomb, num_ion)
         num_photon = num_quanta - num_electron
         return key, num_photon, num_electron
+
+
+# ---------------------------------------------------------------------------
+# Electronic-recoil (ER) yield model.
+#
+# IMPORTANT: the ER mean yields are implemented from the NESTv2.0 SOURCE
+# (NESTCollaboration/nest @ v2.0.0, NEST.cpp GetYields "beta/CH3T" branch +
+# GetQuanta), NOT from PRD 110 023029 Appendix A1, which has several apparent
+# misprints that make its Qy ~2x too high at 25 keV (e.g. exp(rho/0.33926) ->
+# "rho*0.3393"; 1.415935e10 -> "1.145935e10"; xi^2.1393 -> "xi^1.1393"). The
+# NESTv2.0 ER Qy reproduces Fig. 17 (N_e/xi ~62->20, N_ph/xi ~11->53 over
+# 1-25 keV); the A1-as-printed version does not.
+#
+# The recombination FLUCTUATION dr_0 is taken from the PRD A1 functional form
+# (a skew-Gaussian in the quenched electron fraction), since NESTv2.0's dr is a
+# parabola in recombProb that does NOT match Fig. 17 -- the same situation as
+# NR, where the PRD form (not NESTv2.0's) reproduced the figure.
+# ---------------------------------------------------------------------------
+
+
+@export
+class ERYieldParamsP4NEST(Plugin):
+    """NESTv2.0 ER mean yields -> Lindhard L(=1), ion fraction, baseline mean
+    recombination <r>_0 and baseline recombination fluctuation dr_0.
+
+    Qy / Ne / Nph and the exciton-to-ion ratio follow NEST.cpp v2.0 exactly
+    (all constants fixed, NEST nominal). dr_0 uses the PRD A1 skew-Gaussian in
+    the quenched electron fraction zeta = N_e/(N_e+N_ph) (the form that matches
+    Fig. 17), with the field-dependent amplitude A(F).
+    """
+
+    depends_on = ["energy"]
+    provides = ["lindhard", "ion_fraction", "recomb_mean0", "recomb_std0"]
+    parameters = ("w", "field", "liquid_xe_density")
+
+    @partial(jit, static_argnums=(0,))
+    def simulate(self, key, parameters, energy):
+        F = parameters["field"]
+        rho = parameters["liquid_xe_density"]
+        Wq_eV = 1.9896 + (20.8 - 1.9896) / (1.0 + (rho / 4.0434) ** 1.4407)
+
+        # exciton-to-ion ratio (NEST v2.0: alpha*erf(0.05 E))
+        nex_ni = (0.067366 + rho * 0.039693) * erf(0.05 * energy)
+
+        # charge yield Qy (NEST v2.0 beta/ER branch; F = drift field)
+        qy_low = 1000.0 / Wq_eV + 6.5 * (1.0 - 1.0 / (1.0 + (F / 47.408) ** 1.9851))
+        hi_field = 1.0 + 0.4607 / (1.0 + (F / 621.74) ** (-2.2717)) ** 53.502
+        qy_med = (
+            32.988
+            - 32.988 / (1.0 + (F / (0.026715 * jnp.exp(rho / 0.33926))) ** 0.6705)
+        ) * hi_field
+        doke_birks = 1652.264 + (1.415935e10 - 1652.264) / (
+            1.0 + (F / 0.02673144) ** 1.564691
+        )
+        qy = (
+            qy_med
+            + (qy_low - qy_med) / (1.0 + 1.304 * energy ** 2.1393) ** 0.35535
+            + 28.0 / (1.0 + doke_birks * energy ** (-2.0))
+        )
+
+        mean_nq = energy * 1000.0 / Wq_eV          # total quanta (ER, L = 1)
+        mean_ne = qy * energy
+        mean_nph = mean_nq - mean_ne
+        elec_frac = jnp.where(mean_nq > 0, mean_ne / mean_nq, 0.0)
+
+        # baseline mean recombination (NEST: 1 - (nex_ni + 1) * elecFrac)
+        recomb_mean0 = jnp.clip(1.0 - (nex_ni + 1.0) * elec_frac, 0.0, 1.0)
+
+        # baseline recombination fluctuation dr_0 (PRD A1 skew-Gaussian form;
+        # zeta = quenched electron fraction). A(F) is the field-dependent amplitude.
+        a_field = 0.1383 - 0.09583 / (1.0 + (F / 1210.0) ** 1.25)
+        recomb_std0 = (
+            a_field
+            * jnp.exp(-((elec_frac - 0.5) ** 2) / 0.084)
+            * (1.0 + erf(-0.6899 * (elec_frac - 0.5)))
+        )
+
+        # Lindhard ~1 for ER; total quanta sampled as B(xi/w, lindhard).
+        lindhard = jnp.clip(mean_nq * parameters["w"] / energy, 0.0, 1.0)
+        ion_fraction = jnp.clip(1.0 / (1.0 + nex_ni), 0.0, 1.0)
+        return key, lindhard, ion_fraction, recomb_mean0, recomb_std0
+
+
+@export
+@appletree.takes_config(
+    Constant(
+        name="xi_norm_er",
+        type=float,
+        default=150.0,
+        help="ER recombination-correction normalization energy [keV]. PRD Eq. 17 "
+        "lists 150 for ER, which is correct: with the (large) ER coefficients, "
+        "xi_norm=30 overshoots above ~15 keV (LY/QY reverse), while 150 gives the "
+        "monotonic Fig. 17 shape. Both ER and NR use 150; only the paper's NR "
+        "xi_norm entry (30) is a typo -- it is NOT an ER<->NR swap.",
+    ),
+)
+class ERRecombParamsP4NEST(Plugin):
+    """Corrected mean recombination <r> and fluctuation dr for ER (PRD Eq. 17).
+
+    <r> = clip(<r>_0 + P3(xi/xi_norm_er) exp(-xi/xi_norm_er) + d_er, 0, 1)
+    dr  = dr_0 * a_er
+    """
+
+    depends_on = ["recomb_mean0", "recomb_std0", "energy"]
+    provides = ["recomb_mean", "recomb_std"]
+    parameters = ("p0_er", "p1_er", "p2_er", "p3_er", "d_er", "a_er")
+
+    @partial(jit, static_argnums=(0,))
+    def simulate(self, key, parameters, recomb_mean0, recomb_std0, energy):
+        u = energy / self.xi_norm_er.value
+        correction = _legendre_p3(
+            u,
+            parameters["p0_er"],
+            parameters["p1_er"],
+            parameters["p2_er"],
+            parameters["p3_er"],
+        ) * jnp.exp(-energy / self.xi_norm_er.value)
+        recomb_mean = jnp.clip(
+            recomb_mean0 + correction + parameters["d_er"], 0.0, 1.0
+        )
+        recomb_std = recomb_std0 * parameters["a_er"]
+        return key, recomb_mean, recomb_std

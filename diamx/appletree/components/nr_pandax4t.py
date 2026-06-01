@@ -45,7 +45,7 @@ class NRYieldPandaX4T(ComponentSim):
         #          -> corrected <r>, dr
         #          -> N_e = B(N_i, 1-r), N_ph = N_q - N_e
         self.register(p4_nest.NRYieldParamsP4NEST)
-        self.register(p4_nest.NRTotalQuantaP4NEST)
-        self.register(p4_nest.NRIonizationP4NEST)
+        self.register(p4_nest.TotalQuantaP4NEST)
+        self.register(p4_nest.IonizationP4NEST)
         self.register(p4_nest.NRRecombParamsP4NEST)
-        self.register(p4_nest.NRPhotonElectronP4NEST)
+        self.register(p4_nest.PhotonElectronP4NEST)
