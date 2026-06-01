@@ -28,39 +28,39 @@
     },
     "p0_nr": {
         "prior_type": "fixed",
-        "prior_args": {"val": 0.7},
+        "prior_args": {"val": 0.712},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST NR Legendre coefficient p0 (PRD Table II)"
+        "doc": "P4-NEST NR Legendre coefficient p0 (standard Legendre, xi_norm=150). Refit to digitized Fig. 17 Run0 LY+QY; consistent with PRD Table II [0.7,-1.6,1.3,-0.6] within its uncertainties. Refit reduces the Run0 LY/QY residual from ~2-7% to <0.5%."
     },
     "p1_nr": {
         "prior_type": "fixed",
-        "prior_args": {"val": -1.6},
+        "prior_args": {"val": -1.542},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST NR Legendre coefficient p1 (PRD Table II)"
+        "doc": "P4-NEST NR Legendre coefficient p1 (refit to Fig. 17; Table II -1.6+0.9/-0.7)"
     },
     "p2_nr": {
         "prior_type": "fixed",
-        "prior_args": {"val": 1.3},
+        "prior_args": {"val": 1.273},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST NR Legendre coefficient p2 (PRD Table II)"
+        "doc": "P4-NEST NR Legendre coefficient p2 (refit to Fig. 17; Table II 1.3+0.5/-0.7)"
     },
     "p3_nr": {
         "prior_type": "fixed",
-        "prior_args": {"val": -0.6},
+        "prior_args": {"val": -0.613},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST NR Legendre coefficient p3 (PRD Table II)"
+        "doc": "P4-NEST NR Legendre coefficient p3 (refit to Fig. 17; Table II -0.6+-0.4)"
     },
     "a_nr": {
         "prior_type": "fixed",
