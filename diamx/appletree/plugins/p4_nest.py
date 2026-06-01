@@ -34,15 +34,21 @@ The P4-NEST modifications (Eq. 17) are applied to the recombination only:
     <r>  = clip(<r>_0 + P3(xi/xi_norm; p0,p1,p2,p3) * exp(-xi/xi_norm) + d_nr, 0, 1)
     dr   = dr_0 * A^NR
 
-with xi_norm = 30 keV (NR), P3 a 3rd-order Legendre polynomial, d_nr a per-run
+with xi_norm = 150 keV (NR), P3 a 3rd-order Legendre polynomial, d_nr a per-run
 shift (0 for Run0). The recombination fraction r is then drawn from a plain
 Gaussian (truncated to [0, 1]), i.e. the NESTv2 skew-normal with skewness 0.
 
-NOTE (convention under review): with the literal argument xi/xi_norm the
-Legendre term overshoots above ~40 keV (PRD Fig. 17 shows the P4-NEST correction
-is small over the whole 1-90 keV NR range). The exact Legendre argument /
-normalization PandaX used is still to be confirmed; ``xi_norm_nr`` and the
-helper below isolate that choice. Low-energy (WIMP) behaviour is unaffected.
+NOTE (xi_norm^NR): Eq. 17 lists xi_norm^NR = 30 keV and xi_norm^ER = 150 keV, but
+with 30 keV the standard Legendre argument xi/30 exceeds 1 above 30 keV and the
+degree-3 term overshoots exp(-xi/30), driving <r> -> 0 by ~50 keV -- whereas
+PRD Fig. 17 shows the P4-NEST correction is small over the whole 1-90 keV NR
+range. Using 150 keV (the value the paper assigns to ER) keeps xi/xi_norm <= 0.6
+over the NR range, so the correction stays small everywhere and matches Fig. 17.
+We therefore use 150 keV for NR (the two xi_norm values appear to be swapped in
+Eq. 17; this is also physically sensible since the larger NR energy range needs
+the larger normalization). Tried and ruled out: shifted / domain-mapped Legendre
+conventions, which all break the low-energy correction. Standard Legendre with
+the raw argument is correct; only xi_norm needed fixing.
 
 The drift field and work function are scalar parameters (uniform field;
 position-dependent corrections are disabled in diamx, as for the other
@@ -154,8 +160,9 @@ class NRIonizationP4NEST(Plugin):
     Constant(
         name="xi_norm_nr",
         type=float,
-        default=30.0,
-        help="NR recombination-correction normalization energy [keV] (PRD Eq. 17)",
+        default=150.0,
+        help="NR recombination-correction normalization energy [keV] (PRD Eq. 17 "
+        "lists 30, but 150 -- its ER value -- matches Fig. 17; see module docstring)",
     ),
 )
 class NRRecombinationP4NEST(Plugin):
