@@ -10,12 +10,12 @@
     },
     "field": {
         "prior_type": "fixed",
-        "prior_args": {"val": 92.0},
+        "prior_args": {"val": 93.0},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "V/cm",
-        "doc": "PandaX-4T drift field (approximate; NR yield ~insensitive, field^0.05). Confirm from PandaX refs."
+        "doc": "PandaX-4T drift field. Run0 ~93 V/cm (this default); Run1 ~84 V/cm (override per run). NR yield is weakly field-dependent (~field^0.05)."
     },
     "liquid_xe_density": {
         "prior_type": "fixed",
