@@ -242,13 +242,23 @@ class PhotonElectronP4NEST(Plugin):
 
 @export
 class ERYieldParamsP4NEST(Plugin):
-    """NESTv2.0 ER mean yields -> Lindhard L(=1), ion fraction, baseline mean
-    recombination <r>_0 and baseline recombination fluctuation dr_0.
+    """PRD Appendix A1 ER mean yields -> Lindhard L(=1), ion fraction, baseline
+    mean recombination <r>_0 and baseline recombination fluctuation dr_0.
 
-    Qy / Ne / Nph and the exciton-to-ion ratio follow NEST.cpp v2.0 exactly
-    (all constants fixed, NEST nominal). dr_0 uses the PRD A1 skew-Gaussian in
-    the quenched electron fraction zeta = N_e/(N_e+N_ph) (the form that matches
-    Fig. 17), with the field-dependent amplitude A(F).
+    Implements Eq. (A1) as printed, with three corrections:
+      * a FIXED work function W (= the `w` parameter); A1 uses a constant W
+        throughout (1000/W in Y0, <N_i>=1000 xi/(W alpha), zeta=<N_e>W/(1000 xi))
+        and has NO density-dependent Wq -- unlike the NESTv2 source.
+      * two obvious Qy misprints fixed against the NESTv2 model A1 is taken from:
+        the Y1 exponential argument rho/0.33926 (printed `rho*0.3393` gives Qy ~2x
+        too high) and the (Y0-Y1) energy exponent xi^2.1393 (printed `xi^1.1393`
+        gives Qy ~2x too high at 25 keV; literal A1 -> Qy=44 vs Fig.17 ~18).
+      * the `1+` in <N_i> = 1000 xi / (W (1+alpha)); A1 prints 1000 xi/(W alpha),
+        which gives N_i > N_q (impossible for the Eq.1-2 binomial).
+    alpha's rho-coefficient is the NESTv2 value 0.039693 ("taken from NESTv2",
+    main text); the printed 0.093963 is a digit transposition (it only shifts the
+    ionization binomial width -- the refit-absorbed mean yields are unchanged).
+    dr_0 uses the A1 skew-Gaussian in zeta = <N_e>/<N_q> with amplitude A(F).
     """
 
     depends_on = ["energy"]
@@ -257,39 +267,37 @@ class ERYieldParamsP4NEST(Plugin):
 
     @partial(jit, static_argnums=(0,))
     def simulate(self, key, parameters, energy):
-        F = parameters["field"]
-        rho = parameters["liquid_xe_density"]
-        Wq_eV = 1.9896 + (20.8 - 1.9896) / (1.0 + (rho / 4.0434) ** 1.4407)
+        F = parameters["field"]                  # drift field [V/cm] (A1 "E")
+        rho = parameters["liquid_xe_density"]    # rho_Xe [g/cm^3]
+        W_eV = parameters["w"] * 1000.0          # fixed W [eV]; A1 has no Wq(rho)
 
-        # exciton-to-ion ratio (NEST v2.0: alpha*erf(0.05 E))
-        nex_ni = (0.067366 + rho * 0.039693) * erf(0.05 * energy)
+        # exciton-to-ion ratio alpha = (0.067366 + 0.039693 rho) Phi(0.05 xi)
+        alpha = (0.067366 + 0.039693 * rho) * erf(0.05 * energy)
 
-        # charge yield Qy (NEST v2.0 beta/ER branch; F = drift field)
-        qy_low = 1000.0 / Wq_eV + 6.5 * (1.0 - 1.0 / (1.0 + (F / 47.408) ** 1.9851))
-        hi_field = 1.0 + 0.4607 / (1.0 + (F / 621.74) ** (-2.2717)) ** 53.502
-        qy_med = (
-            32.988
-            - 32.988 / (1.0 + (F / (0.026715 * jnp.exp(rho / 0.33926))) ** 0.6705)
-        ) * hi_field
-        doke_birks = 1652.264 + (1.415935e10 - 1652.264) / (
-            1.0 + (F / 0.02673144) ** 1.564691
+        # charge yield Qy = <N_e>/xi (A1, drift field F; the two misprints fixed)
+        eta = 1.0 + 0.4607 / (1.0 + (F / 621.74) ** (-2.2717)) ** 53.502
+        Y0 = 1000.0 / W_eV + 6.5 * (1.0 - 1.0 / (1.0 + (F / 47.408) ** 1.9851))
+        Y1 = 32.99 * eta * (
+            1.0 - 1.0 / (1.0 + (F / (0.026712 * jnp.exp(rho / 0.33926))) ** 0.6705)
         )
+        tau = (
+            1652.264 + (1.145935e10 - 1652.264) / (1.0 + (F / 0.02673) ** 1.564691)
+        ) * energy ** (-2.0)
         qy = (
-            qy_med
-            + (qy_low - qy_med) / (1.0 + 1.304 * energy ** 2.1393) ** 0.35535
-            + 28.0 / (1.0 + doke_birks * energy ** (-2.0))
+            Y1
+            + (Y0 - Y1) / (1.0 + 1.304 * energy ** 2.1393) ** 0.35535
+            + 28.0 / (1.0 + tau)
         )
 
-        mean_nq = energy * 1000.0 / Wq_eV          # total quanta (ER, L = 1)
+        # A1 mean quanta: <N_q> = 1000 xi / W, <N_e> = xi Qy, ion frac = 1/(1+alpha)
+        mean_nq = energy * 1000.0 / W_eV         # total quanta (ER, L = 1)
         mean_ne = qy * energy
-        mean_nph = mean_nq - mean_ne
-        elec_frac = jnp.where(mean_nq > 0, mean_ne / mean_nq, 0.0)
+        elec_frac = jnp.where(mean_nq > 0, mean_ne / mean_nq, 0.0)  # zeta = <N_e>/<N_q>
 
-        # baseline mean recombination (NEST: 1 - (nex_ni + 1) * elecFrac)
-        recomb_mean0 = jnp.clip(1.0 - (nex_ni + 1.0) * elec_frac, 0.0, 1.0)
+        # baseline mean recombination <r>_0 = 1 - <N_e>/<N_i> = 1 - (1+alpha) zeta
+        recomb_mean0 = jnp.clip(1.0 - (1.0 + alpha) * elec_frac, 0.0, 1.0)
 
-        # baseline recombination fluctuation dr_0 (PRD A1 skew-Gaussian form;
-        # zeta = quenched electron fraction). A(F) is the field-dependent amplitude.
+        # baseline recombination fluctuation dr_0 (A1 skew-Gaussian in zeta; A(F))
         a_field = 0.1383 - 0.09583 / (1.0 + (F / 1210.0) ** 1.25)
         recomb_std0 = (
             a_field
@@ -297,9 +305,9 @@ class ERYieldParamsP4NEST(Plugin):
             * (1.0 + erf(-0.6899 * (elec_frac - 0.5)))
         )
 
-        # Lindhard ~1 for ER; total quanta sampled as B(xi/w, lindhard).
+        # ER Lindhard = 1 exactly (fixed W ties <N_q> to the sampling w = W/1000)
         lindhard = jnp.clip(mean_nq * parameters["w"] / energy, 0.0, 1.0)
-        ion_fraction = jnp.clip(1.0 / (1.0 + nex_ni), 0.0, 1.0)
+        ion_fraction = jnp.clip(1.0 / (1.0 + alpha), 0.0, 1.0)
         return key, lindhard, ion_fraction, recomb_mean0, recomb_std0
 
 
