@@ -310,10 +310,14 @@ class ERYieldParamsP4NEST(Plugin):
         type=float,
         default=150.0,
         help="ER recombination-correction normalization energy [keV]. PRD Eq. 17 "
-        "lists 150 for ER, which is correct: with the (large) ER coefficients, "
-        "xi_norm=30 overshoots above ~15 keV (LY/QY reverse), while 150 gives the "
-        "monotonic Fig. 17 shape. Both ER and NR use 150; only the paper's NR "
-        "xi_norm entry (30) is a typo -- it is NOT an ER<->NR swap.",
+        "lists 150 for ER, which is correct: the published Table II coefficients are "
+        "sized for xi_norm=150. Refitting the digitized Fig. 17 confirms it -- at "
+        "xi_norm=150 the fit has two soft singular directions and the data-matching "
+        "manifold passes within |dp|~0.1-0.2 of Table II (well inside Table III's "
+        "1-sigma), so ~Table II coefficients reproduce LY/QY to ~1%. At xi_norm=30 "
+        "Table II overshoots (LY/QY reverse) and only far-from-Table-II coeffs match. "
+        "Both ER and NR use 150; only the paper's NR xi_norm entry (30) is a typo "
+        "(the Table II NR coeffs blow up at 30 but give 0.1% at 150) -- not a swap.",
     ),
 )
 class ERRecombParamsP4NEST(Plugin):

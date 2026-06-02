@@ -28,39 +28,39 @@
     },
     "p0_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": 1.1},
+        "prior_args": {"val": 1.19},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Legendre coefficient p0 (PRD Table II, published; not yet refit)"
+        "doc": "P4-NEST ER Legendre coefficient p0. PRD Table II central value is 1.1; this is the data-matched value (within Table III's 1-sigma, |dp|~0.17 from Table II) that lands on the digitized Fig.17 manifold at xi_norm_er=150 -> LY/QY rms ~1% (exact Table II would give ~10% QY). See [[project_pandax_4t]]."
     },
     "p1_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": -3.1},
+        "prior_args": {"val": -3.04},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Legendre coefficient p1 (PRD Table II)"
+        "doc": "P4-NEST ER Legendre coefficient p1 (PRD Table II -3.1; data-matched -3.04, within Table III errors)"
     },
     "p2_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": 2.2},
+        "prior_args": {"val": 2.32},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Legendre coefficient p2 (PRD Table II)"
+        "doc": "P4-NEST ER Legendre coefficient p2 (PRD Table II 2.2; data-matched 2.32, within Table III errors)"
     },
     "p3_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": -1.7},
+        "prior_args": {"val": -1.74},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Legendre coefficient p3 (PRD Table II)"
+        "doc": "P4-NEST ER Legendre coefficient p3 (PRD Table II -1.7; data-matched -1.74, within Table III errors)"
     },
     "a_er": {
         "prior_type": "fixed",
