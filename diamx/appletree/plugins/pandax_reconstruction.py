@@ -46,9 +46,10 @@ export, __all__ = exporter(export_self=False)
     Map(
         name="hit_eff",
         method="LERP",
-        default="pandax4t_run0_hit_eff.json",
-        help="Hit-clustering loss probability eps_hit as a function of the number "
-        "of detected hits N_det (PRD 110 023029 Eq. 9, Fig. 6 left).",
+        default="pandax4t_hit_eff.json",
+        help="Hit-clustering SURVIVAL probability 1 - eps_hit as a function of the "
+        "number of detected hits N_det (PRD 110 023029 Eq. 9, Fig. 6 left, whose "
+        "y-axis is 1 - eps_hit). Shared between Run0 and Run1.",
     ),
 )
 class PhotonDetectionPandaX4T(Plugin):
@@ -56,6 +57,9 @@ class PhotonDetectionPandaX4T(Plugin):
 
     N_det = B(num_photon, g1 * s1_lce / (1 + p_dpe))         (stock detection)
     N'_det = B(N_det, 1 - eps_hit(N_det))                    (PandaX hit clustering)
+
+    The ``hit_eff`` map stores the survival probability 1 - eps_hit directly
+    (as digitized from Fig. 6), so the thinning is ``B(N_det, hit_eff(N_det))``.
     """
 
     depends_on = ["num_photon", "s1_lce"]
@@ -67,9 +71,9 @@ class PhotonDetectionPandaX4T(Plugin):
         g1_true_no_dpe = jnp.clip(parameters["g1"] * s1_lce / (1.0 + parameters["p_dpe"]), 0, 1.0)
         key, n_det = randgen.binomial(key, g1_true_no_dpe, num_photon)
 
-        # hit-clustering loss: each detected hit survives with prob 1 - eps_hit(N_det)
-        eps_hit = jnp.clip(self.hit_eff.apply(n_det), 0.0, 1.0)
-        key, num_s1_phd = randgen.binomial(key, 1.0 - eps_hit, n_det)
+        # hit-clustering survival: keep each detected hit with prob 1 - eps_hit(N_det)
+        surv = jnp.clip(self.hit_eff.apply(n_det), 0.0, 1.0)
+        key, num_s1_phd = randgen.binomial(key, surv, n_det)
         return key, num_s1_phd
 
 
