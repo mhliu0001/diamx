@@ -1,0 +1,59 @@
+{
+    "experiments": [
+        {
+            "experiment_name": "pandax4t_run0",
+            "livetime": 0.2601,
+            "fiducial_mass": 2.38,
+            "data": "pandax4t_run0_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(2, 135, 28)",
+                "logcs2_s1": "np.linspace(0.5, 3.5, 31)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "other_er",
+                    "rate_nominal": 504.0,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "tritium",
+                    "rate_nominal": 556.0,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "xe124",
+                    "rate_nominal": 2.3,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "xe127",
+                    "rate_nominal": 7.7,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "neutron",
+                    "rate_nominal": 0.6,
+                    "rate_uncertainty": 0.5,
+                    "rate_relative_uncertainty": true,
+                    "args": {"batch_size": 100000000}
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
+        }
+    ],
+    "signal": {
+        "signal_name": "wimp",
+        "rate_fit_limits": [0, 3000],
+        "rate_parameter_interval_bounds": [0, 3000],
+        "parameter_name": "mass",
+        "parameter_range": "[6, 40, 200, 1000]",
+        "args": {
+            "signal_spectrum_path": "/home/mhliu/Documents/diamx/diamx/data/wimp_{mass:d}GeV.csv"
+        }
+    }
+}

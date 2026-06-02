@@ -1,0 +1,189 @@
+{
+    "w": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0137
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "keV",
+        "doc": "Mean energy per quantum W"
+    },
+    "liquid_xe_density": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 2.8619
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "g/cm^3",
+        "doc": "LXe density"
+    },
+    "field": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 93.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "V/cm",
+        "doc": "PandaX-4T run0 drift field"
+    },
+    "p0_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.237
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER parameter p0_er"
+    },
+    "p1_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": -0.419
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER parameter p1_er"
+    },
+    "p2_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.377
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER parameter p2_er"
+    },
+    "p3_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": -0.097
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER parameter p3_er"
+    },
+    "a_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 1.11
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER parameter a_er"
+    },
+    "d_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "ER Run1 recomb shift"
+    },
+    "g1": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0997
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "PE/photon",
+        "doc": "S1 gain"
+    },
+    "g2": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 4.12
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "PE/e",
+        "doc": "S2 bottom gain g2_b"
+    },
+    "p_dpe": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.22
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "double-PE probability"
+    },
+    "gas_gain": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 20.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "PE/e",
+        "doc": "PLACEHOLDER single-electron gain"
+    },
+    "drift_velocity": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0677
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "cm/us",
+        "doc": "PLACEHOLDER drift velocity"
+    },
+    "elife_sigma": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "elife_sigma (nominal 0 for templates)"
+    },
+    "s1_cut_acc_sigma": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "s1_cut_acc_sigma (nominal 0 for templates)"
+    },
+    "s2_cut_acc_sigma": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "s2_cut_acc_sigma (nominal 0 for templates)"
+    }
+}
