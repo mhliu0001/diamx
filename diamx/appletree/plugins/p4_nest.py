@@ -316,16 +316,19 @@ class ERYieldParamsP4NEST(Plugin):
     Constant(
         name="xi_norm_er",
         type=float,
-        default=150.0,
-        help="ER recombination-correction normalization energy [keV]. PRD Eq. 17 "
-        "lists 150 for ER, which is correct: the published Table II coefficients are "
-        "sized for xi_norm=150. Refitting the digitized Fig. 17 confirms it -- at "
-        "xi_norm=150 the fit has two soft singular directions and the data-matching "
-        "manifold passes within |dp|~0.1-0.2 of Table II (well inside Table III's "
-        "1-sigma), so ~Table II coefficients reproduce LY/QY to ~1%. At xi_norm=30 "
-        "Table II overshoots (LY/QY reverse) and only far-from-Table-II coeffs match. "
-        "Both ER and NR use 150; only the paper's NR xi_norm entry (30) is a typo "
-        "(the Table II NR coeffs blow up at 30 but give 0.1% at 150) -- not a swap.",
+        default=30.0,
+        help="ER recombination-correction normalization energy [keV]. xi_norm is a "
+        "reparametrization -- any value fits the same <r>(xi) curve given suitable "
+        "coefficients -- so diamx fits p0..p3 to the digitized Fig. 17 yield CURVE "
+        "(not the published Table II values, which are degenerate: Table III quotes "
+        "+-50-100% errors). At xi_norm=30 that fit is well-conditioned and gives small "
+        "coefficients (~[0.24,-0.42,0.38,-0.10]) that reproduce LY/QY to ~0.2% with no "
+        "residual structure. Anchoring to ~Table II at xi_norm=150 (which the "
+        "degeneracy there allows) instead leaves a ~1% mid-energy (5-15 keV) wobble, "
+        "because PandaX's Table II ER coefficients are themselves ~1% inconsistent with "
+        "their own Fig. 17 curve. We match the curve (it feeds the templates). NR uses "
+        "xi_norm_nr=150, where its Table II coefficients reproduce the curve directly "
+        "(the paper's Eq. 17 NR=30 entry is a typo -- those coeffs blow up at 30).",
     ),
 )
 class ERRecombParamsP4NEST(Plugin):

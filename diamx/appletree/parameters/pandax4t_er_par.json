@@ -28,39 +28,39 @@
     },
     "p0_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": 1.19},
+        "prior_args": {"val": 0.237},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Legendre coefficient p0. PRD Table II central value is 1.1; this is the data-matched value (within Table III's 1-sigma, |dp|~0.17 from Table II) that lands on the digitized Fig.17 manifold at xi_norm_er=150 -> LY/QY rms ~1% (exact Table II would give ~10% QY). See [[project_pandax_4t]]."
+        "doc": "P4-NEST ER Legendre coefficient p0, FIT to the digitized Fig.17 yield curve at xi_norm_er=30 (free LS, no Table-II prior). Reproduces LY/QY to ~0.2% with no residual structure. NOT the published Table II value 1.1: Table II at xi_norm=150 leaves a ~1% mid-energy wobble (PandaX's degenerate ER coeffs are ~1% inconsistent with their own Fig.17 curve). See [[project_pandax_4t]]."
     },
     "p1_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": -3.04},
+        "prior_args": {"val": -0.419},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Legendre coefficient p1 (PRD Table II -3.1; data-matched -3.04, within Table III errors)"
+        "doc": "P4-NEST ER Legendre coefficient p1, fit to Fig.17 at xi_norm_er=30 (Table II value -3.1 is for xi_norm=150)"
     },
     "p2_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": 2.32},
+        "prior_args": {"val": 0.377},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Legendre coefficient p2 (PRD Table II 2.2; data-matched 2.32, within Table III errors)"
+        "doc": "P4-NEST ER Legendre coefficient p2, fit to Fig.17 at xi_norm_er=30 (Table II value 2.2 is for xi_norm=150)"
     },
     "p3_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": -1.74},
+        "prior_args": {"val": -0.097},
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Legendre coefficient p3 (PRD Table II -1.7; data-matched -1.74, within Table III errors)"
+        "doc": "P4-NEST ER Legendre coefficient p3, fit to Fig.17 at xi_norm_er=30 (Table II value -1.7 is for xi_norm=150)"
     },
     "a_er": {
         "prior_type": "fixed",
@@ -78,6 +78,6 @@
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Run1 recombination shift. 0 for Run0; fitting the digitized Run1 LY+QY gives ~-0.028 (close to Table II's d_ER=-0.032). Both ER and NR Run1 prefer d~-0.03; the listed d_NR=-0.043 matches neither."
+        "doc": "P4-NEST ER Run1 recombination shift. 0 for Run0; fitting the digitized Run1 LY+QY at xi_norm_er=30 gives ~-0.029 (close to Table II's d_ER=-0.032). Both ER and NR Run1 prefer d~-0.03; the listed d_NR=-0.043 matches neither."
     }
 }
