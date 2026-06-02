@@ -78,6 +78,6 @@
         "init_mean": null,
         "init_std": null,
         "unit": "1",
-        "doc": "P4-NEST ER Run1 recombination shift. 0 for Run0; for Run1 use -0.043 (Table II's d_NR -- the d_ER/d_NR values appear swapped between ER and NR, like xi_norm; to be confirmed against Fig. 17)."
+        "doc": "P4-NEST ER Run1 recombination shift. 0 for Run0; fitting the digitized Run1 LY+QY gives ~-0.028 (close to Table II's d_ER=-0.032). Both ER and NR Run1 prefer d~-0.03; the listed d_NR=-0.043 matches neither."
     }
 }
