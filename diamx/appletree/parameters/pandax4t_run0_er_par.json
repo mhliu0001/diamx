@@ -134,13 +134,13 @@
     "gas_gain": {
         "prior_type": "fixed",
         "prior_args": {
-            "val": 5.0
+            "val": 5.5
         },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "PE/e",
-        "doc": "single-electron gain [PE/e] (~5 from Fig.2; refine later)"
+        "doc": "single-electron gain [PE/e]. PLACEHOLDER ~5-6 (refine from Fig.2). MUST be >= max g2_b (run1 g2_b=5.03) so extraction_eff=g2_b/gas_gain<=1; only affects S2 resolution, not the mean S2 (=g2_b)."
     },
     "drift_velocity": {
         "prior_type": "fixed",
