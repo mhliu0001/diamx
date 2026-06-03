@@ -134,13 +134,13 @@
     "gas_gain": {
         "prior_type": "fixed",
         "prior_args": {
-            "val": 20.0
+            "val": 5.0
         },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "PE/e",
-        "doc": "PLACEHOLDER single-electron gain"
+        "doc": "single-electron gain [PE/e] (~5 from Fig.2; refine later)"
     },
     "drift_velocity": {
         "prior_type": "fixed",
@@ -151,7 +151,7 @@
         "init_mean": null,
         "init_std": null,
         "unit": "cm/us",
-        "doc": "PLACEHOLDER drift velocity"
+        "doc": "drift velocity [cm/us]. IRRELEVANT: electron-lifetime loss is disabled (pandax4t_elife.json ~ 1e9 us -> survival~1), and there is no position dependence. Kept only because appletree's DriftLoss requires it."
     },
     "elife_sigma": {
         "prior_type": "fixed",

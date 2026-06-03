@@ -3,7 +3,7 @@
     "s1_correction": "_s1_correction.json",
     "s2_lce": "_s2_correction.json",
     "s2_correction": "_s2_correction.json",
-    "elife": "_elife.json",
+    "elife": "pandax4t_elife.json",
     "posrec_reso": "_posrec_reso.json",
     "gas_gain_relative": "_gas_gain_relative.json",
     "efield_map": "_efield_map.json",
