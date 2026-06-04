@@ -83,11 +83,13 @@ class PandaX4T(Experiment):
         "neutron": "pandax4t_run0_nr_par.json",
         "nr": "pandax4t_run0_nr_par.json",
     }
-    # net signal efficiency vs energy (digitized PRD Fig. 15) for eff uncertainty
+    # signal (NR) total-efficiency band vs energy (digitized PRD Fig. 15), with the
+    # 1-sigma band regularized at the low/high ends (relative diff held constant past
+    # the digitized band range -- see notebooks/pandax4t_efficiency.ipynb).
     default_eff_file = [
-        "pandax4t_run0_eff_median.csv",
-        "pandax4t_run0_eff_lower.csv",
-        "pandax4t_run0_eff_upper.csv",
+        "pandax4t_run0_eff_nr_total_median.csv",
+        "pandax4t_run0_eff_nr_total_lower_reg.csv",
+        "pandax4t_run0_eff_nr_total_upper_reg.csv",
     ]
     default_data_file = "pandax4t_run0_wimp_data.csv"
 
@@ -436,8 +438,8 @@ class PandaX4TRun1(PandaX4TRun0):
         "nr": "pandax4t_run1_nr_par.json",
     }
     default_eff_file = [
-        "pandax4t_run1_eff_median.csv",
-        "pandax4t_run1_eff_lower.csv",
-        "pandax4t_run1_eff_upper.csv",
+        "pandax4t_run1_eff_nr_total_median.csv",
+        "pandax4t_run1_eff_nr_total_lower_reg.csv",
+        "pandax4t_run1_eff_nr_total_upper_reg.csv",
     ]
     default_data_file = "pandax4t_run1_wimp_data.csv"
