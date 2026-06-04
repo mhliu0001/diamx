@@ -59,6 +59,61 @@
                 "parameter_interval_bounds": [0.5, 1.5],
                 "args": {}
             }
+        },
+        {
+            "experiment_name": "pandax4t_run1",
+            "livetime": 0.4032258065,
+            "fiducial_mass": 2.48,
+            "data": "pandax4t_run1_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(2, 135, 134)",
+                "logcs2_s1": "np.linspace(0.5, 3.5, 101)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "other_er",
+                    "rate_nominal": 3040.48,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "tritium",
+                    "rate_nominal": 282.72,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "xe124",
+                    "rate_nominal": 10.168,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "neutron",
+                    "rate_nominal": 2.728,
+                    "rate_uncertainty": 0.5454,
+                    "rate_relative_uncertainty": true,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "b8",
+                    "rate_nominal": 1.736,
+                    "rate_uncertainty": 0.2857,
+                    "rate_relative_uncertainty": true,
+                    "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "ac",
+                    "rate_nominal": 32.24,
+                    "args": {
+                        "template_path": "pandax4t_run1_ac_template.h5",
+                        "hist_name": "cs1-logcs2_s1"
+                    }
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [0.5, 1.5],
+                "parameter_interval_bounds": [0.5, 1.5],
+                "args": {}
+            }
         }
     ],
     "signal": {
