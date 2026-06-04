@@ -36,6 +36,14 @@
                     "rate_uncertainty": 0.5,
                     "rate_relative_uncertainty": true,
                     "args": {"batch_size": 100000000}
+                },
+                {
+                    "bkg_name": "ac",
+                    "rate_nominal": 11.0,
+                    "args": {
+                        "template_path": "pandax4t_run0_ac_template.h5",
+                        "hist_name": "cs1-logcs2_s1"
+                    }
                 }
             ],
             "shaped_bkgs": [],
