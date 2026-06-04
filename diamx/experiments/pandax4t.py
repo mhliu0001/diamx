@@ -280,8 +280,12 @@ class PandaX4T(Experiment):
                 if opt in kwargs:
                     apt_config[opt] = kwargs[opt]
             if "energy_spectrum" in kwargs:
-                apt_config["energy_spectrum"] = csv_to_apt_map(
-                    kwargs["energy_spectrum"], "pdf"
+                spectrum = str(kwargs["energy_spectrum"])
+                # accept a CSV (converted to an apt map) or an existing apt map JSON
+                # (e.g. the reused XENONnT neutron recoil spectrum)
+                apt_config["energy_spectrum"] = (
+                    spectrum if spectrum.endswith(".json")
+                    else csv_to_apt_map(spectrum, "pdf")
                 )
             cs1, cs2, eff = self.run_appletree(
                 batch_size, apt_config, yield_model, param_path, name
@@ -402,7 +406,20 @@ class PandaX4TRun0(PandaX4T):
                 "er_mono", rate, template_file_path, name, mono_energy=5.2, **kwargs
             )
         elif name in ("neutron", "pandax_neutron"):
-            self._generate_template("neutron", rate, template_file_path, name, **kwargs)
+            # radiogenic-neutron NR background -- reuse the XENONnT neutron recoil
+            # spectrum (an appletree map JSON), per the PandaX-4T integration plan
+            spectrum_path = get_file_path_diamx("xenonnt_sr0_neutron_spectrum.json")
+            self._generate_template(
+                "neutron", rate, template_file_path, name,
+                energy_spectrum=spectrum_path, **kwargs,
+            )
+        elif name in ("b8", "8b"):
+            # solar 8B CEvNS NR background -- digitized recoil spectrum (PRD Fig.)
+            spectrum_path = importlib.resources.files("diamx") / "data" / "pandax4t_b8_spectrum.csv"
+            self._generate_template(
+                "neutron", rate, template_file_path, name,
+                energy_spectrum=str(spectrum_path), **kwargs,
+            )
         elif "template_path" in kwargs:
             if "hist_name" not in kwargs:
                 raise ValueError("hist_name must be provided for external templates.")

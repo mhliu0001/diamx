@@ -38,6 +38,13 @@
                     "args": {"batch_size": 100000000}
                 },
                 {
+                    "bkg_name": "b8",
+                    "rate_nominal": 0.3,
+                    "rate_uncertainty": 0.333,
+                    "rate_relative_uncertainty": true,
+                    "args": {"batch_size": 100000000}
+                },
+                {
                     "bkg_name": "ac",
                     "rate_nominal": 11.0,
                     "args": {
