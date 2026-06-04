@@ -6,8 +6,8 @@
             "fiducial_mass": 2.38,
             "data": "pandax4t_run0_wimp_data.csv",
             "roi": {
-                "cs1": "np.linspace(2, 135, 28)",
-                "logcs2_s1": "np.linspace(0.5, 3.5, 31)"
+                "cs1": "np.linspace(2, 135, 134)",
+                "logcs2_s1": "np.linspace(0.5, 3.5, 101)"
             },
             "bkgs": [
                 {
