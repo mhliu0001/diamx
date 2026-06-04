@@ -23,5 +23,7 @@
         "pandax4t_run1_s2_cut_acc_lower.json",
         "pandax4t_run1_s2_cut_acc_upper.json",
         "s2_cut_acc_sigma"
-    ]
+    ],
+    "quality_residual": "pandax4t_run1_eff_nr_quality_residual.json",
+    "recon_eff": "pandax4t_run1_eff_nr_rec.json"
 }

@@ -50,9 +50,12 @@ class _PandaX4TChain(ComponentSim):
         self.register_all(apt.plugins.reconstruction)
         # PandaX hit-clustering loss -- overrides the stock PhotonDetection
         self.register(pandax_reconstruction.PhotonDetectionPandaX4T)
-        # selection efficiency: S1 and S2 cut acceptance -> eff
+        # efficiency (PRD Eq. 16): quality = S1/S2 cut acceptance x residual r(xi),
+        # times the reconstruction efficiency; SS = 1; ROI applied by the binning.
         self.register(apt.plugins.efficiency.S1CutAccept)
         self.register(apt.plugins.efficiency.S2CutAccept)
+        self.register(pandax_reconstruction.QualityResidualPandaX4T)
+        self.register(pandax_reconstruction.ReconEffPandaX4T)
         self.register(pandax_reconstruction.EffPandaX4T)
 
     def _register_nr_yields(self):

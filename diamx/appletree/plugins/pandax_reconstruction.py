@@ -78,17 +78,64 @@ class PhotonDetectionPandaX4T(Plugin):
 
 
 @export
-class EffPandaX4T(Plugin):
-    """Per-event selection acceptance weight: eff = cut_acc_s1 * cut_acc_s2.
+@takes_config(
+    Map(
+        name="quality_residual",
+        method="LERP",
+        default="pandax4t_run0_eff_nr_quality_residual.json",
+        help="Residual energy-dependent quality acceptance r(xi) = (Fig.15 quality) / "
+        "(s1_cut_acc * s2_cut_acc projection). The S1/S2 cut acceptances reproduce only "
+        "the high-energy plateau; r(xi) carries the low-energy quality turn-on and a "
+        "~5% residual plateau loss. Run- and recoil-specific (set via the instruct).",
+    ),
+)
+class QualityResidualPandaX4T(Plugin):
+    """Residual energy-space quality acceptance r(xi) (see derivation in
+    notebooks/pandax4t_efficiency.ipynb)."""
 
-    Overrides appletree's ``Eff``; PandaX's measured S1/S2 cut-acceptance curves
-    (Fig. 12, via ``S1CutAccept`` / ``S2CutAccept``) already fold in reconstruction
-    and threshold efficiency, so no separate S2-threshold / 3-fold-S1 term.
+    depends_on = ["energy"]
+    provides = ["acc_quality_residual"]
+
+    @partial(jit, static_argnums=(0,))
+    def simulate(self, key, parameters, energy):
+        return key, jnp.clip(self.quality_residual.apply(energy), 0.0, 1.0)
+
+
+@export
+@takes_config(
+    Map(
+        name="recon_eff",
+        method="LERP",
+        default="pandax4t_run0_eff_nr_rec.json",
+        help="Reconstruction efficiency eps_recon(xi) vs recoil energy (PRD Eq. 16, "
+        "Fig. 15 reconstruction curve). Run- and recoil-specific (set via the instruct).",
+    ),
+)
+class ReconEffPandaX4T(Plugin):
+    """Reconstruction efficiency eps_recon(xi) as a function of recoil energy."""
+
+    depends_on = ["energy"]
+    provides = ["acc_recon"]
+
+    @partial(jit, static_argnums=(0,))
+    def simulate(self, key, parameters, energy):
+        return key, jnp.clip(self.recon_eff.apply(energy), 0.0, 1.0)
+
+
+@export
+class EffPandaX4T(Plugin):
+    """Per-event efficiency weight (PRD Eq. 16): quality x ROI x recon x SS.
+
+        eff = [cut_acc_s1 * cut_acc_s2 * r(xi)]   (quality: S1/S2 cut acc + residual)
+              * acc_recon(xi)                     (reconstruction)
+
+    Single-scatter (SS) = 1 (this study uses single-scatter signals only), and the
+    ROI term is applied downstream by the (cs1, log10(cs2/cs1)) ROI binning, not here.
     """
 
-    depends_on = ["cut_acc_s1", "cut_acc_s2"]
+    depends_on = ["cut_acc_s1", "cut_acc_s2", "acc_quality_residual", "acc_recon"]
     provides = ["eff"]
 
     @partial(jit, static_argnums=(0,))
-    def simulate(self, key, parameters, cut_acc_s1, cut_acc_s2):
-        return key, cut_acc_s1 * cut_acc_s2
+    def simulate(self, key, parameters, cut_acc_s1, cut_acc_s2, acc_quality_residual, acc_recon):
+        return key, cut_acc_s1 * cut_acc_s2 * acc_quality_residual * acc_recon
