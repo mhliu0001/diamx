@@ -1,4 +1,7 @@
-alea-inference
+# Pinned: alea 0.3.5 changed _confidence_interval_checks to return 4 values
+# (added confidence_interval_root_find), which breaks DiamxModel.confidence_interval.
+# 0.3.4 matches the cvmfs analysis environment diamx targets.
+alea-inference==0.3.4
 appletree==0.5.5
 blueice
 importlib_resources

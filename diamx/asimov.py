@@ -279,4 +279,15 @@ def get_asimov_sigma(
             RuntimeWarning,
         )
 
+    # The Minuit objective is a closure capturing asimov_model, so
+    # asimov_model -> minuit_object -> MinuitWrap.func -> asimov_model forms a
+    # reference cycle that passes through iminuit's C extension and is not
+    # reliably reclaimed by the cyclic garbage collector. Since this function is
+    # called many times per confidence_interval_asymptotic (once per brentq
+    # iteration), each surviving asimov_model retains a full set of template
+    # histograms and leaks memory across mass points. Break the cycle explicitly
+    # so the temporary model (and its TemplateSources) can be freed on return.
+    asimov_model.minuit_object = None
+    asimov_model._likelihood = None
+
     return sigma
