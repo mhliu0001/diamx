@@ -269,3 +269,83 @@ def test_lz_ws2024(tmp_path):
     lz_experiment_ws2024.get_data()
     lz_experiment_ws2024.get_bkg_templates()
     lz_experiment_ws2024.get_shaped_bkg_templates()
+
+
+# The PandaX-4T analysis space is (cS1, log10(cS2_b/cS1)); the AC component is a
+# contour-driven template loaded from disk whose binning must match the roi, so
+# these tests use the real (fine) roi from the config.
+_PANDAX_ROI = {
+    "cs1": "np.linspace(2, 135, 134)",
+    "logcs2_s1": "np.linspace(0.5, 3.5, 101)",
+}
+
+
+def test_pandax4t_run0(tmp_path):
+    test_config = {
+        "experiment_name": "pandax4t_run0",
+        "livetime": 0.2268907563,
+        "fiducial_mass": 2.38,
+        "data": "pandax4t_run0_wimp_data.csv",
+        "roi": _PANDAX_ROI,
+        "bkgs": [
+            {"bkg_name": "other_er", "rate_nominal": 2221.333, "args": {"batch_size": 5000}},
+            {"bkg_name": "tritium", "rate_nominal": 2450.519, "args": {"batch_size": 5000}},
+            {"bkg_name": "xe124", "rate_nominal": 10.137, "args": {"batch_size": 5000}},
+            {"bkg_name": "xe127", "rate_nominal": 33.937, "args": {"batch_size": 5000}},
+            {"bkg_name": "neutron", "rate_nominal": 2.6444, "args": {"batch_size": 5000}},
+            {"bkg_name": "b8", "rate_nominal": 1.3222, "args": {"batch_size": 5000}},
+            {
+                "bkg_name": "ac",
+                "rate_nominal": 48.4815,
+                "args": {
+                    "template_path": "pandax4t_run0_ac_template.h5",
+                    "hist_name": "cs1-logcs2_s1",
+                },
+            },
+        ],
+        "shaped_bkgs": [],
+        "eff": {
+            "fit_limits": [0.5, 1.5],
+            "parameter_interval_bounds": [0.5, 1.5],
+            "args": {},
+        },
+    }
+    pandax_run0 = diamx.experiments.PandaX4TRun0(test_config, tmp_path)
+    pandax_run0.get_data()
+    pandax_run0.get_bkg_templates()
+    pandax_run0.get_shaped_bkg_templates()
+
+
+def test_pandax4t_run1(tmp_path):
+    test_config = {
+        "experiment_name": "pandax4t_run1",
+        "livetime": 0.4032258065,
+        "fiducial_mass": 2.48,
+        "data": "pandax4t_run1_wimp_data.csv",
+        "roi": _PANDAX_ROI,
+        "bkgs": [
+            {"bkg_name": "other_er", "rate_nominal": 3040.48, "args": {"batch_size": 5000}},
+            {"bkg_name": "tritium", "rate_nominal": 282.72, "args": {"batch_size": 5000}},
+            {"bkg_name": "xe124", "rate_nominal": 10.168, "args": {"batch_size": 5000}},
+            {"bkg_name": "neutron", "rate_nominal": 2.728, "args": {"batch_size": 5000}},
+            {"bkg_name": "b8", "rate_nominal": 1.736, "args": {"batch_size": 5000}},
+            {
+                "bkg_name": "ac",
+                "rate_nominal": 32.24,
+                "args": {
+                    "template_path": "pandax4t_run1_ac_template.h5",
+                    "hist_name": "cs1-logcs2_s1",
+                },
+            },
+        ],
+        "shaped_bkgs": [],
+        "eff": {
+            "fit_limits": [0.5, 1.5],
+            "parameter_interval_bounds": [0.5, 1.5],
+            "args": {},
+        },
+    }
+    pandax_run1 = diamx.experiments.PandaX4TRun1(test_config, tmp_path)
+    pandax_run1.get_data()
+    pandax_run1.get_bkg_templates()
+    pandax_run1.get_shaped_bkg_templates()
