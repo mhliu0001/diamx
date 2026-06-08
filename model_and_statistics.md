@@ -2,13 +2,22 @@
 
 # Signal & Background Modeling and Statistical Inference in `diamx`
 
-**Minghao Liu, Nov 11, 2025**
+**Minghao Liu**
 
 [TOC]
 
-In `diamx`, we implement complete background and signal models for the XENONnT [[1]](#xenonnt_sr0) [[2]](#xenonnt_sr1) and LUX-ZEPLIN (LZ) [[3]](#lz_ws2022) [[4]](#lz_ws2024) experiment. This note describes how these models are constructed and implemented.
+In `diamx`, we implement complete background and signal models for the XENONnT [[1]](#xenonnt_sr0) [[2]](#xenonnt_sr1), LUX-ZEPLIN (LZ) [[3]](#lz_ws2022) [[4]](#lz_ws2024), and PandaX-4T [[15]](#pandax_prl) [[16]](#pandax_prd) experiments. This note describes how these models are constructed and implemented.
 
 The note is divided into four sections. The first section describes how the ER and NR events are modeled using parametrized models with `appletree` and `nest`. The second section describes the contour-driven treatment for data-driven background components, such as accidental coincidence (AC) and surface events. The third section is devoted to the construction of confidence intervals and discovery significances with asymptotic equations. The last section explains experiment-specific configurations, and uses spin-independent WIMP model to demonstrate how `diamx` reproduces the confidence intervals of WIMP-nucleon cross sections in literature.
+
+## History of this note
+
+This note is maintained alongside the `diamx` package; its major revisions are summarized below.
+
+| Date         | Version      | Update                                                                                                                                                                                                                          |
+| ------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2025-11-11   | v0.2.0       | Initial note: ER/NR and data-driven background modeling, the profiled-likelihood inference framework, and the XENONnT (SR0, SR1) and LZ (WS2022, WS2024) experiment models. (First drafted 2025-06-15.)                          |
+| 2026-06-07   | unreleased   | Added the PandaX-4T Run0 & Run1 model: micro-physics (P4-NEST), detector response (including the per-run electron-lifetime treatment), efficiency, the contour-band AC template, and the experiment-specific section, with references [[15]](#pandax_prl) [[16]](#pandax_prd). |
 
 ## Modeling ER and NR Events with `appletree` or `nest`
 
@@ -20,11 +29,11 @@ A realistic model for ER and NR events should predict the distribution of backgr
 2. **Detector response model**: Simulates photon/electron transport, S1/S2 signal formation and corrections, and reconstruction biases.
 3. **Efficiency model**: Accounts for various effects that may lead to event loss, such as S1 reconstruction and selection criteria.
 
-We use the package `appletree` and `nest` to construct models for XENONnT and LZ, respectively. This section describes the three modules defined in `diamx`.
+We use the package `appletree` to construct models for XENONnT and PandaX-4T, and the package `nest` for LZ. This section describes the three modules defined in `diamx`.
 
 ### Micro-physics Model
 
-Both XENONnT and LZ use the NEST parametrization, which uses a series of parameters to construct a model for liquid xenon scintillation yields. In order to match calibration data, both experiments adjust the micro-physics parameters from the default parameters, and these parameters are mostly available in literature.
+XENONnT, LZ, and PandaX-4T all use NEST-based parametrizations, which use a series of parameters to construct a model for liquid xenon scintillation yields. In order to match calibration data, each experiment adjusts the micro-physics parameters from the default parameters, and these parameters are mostly available in literature.
 
 #### XENONnT Micro-physics
 
@@ -105,6 +114,36 @@ Note:
 * `ERYieldsParam[5]` acts as a switch to toggle the density and W corrections. $-1$ means turning on the toggling.
 * `NRERWidthsParam[7]` enters the calculation of $A$ for ER.
 
+#### PandaX-4T Micro-physics
+
+PandaX-4T uses its own NEST-based signal-response model, detailed in [[16]](#pandax_prd). Unlike for XENONnT and LZ, this model is not distributed as a ready-to-use parametrization, so `diamx.appletree` re-implements it as a set of custom plugins (`p4_nest`). The mean yields follow [[16]](#pandax_prd): NR light and charge yields from Eq. (A2), and ER yields from Appendix A1. The ER mean yields *as printed* in Appendix A1 contain several apparent misprints (e.g. the $Y_1$ exponential argument, the $Q_y$ energy exponent, and the $1{+}\alpha$ in $\langle N_i\rangle$) that make $Q_y$ roughly a factor of two too high; we instead implement the NEST v2.0 source [[6]](#nest_paper) that A1 is based on, with a fixed work function $W$. The recombination fluctuation $\Delta r$ uses the skew-Gaussian in the quenched electron fraction $\zeta=\langle N_e\rangle/\langle N_q\rangle$ from Appendix A1/A2.
+
+On top of the mean recombination, PandaX applies an energy-dependent correction (Eq. (17) of [[16]](#pandax_prd)):
+$$
+\langle r\rangle = \mathrm{clip}\!\left(\langle r\rangle_0 + P_3(\xi/\xi_{\mathrm{norm}})\,e^{-\xi/\xi_{\mathrm{norm}}} + d,\; 0,\; 1\right),
+$$
+where $P_3$ is a third-order Legendre polynomial with coefficients $p_0\ldots p_3$, $\xi$ is the recoil energy, and $d$ is a per-run shift; the fluctuation is scaled as $\Delta r = a\,\Delta r_0$. We treat $\xi_{\mathrm{norm}}$ as a reparametrization and use $\xi_{\mathrm{norm}}^{\mathrm{ER}}=30$ keV and $\xi_{\mathrm{norm}}^{\mathrm{NR}}=150$ keV (the Eq. (17) NR entry of 30 keV overshoots and is treated as a typo).
+
+Rather than adopting the published Table II coefficients (which carry $\pm 50$–$100\%$ uncertainties and are degenerate), we fit $p_0\ldots p_3$ directly to the digitized yield curves of Fig. 17 of [[16]](#pandax_prd). For NR the published yields only reach $\sim 79$ keV (cS1 $\sim 115$), whereas the NR median band extends to cS1 $\sim 134$; we therefore fit the NR coefficients **jointly** to the Fig. 17 LY/QY and to the published NR-median locus at high cS1, which constrains the high-energy charge-to-light ratio that is otherwise extrapolated. The fit is analytic (anchored and verified against Monte-Carlo); the full procedure is documented in `notebooks/pandax4t_yields.ipynb`. The resulting model reproduces the Fig. 17 light yield, charge yield, and recombination fluctuation to better than $\sim 1\%$, and the NR median / ER band to the published curves (see Fig. 4.10).
+
+The micro-physics parameters used in `appletree` are listed in Table 1.4.
+
+**Table 1.4**: PandaX-4T micro-physics parameters used in `diamx`. The functional forms follow [[16]](#pandax_prd); the recombination-correction coefficients are fit to the Fig. 17 yield curves (and, for NR, the NR median) as described above.
+
+| Parameter (name in `diamx`)                  | Value                                   | Unit  |
+| -------------------------------------------- | --------------------------------------- | ----- |
+| $W$ (`w`)                                    | $13.7$                                  | eV    |
+| $\rho_{\mathrm{Xe}}$ (`liquid_xe_density`)   | $2.8619$                                | g/cm³ |
+| $\xi_{\mathrm{norm}}^{\mathrm{ER}}$ (`xi_norm_er`) | $30$                              | keV   |
+| $\xi_{\mathrm{norm}}^{\mathrm{NR}}$ (`xi_norm_nr`) | $150$                             | keV   |
+| ER $p_0\ldots p_3$ (`p{0..3}_er`)            | $[0.237, -0.419, 0.377, -0.097]$        | --    |
+| ER $d$ (`d_er`), Run0 / Run1                 | $0$ / $-0.029$                          | --    |
+| ER $a$ (`a_er`)                              | $1.11$                                  | --    |
+| NR $p_0\ldots p_3$ (`p{0..3}_nr`), Run0      | $[0.690, -1.495, 1.230, -0.589]$        | --    |
+| NR $p_0\ldots p_3$ (`p{0..3}_nr`), Run1      | $[0.523, -0.981, 0.926, -0.330]$        | --    |
+| NR $d$ (`d_nr`), Run0 / Run1                 | $0$ / $-0.031$                          | --    |
+| NR $a$ (`a_nr`)                              | $1.06$                                  | --    |
+
 ### Detector Response Model
 
 A typical detector model includes the following effects:
@@ -137,6 +176,23 @@ Table 1.3 lists the detector parameters used in XENONnT SR0 & SR1 detector model
 | Drift velocity           | $0.0677\, \mathrm{cm/\mu s}$ (source: `appletree` value) | $0.0677\, \mathrm{cm/\mu s}$ (source: `appletree` value) |
 | Electric field           | $23\, \mathrm{V/cm}$ [[1]](#xenonnt_sr0)                 | $23\, \mathrm{V/cm}$ [[2]](#xenonnt_sr1)                 |
 | Probability of DPE       | $0.227$ (source: `appletree` value)                      | $0.227$ (source: `appletree` value)                      |
+
+The PandaX-4T detector model is also implemented in `appletree`. PandaX reconstructs in the $(cS1, \log_{10}(cS2_b/cS1))$ space, where $cS2_b$ is the *bottom*-array S2 and the second axis is a *ratio* — in contrast to the absolute $cS2$ used by XENONnT and the $S2c$ used by LZ. The corresponding gains $g_1$ and $g_{2b}$ differ between Run0 and Run1 and are taken from [[16]](#pandax_prd) (the values quoted in [[15]](#pandax_prl) agree to $\lesssim 1\%$). One PandaX-specific reconstruction addition is the hit-clustering loss (Eq. (9) and Fig. 6 of [[16]](#pandax_prd)), in which detected S1 hits can be lost during clustering with an energy/hit-count-dependent probability.
+
+Unlike for XENONnT and LZ, we keep a finite, position- and time-dependent **electron lifetime**, because it is the dominant contributor to the width of the ER/NR bands here. Each simulated event draws an electron lifetime from the per-run distribution digitized from Fig. 1 of [[16]](#pandax_prd) (stored as an inverse-CDF / quantile map, `pandax4t_run{0,1}_elife.json`, built in `notebooks/pandax4t_maps.ipynb`); the resulting binomial charge loss — a mean of $\sim 30\%$ over the $\sim 120$ cm drift, with the charge-survival correction dividing out only the *mean* — broadens the bands by the right amount. The drift velocities are set so that the maximum drift time matches the PandaX values ($\sim 820\,\mu$s for Run0 and $\sim 900\,\mu$s for Run1, the latter having a lower drift field). Detector parameters are listed in Table 1.5.
+
+**Table 1.5**: Detector parameters used in the PandaX-4T Run0 & Run1 model.
+
+| Parameter                  | Run0                                       | Run1                                       |
+| -------------------------- | ------------------------------------------ | ------------------------------------------ |
+| Photon gain $g_1$          | $0.0997\,\mathrm{PE/photon}$ [[16]](#pandax_prd) | $0.0907\,\mathrm{PE/photon}$ [[16]](#pandax_prd) |
+| Bottom-S2 gain $g_{2b}$    | $4.12\,\mathrm{PE/electron}$ [[16]](#pandax_prd) | $5.03\,\mathrm{PE/electron}$ [[16]](#pandax_prd) |
+| Single-electron gain $G$   | $5.5\,\mathrm{PE/electron}$ (source: `appletree` placeholder) | $5.5\,\mathrm{PE/electron}$ (source: `appletree` placeholder) |
+| Drift velocity             | $0.146\,\mathrm{cm/\mu s}$                  | $0.133\,\mathrm{cm/\mu s}$                  |
+| Max drift time             | $\sim 820\,\mu\mathrm{s}$                   | $\sim 900\,\mu\mathrm{s}$                   |
+| Electron lifetime          | $\sim 400$–$1700\,\mu\mathrm{s}$ (median $\sim 1150$) [[16]](#pandax_prd) | $\sim 500$–$1760\,\mu\mathrm{s}$ (median $\sim 1550$) [[16]](#pandax_prd) |
+| Drift field                | $93\,\mathrm{V/cm}$ [[16]](#pandax_prd)    | $84\,\mathrm{V/cm}$ [[16]](#pandax_prd)    |
+| Probability of DPE         | $0.22$ (source: `appletree` value)         | $0.22$ (source: `appletree` value)         |
 
 ### Efficiency Model
 
@@ -172,11 +228,13 @@ The publicly available data do not suffice to construct a complete efficiency mo
 
   3. Apply both effects independently in `diamx`.
 
+**For PandaX-4T**, more efficiency information is published, so the model is more complete (PRD Eq. (16) of [[16]](#pandax_prd)). The per-event acceptance is the product of the S1 and S2 cut acceptances (Fig. 12 of [[16]](#pandax_prd)), a residual energy-dependent quality acceptance $r(\xi)$ that carries the low-energy quality turn-on and a $\sim 5\%$ plateau loss not captured by the S1/S2 cut acceptances, and a reconstruction efficiency $\varepsilon_{\mathrm{recon}}(\xi)$ (Fig. 15 of [[16]](#pandax_prd)). All four curves are run- and recoil-specific and are digitized in `notebooks/pandax4t_efficiency.ipynb`; the hit-clustering loss (Section above) enters separately at the detector stage. The single-scatter requirement and the region-of-interest selection are handled elsewhere (the latter by the analysis-space binning).
+
 ## Modeling Data-driven Backgrounds with a Gaussian-Like / Piecewise-Uniform Profile
 
 Some background components, such as accidental coincidence and surface events, rely on data-driven PDFs that are not publicly available. Usually, in publications only the $1\sigma$ and $2\sigma$ contours can be extracted, which is not enough to specify a full 2D PDF. In `diamx` we try to reconstruct a plausible background template by assuming a two-parameter family of PDF shapes, so that the two published contours uniquely fix all remaining degrees of freedom.
 
-With minimal knowledge we can assume two types of PDF profiles: one is a Gaussian-like profile, and the other is a piecewise-uniform profile. The Gaussian-like profile is ideal for producing a smooth, continuous PDF with a single peak, while the piecewise-uniform profile can deal with more general cases, at the cost of having a sharp jump at the contour boundaries. We use the Gaussian-like approach for AC in XENONnT and LZ, and the piecewise-uniform approach for surface events in XENONnT SR0.
+With minimal knowledge we can assume two types of PDF profiles: one is a Gaussian-like profile, and the other is a piecewise-uniform profile. The Gaussian-like profile is ideal for producing a smooth, continuous PDF with a single peak, while the piecewise-uniform profile can deal with more general cases, at the cost of having a sharp jump at the contour boundaries. We use the Gaussian-like approach for AC in XENONnT and LZ, the piecewise-uniform approach for surface events in XENONnT SR0, and a closely related **contour-band** approach (a robust variant of the piecewise-uniform profile) for AC in PandaX-4T, described below.
 
 ### Gaussian-like Profile
 
@@ -234,6 +292,30 @@ $$
 c_1 = 0.68/A_1, \qquad c_2 = 0.32/(A_2-A_1)
 $$
 where $A_1 =  \mathrm{Area}(\Sigma_1)$, $A_2 = \mathrm{Area}(\Sigma_2)$.
+
+### Contour-band Profile (PandaX-4T AC)
+
+The PandaX-4T accidental-coincidence template is built from the digitized $1\sigma/2\sigma$ AC contours of [[15]](#pandax_prl), extracted in the $(cS1, \log_{10}(cS2_b/cS1))$ analysis space (`notebooks/pandax4t_ac_template.ipynb`). Two features of these contours rule out the Gaussian-like ray-from-peak method (and a naive contour closure):
+
+1. The published contours are **open arcs** anchored to the left edge of the ROI ($cS1 = 2$ PE). A straight auto-closure produces a spurious diagonal that can even clip part of the $1\sigma$ region.
+2. The Run1 $1\sigma$ region is **bimodal** — it has a secondary lobe in the upper-left corner — which the single-peak ansatz cannot represent.
+
+We therefore use a **contour-band** template, which generalizes the piecewise-uniform profile to open, multi-piece contours:
+
+1. **Close and combine.** Each arc is closed by routing along the left ROI edge ($cS1 = 2$), and the interior masks are built with `matplotlib.path`. For Run1 the $1\sigma$ region is the **union** of its two lobes, and the $2\sigma$ region is forced to contain the $1\sigma$ region.
+2. **Regularize.** On a sub-sampled grid, each region is cleaned up with a morphological closing (to bridge the zigzag of the digitized boundary), filling of self-intersection holes, and a Gaussian smoothing of the boundary followed by a threshold. The regularization scales are fixed in physical units ($\sim 0.74$ PE $\times\ 0.105$ in $\log_{10}(cS2_b/cS1)$ for the closing, $\sim 0.30$ PE $\times\ 0.05$ for the smoothing), so the result is independent of the analysis binning; the procedure is order-agnostic, which makes it robust to the dirty, self-intersecting $2\sigma$ contour.
+3. **Assign a band density.** A piecewise-constant density is set so the enclosed probabilities match the contour levels, following the same $1\sigma\to0.68$, $2\sigma\to0.95$ convention as the XENONnT AC template, with the remaining $5\%$ spread uniformly over the rest of the ROI:
+   $$
+   f(x,y) = \begin{cases}
+     0.68/A_1, & (x,y)\in\Sigma_1,\\
+     (0.95-0.68)/(A_2-A_1), & (x,y)\in\Sigma_2\setminus\Sigma_1,\\
+     0.05/(A_{\mathrm{ROI}}-A_2), & (x,y)\notin\Sigma_2,
+   \end{cases}
+   $$
+   where $A_1$, $A_2$, and $A_{\mathrm{ROI}}$ are the areas of $\Sigma_1$, $\Sigma_2$, and the full ROI. Unlike the piecewise-uniform surface template, a non-zero tail is kept outside $\Sigma_2$, matching the XENONnT AC convention.
+4. **Bin and normalize.** The fine-grid density is integrated onto the analysis binning and normalized. By construction the density level sets are the input contours, so the model reproduces them up to the (coarse, $\sim 3$-bin-wide) analysis binning.
+
+The resulting templates (`diamx/data/pandax4t_run{0,1}_ac_template.h5`) are loaded directly as the AC component of the PandaX-4T model (see the PandaX-4T Run0 & Run1 section).
 
 ## Statistical Inference with Profiled Likelihood Ratio and Asymptotic Limits
 
@@ -530,6 +612,53 @@ Table 4.4 shows the comparison between expected number of events from literature
 | :----------------------------------------------------------: |
 | **Fig. 4.8:** Upper limit on spin-independent WIMP-nucleon cross section at 90% confidence level as a function of the WIMP mass from the LZ WS2024 results. The orange line shows the literature value without applying power constraints, and the blue line shows the upper limit from `diamx`. |
 
+### PandaX-4T Run0 & Run1
+
+We analyze the combined Run0 + Run1 dataset (exposures of $0.54$ and $1.00$ tonne$\cdot$year, $1.54$ tonne$\cdot$year in total [[15]](#pandax_prl)) in the $(cS1, \log_{10}(cS2_b/cS1))$ space, where $cS2_b$ is the bottom-array S2. The two runs share the micro-physics functional form but use per-run gains, drift fields, electron-lifetime distributions, and NR recombination coefficients (Tables 1.4–1.5). $1117$ and $1373$ candidate events are observed in Run0 and Run1, respectively [[15]](#pandax_prl).
+
+Following Table I of [[15]](#pandax_prl), we model the following components: **Other ER** (a data-driven, near-flat ER spectrum), **tritium** (CH$_3$T, flat ER), **${}^{124}$Xe** and **${}^{127}$Xe** (mono-energetic ER lines; ${}^{127}$Xe in Run0 only), **neutron** and **${}^8$B CE$\nu$NS** (NR), and **AC**. The ${}^8$B recoil spectrum is taken from the PandaX-4T ${}^8$B CE$\nu$NS measurement [[17]](#pandax_b8), while the neutron recoil spectrum reuses the XENONnT input [[11]](#xenonnt_sensitivity). The surface background ($\lesssim 0.3$ events) is neglected. As in [[15]](#pandax_prl), the tritium rate is left **free** in the fit (PandaX determines it through an unconstrained fit), while the remaining components are Gaussian-constrained to their Table I uncertainties. The AC template is contour-driven (Section 2) from the digitized $1\sigma/2\sigma$ AC contours of [[15]](#pandax_prl).
+
+Fig. 4.9 shows the contour / pie-chart comparison for the two runs. Because the analysis axis is the charge-to-light *ratio*, the published $5\%/95\%$ ER band edges and NR median are overlaid (rather than $1\sigma/2\sigma$ contours) to validate the band shape; Fig. 4.10 shows this comparison in the $(cS1, \log_{10} cS2_b)$ plane, where the diamx ER band and NR median track the published curves across the full cS1 range — the latter requires both the realistic electron lifetime and the high-cS1 joint refit of the NR recombination coefficients.
+
+| <img src="plots/pandax4t_run0_cs1_logcs2s1_contours.png" style="zoom:12.5%;" /> <img src="plots/pandax4t_run1_cs1_logcs2s1_contours.png" style="zoom:12.5%;" /> |
+| :----------------------------------------------------------: |
+| **Fig. 4.9:** The contours for the backgrounds / signal modeled in `diamx` for PandaX-4T Run0 (left) and Run1 (right), in the $(cS1, \log_{10}(cS2_b/cS1))$ space. Pie charts show the digitized candidate events from [[15]](#pandax_prl) and the fractions of different components in the best-fit model. Blue, green, purple, and red contours show the ER (other ER + tritium + Xe), neutron + ${}^8$B, AC, and 40 GeV/c$^2$ WIMP components from `diamx`; the AC and WIMP literature $1\sigma/2\sigma$ contours and the published ER $5\%/95\%$ band edges (black dotted) are overlaid for comparison. |
+
+| <img src="plots/pandax4t_run0_nr_median_er_band_validation_logcs2.png" style="zoom:12.5%;" /> <img src="plots/pandax4t_run1_nr_median_er_band_validation_logcs2.png" style="zoom:12.5%;" /> |
+| :----------------------------------------------------------: |
+| **Fig. 4.10:** NR median and ER $5\%/95\%$ band, `diamx` versus published, for Run0 (left) and Run1 (right), in the $(cS1, \log_{10} cS2_b)$ plane. Solid lines are `diamx`; dashed lines are the digitized published curves of [[15]](#pandax_prl) (red: NR median; blue: ER $5\%/95\%$). Grey points are the candidate events. The agreement across the full cS1 range validates the yield, electron-lifetime, and reconstruction models. |
+
+Tables 4.5a–b compare the nominal and best-fit expected number of events. The agreement is good; PandaX-4T publishes only a *combined* (Run0+Run1) best fit in Table I of [[15]](#pandax_prl), which the `diamx` per-run best fits reproduce when summed (e.g. Other ER $1750$ vs $1767\pm48$, CH$_3$T $660$ vs $677\pm44$, neutron $1.7$ vs $1.6\pm0.8$, AC $23$ vs $26\pm5$). Fig. 4.11 shows the 90% CL upper limit on the spin-independent WIMP-nucleon cross section. The `diamx` limit agrees with the published curve to within $\sim 5\%$ for WIMP masses $\gtrsim 100$ GeV/c$^2$ (the region most relevant for, e.g., inelastic dark matter); near the $\sim 40$ GeV/c$^2$ minimum it lies $\sim 1.5\times$ above the published value, and the discrepancy grows toward low mass (up to $\sim 3\times$ near $15$ GeV/c$^2$), reflecting the low-energy region where the residual low-cS1 NR-median offset and threshold/surface effects are not fully captured.
+
+**Table 4.5a:** Expected number of events for each model component in PandaX-4T Run0, from a combined Run0 + Run1 fit. The “Nominal” column shows the Table I expectation values and uncertainties of [[15]](#pandax_prl) (`diamx` uses the same central rates); the "Best fit (`diamx`)" column shows best-fit expectation values and uncertainties for a free fit including a 40 GeV/c$^2$ WIMP signal. The tritium rate is unconstrained (free) in the fit.
+
+|   Component Name   | Nominal (literature) | Best fit (`diamx`) |
+| :----------------: | :------------------: | :----------------: |
+|   Other ER (data)  |      $504 \pm 16$    |     $510 \pm 14$   |
+|   ${}^3$H (CH$_3$T)|      $556 \pm 33$    |     $570 \pm 30$   |
+|    ${}^{124}$Xe    |     $2.3 \pm 0.6$    |    $2.3 \pm 0.6$   |
+|    ${}^{127}$Xe    |     $7.7 \pm 0.4$    |    $7.7 \pm 0.4$   |
+|      Neutron       |     $0.6 \pm 0.3$    |    $0.6 \pm 0.3$   |
+|  ${}^8$B CE$\nu$NS |     $0.3 \pm 0.1$    |   $0.31 \pm 0.10$  |
+|        AC          |       $11 \pm 3$     |      $11 \pm 3$    |
+| WIMP (40 GeV/c$^2$)|         --           |        $0.0$       |
+
+**Table 4.5b:** Expected number of events for each model component in PandaX-4T Run1, from a combined Run0 + Run1 fit (columns as in Table 4.5a).
+
+|   Component Name   | Nominal (literature) | Best fit (`diamx`) |
+| :----------------: | :------------------: | :----------------: |
+|   Other ER (data)  |     $1226 \pm 28$    |    $1240 \pm 20$   |
+|   ${}^3$H (CH$_3$T)|      $114 \pm 33$    |      $90 \pm 30$   |
+|    ${}^{124}$Xe    |     $4.1 \pm 1.1$    |    $4.1 \pm 1.1$   |
+|      Neutron       |     $1.1 \pm 0.6$    |    $1.1 \pm 0.6$   |
+|  ${}^8$B CE$\nu$NS |     $0.7 \pm 0.2$    |   $0.74 \pm 0.19$  |
+|        AC          |       $13 \pm 4$     |      $12 \pm 3$    |
+| WIMP (40 GeV/c$^2$)|         --           |        $0.0$       |
+
+| <img src="plots/pandax4t_run01_wimp_ci.png" style="zoom:25%;" /> |
+| :----------------------------------------------------------: |
+| **Fig. 4.11:** Upper limit on the spin-independent WIMP-nucleon cross section at 90% confidence level as a function of the WIMP mass from the combined PandaX-4T Run0 & Run1 results. The orange line shows the literature value [[15]](#pandax_prl) without applying power constraints, and the blue line shows the upper limit from `diamx`. The two agree to within $\sim 5\%$ above $\sim 100$ GeV/c$^2$. |
+
 ## References
 
 <a id="xenonnt_sr0">[1]</a> E. Aprile et al., First Dark Matter Search with Nuclear Recoils from the XENONnT Experiment, [Phys. Rev. Lett. **131**, 041003 (2023)](https://doi.org/10.1103/PhysRevLett.131.041003).
@@ -559,3 +688,9 @@ Table 4.4 shows the comparison between expected number of events from literature
 <a id="xe136_double_beta">[13]</a> J. Kotila and F. Iachello, Phase-space factors for double-${\beta}$ decay, [Phys. Rev. C **85**, 034316 (2012)](https://doi.org/10.1103/PhysRevC.85.034316).
 
 <a id="beta_shape">[14]</a> Mougeot, Atomic exchange correction in forbidden unique beta transitions, [Applied Radiation and Isotopes **201**, 111018 (2023)](https://doi.org/10.1016/j.apradiso.2023.111018).
+
+<a id="pandax_prl">[15]</a> Z. Bo et al. (PandaX Collaboration), Dark Matter Search Results from 1.54 Tonne$\cdot$Year Exposure of PandaX-4T, [Phys. Rev. Lett. **134**, 011805 (2025)](https://doi.org/10.1103/PhysRevLett.134.011805).
+
+<a id="pandax_prd">[16]</a> Y. Luo et al. (PandaX Collaboration), Signal response model in PandaX-4T, [Phys. Rev. D **110**, 023029 (2024)](https://doi.org/10.1103/PhysRevD.110.023029).
+
+<a id="pandax_b8">[17]</a> Z. Bo et al. (PandaX Collaboration), First Indication of Solar Neutrinos through Coherent Elastic Neutrino-Nucleus Scattering in PandaX-4T, [Phys. Rev. Lett. **133**, 191001 (2024)](https://doi.org/10.1103/PhysRevLett.133.191001).
