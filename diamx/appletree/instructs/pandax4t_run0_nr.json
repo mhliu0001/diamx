@@ -3,7 +3,7 @@
     "s1_correction": "_s1_correction.json",
     "s2_lce": "_s2_correction.json",
     "s2_correction": "_s2_correction.json",
-    "elife": "pandax4t_elife.json",
+    "elife": "pandax4t_run0_elife.json",
     "posrec_reso": "_posrec_reso.json",
     "gas_gain_relative": "_gas_gain_relative.json",
     "efield_map": "_efield_map.json",
@@ -25,5 +25,7 @@
         "s2_cut_acc_sigma"
     ],
     "quality_residual": "pandax4t_run0_eff_nr_quality_residual.json",
-    "recon_eff": "pandax4t_run0_eff_nr_rec.json"
+    "recon_eff": "pandax4t_run0_eff_nr_rec.json",
+    "z_min": -120.0,
+    "z_max": -13.35
 }

@@ -41,6 +41,39 @@ from diamx.appletree import get_file_path_diamx
 from diamx.utils import make_template, generate_bin_array, csv_to_apt_map, HiddenPrints
 
 
+def _p4_er_qy(energy, model):
+    """ER charge yield Qy [e-/keV] at ``energy`` from the P4-NEST mean ER yields
+    (PRD Appendix A1; mirrors ``diamx.appletree.ERYieldParamsP4NEST``). This is
+    the bare mean yield (before the Eq. 17 recombination correction); it is used
+    only for the quanta-conserving light-yield compensation when a line's charge
+    yield is quenched (a sub-percent effect on the line position), so the
+    omission of the small Eq. 17 correction is negligible."""
+    F = model["field"]
+    rho = model["liquid_xe_density"]
+    W_eV = model["w"] * 1000.0
+    eta = 1.0 + 0.4607 / (1.0 + (F / 621.74) ** (-2.2717)) ** 53.502
+    Y0 = 1000.0 / W_eV + 6.5 * (1.0 - 1.0 / (1.0 + (F / 47.408) ** 1.9851))
+    Y1 = 32.99 * eta * (
+        1.0 - 1.0 / (1.0 + (F / (0.026712 * np.exp(rho / 0.33926))) ** 0.6705)
+    )
+    tau = (
+        1652.264 + (1.145935e10 - 1652.264) / (1.0 + (F / 0.02673) ** 1.564691)
+    ) * energy ** (-2.0)
+    return Y1 + (Y0 - Y1) / (1.0 + 1.304 * energy ** 2.1393) ** 0.35535 + 28.0 / (1.0 + tau)
+
+
+def _p4_quench_ly_scalar(energy, qy_scalar, model):
+    """Light-yield scalar that conserves total quanta when a mono-energetic line's
+    charge yield is quenched by ``qy_scalar`` (= Q/Q_beta). The PandaX-4T DEC/EC
+    quenching is modelled exactly as in XENONnT: ``g2 -> g2 * qy_scalar`` reduces
+    the charge, and ``g1 -> g1 * ly_scalar`` puts the freed quanta into light, so
+    that ``N_ph + N_e`` (hence the deposited energy) is preserved. For ER,
+    ``LY + QY = 1/w``, so ``ly_new = 1/w - QY * qy_scalar``."""
+    inv_w = 1.0 / model["w"]
+    qy = _p4_er_qy(energy, model)
+    return (inv_w - qy * qy_scalar) / (inv_w - qy)
+
+
 class PandaX4T(Experiment):
     """PandaX-4T base experiment (defaults to Run0 configuration)."""
 
@@ -236,6 +269,19 @@ class PandaX4T(Experiment):
             [mh], template_file_path, histogram_names=[hist_name]
         )
 
+    def _quench_yield_model(self, yield_model, energy, qy_scalar):
+        """Return ``yield_model`` with g1/g2 rescaled to model a charge yield
+        quenched by ``qy_scalar`` = Q/Q_beta at ``energy`` (quanta conserved; see
+        ``_p4_quench_ly_scalar``). ``qy_scalar`` None or 1.0 -> returned unchanged."""
+        if qy_scalar is None or qy_scalar == 1.0:
+            return yield_model
+        quenched = copy.deepcopy(yield_model)
+        quenched["g1"] = yield_model["g1"] * _p4_quench_ly_scalar(
+            energy, qy_scalar, yield_model
+        )
+        quenched["g2"] = yield_model["g2"] * qy_scalar
+        return quenched
+
     def _generate_template(self, name, rate, template_file_path, hist_name, **kwargs):
         batch_size = kwargs.get("batch_size", self.default_batch_size)
 
@@ -257,19 +303,36 @@ class PandaX4T(Experiment):
             apt_config, yield_model, param_path = load("er_mono")
             mono = kwargs.get("mono_energy")
             branching = kwargs.get("branching_ratio")
+            # qy_scalar = Q/Q_beta quenches the line's charge yield: a scalar for a
+            # single line, or a list (one per line) for a multi-line source such as
+            # the Xe124 DEC (LM + LL shells). None -> no quenching.
+            qy_scalar = kwargs.get("qy_scalar")
             if np.isscalar(mono):
                 apt_config["mono_energy"] = mono
                 cs1, cs2, eff = self.run_appletree(
-                    batch_size, apt_config, yield_model, param_path, "er_mono"
+                    batch_size,
+                    apt_config,
+                    self._quench_yield_model(yield_model, mono, qy_scalar),
+                    param_path,
+                    "er_mono",
                 )
             else:
                 if branching is None or len(branching) != len(mono):
                     raise ValueError("branching_ratio must match mono_energy.")
+                if qy_scalar is not None and (
+                    np.isscalar(qy_scalar) or len(qy_scalar) != len(mono)
+                ):
+                    raise ValueError("qy_scalar must be a list matching mono_energy.")
                 cs1, cs2, eff = [], [], []
-                for e, br in zip(mono, branching):
+                for idx, (e, br) in enumerate(zip(mono, branching)):
                     apt_config["mono_energy"] = e
+                    qs = None if qy_scalar is None else qy_scalar[idx]
                     c1, c2, ef = self.run_appletree(
-                        int(batch_size * br), apt_config, yield_model, param_path, "er_mono"
+                        int(batch_size * br),
+                        apt_config,
+                        self._quench_yield_model(yield_model, e, qs),
+                        param_path,
+                        "er_mono",
                     )
                     cs1.append(c1); cs2.append(c2); eff.append(ef)
                 cs1 = np.concatenate(cs1); cs2 = np.concatenate(cs2); eff = np.concatenate(eff)
@@ -398,12 +461,49 @@ class PandaX4TRun0(PandaX4T):
                 energy_spectrum=spectrum_path, **kwargs,
             )
         elif name == "xe124":
-            self._generate_template(
-                "er_mono", rate, template_file_path, name, mono_energy=10.0, **kwargs
-            )
+            if "ll_quenching_factor" in kwargs or "lm_quenching_factor" in kwargs:
+                # DEC model (as in XENONnT and LZ): the LM shell (5.98 keV) and LL
+                # shell (10.0 keV), same energies and branching ratios as the other
+                # experiments. The DEC charge yield is quenched relative to beta
+                # decay: the LM shell shares the Xe127 L-shell ratio
+                # Q_L/Q_beta = Q_LM/Q_beta = 0.88 (LZ WS2024, similar drift field),
+                # while the LL shell has the lower, free Q_LL/Q_beta (shared with LZ).
+                quench = {
+                    k: v
+                    for k, v in kwargs.items()
+                    if k not in ("lm_quenching_factor", "ll_quenching_factor")
+                }
+                self._generate_template(
+                    "er_mono",
+                    rate,
+                    template_file_path,
+                    name,
+                    mono_energy=[5.98, 10.0],
+                    branching_ratio=[7.1 / 19.4, 12.3 / 19.4],
+                    qy_scalar=[
+                        kwargs.get("lm_quenching_factor", 0.88),
+                        kwargs.get("ll_quenching_factor", 0.70),
+                    ],
+                    **quench,
+                )
+            else:
+                # simple single-line treatment (LL shell only, no quenching), as in
+                # the PandaX-4T paper -- used by the non-DEC configs.
+                self._generate_template(
+                    "er_mono", rate, template_file_path, name, mono_energy=10.0, **kwargs
+                )
         elif name == "xe127":
+            # Xe127 L-shell electron capture (5.2 keV). The DEC configs quench the
+            # L-shell charge yield (l_quenching_factor = Q_L/Q_beta = 0.88, as for
+            # the Xe124 LM shell); without it the line is unquenched.
             self._generate_template(
-                "er_mono", rate, template_file_path, name, mono_energy=5.2, **kwargs
+                "er_mono",
+                rate,
+                template_file_path,
+                name,
+                mono_energy=5.2,
+                qy_scalar=kwargs.get("l_quenching_factor", 1.0),
+                **{k: v for k, v in kwargs.items() if k != "l_quenching_factor"},
             )
         elif name in ("neutron", "pandax_neutron"):
             # radiogenic-neutron NR background -- reuse the XENONnT neutron recoil

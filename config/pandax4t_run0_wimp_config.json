@@ -13,40 +13,60 @@
                 {
                     "bkg_name": "other_er",
                     "rate_nominal": 2221.333,
-                    "args": {"batch_size": 100000000}
+                    "rate_uncertainty": 0.0317,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "tritium",
                     "rate_nominal": 2450.519,
-                    "args": {"batch_size": 100000000}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "xe124",
                     "rate_nominal": 10.137,
-                    "args": {"batch_size": 100000000}
+                    "rate_uncertainty": 0.2609,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "xe127",
                     "rate_nominal": 33.937,
-                    "args": {"batch_size": 100000000}
+                    "rate_uncertainty": 0.0519,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "neutron",
                     "rate_nominal": 2.6444,
                     "rate_uncertainty": 0.5,
                     "rate_relative_uncertainty": true,
-                    "args": {"batch_size": 100000000}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "b8",
                     "rate_nominal": 1.3222,
                     "rate_uncertainty": 0.3333,
                     "rate_relative_uncertainty": true,
-                    "args": {"batch_size": 100000000}
+                    "args": {
+                        "batch_size": 100000000
+                    }
                 },
                 {
                     "bkg_name": "ac",
                     "rate_nominal": 48.4815,
+                    "rate_uncertainty": 0.2727,
+                    "rate_relative_uncertainty": true,
                     "args": {
                         "template_path": "pandax4t_run0_ac_template.h5",
                         "hist_name": "cs1-logcs2_s1"
@@ -55,16 +75,28 @@
             ],
             "shaped_bkgs": [],
             "eff": {
-                "fit_limits": [0.5, 1.5],
-                "parameter_interval_bounds": [0.5, 1.5],
+                "fit_limits": [
+                    0.5,
+                    1.5
+                ],
+                "parameter_interval_bounds": [
+                    0.5,
+                    1.5
+                ],
                 "args": {}
             }
         }
     ],
     "signal": {
         "signal_name": "wimp",
-        "rate_fit_limits": [0, 3000],
-        "rate_parameter_interval_bounds": [0, 3000],
+        "rate_fit_limits": [
+            0,
+            3000
+        ],
+        "rate_parameter_interval_bounds": [
+            0,
+            3000
+        ],
         "parameter_name": "mass",
         "parameter_range": "[6, 40, 200, 1000]",
         "args": {

@@ -27,21 +27,13 @@
                     }
                 },
                 {
-                    "bkg_name": "xe124",
-                    "rate_nominal": 10.137,
-                    "rate_uncertainty": 0.2609,
-                    "rate_relative_uncertainty": true,
-                    "args": {
-                        "batch_size": 100000000
-                    }
-                },
-                {
                     "bkg_name": "xe127",
                     "rate_nominal": 33.937,
                     "rate_uncertainty": 0.0519,
                     "rate_relative_uncertainty": true,
                     "args": {
-                        "batch_size": 100000000
+                        "batch_size": 100000000,
+                        "l_quenching_factor": 0.88
                     }
                 },
                 {
@@ -73,7 +65,32 @@
                     }
                 }
             ],
-            "shaped_bkgs": [],
+            "shaped_bkgs": [
+                {
+                    "shaped_bkg_name": "xe124",
+                    "shape_parameters": [
+                        {
+                            "shape_parameter_name": "ll_quenching_factor",
+                            "shape_parameter_shared": true,
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.65, 0.88, 0.02)",
+                            "shape_parameter_nominal": 0.71,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [
+                                0.65,
+                                0.87
+                            ]
+                        }
+                    ],
+                    "rate_nominal": 15.9884,
+                    "rate_uncertainty": 0.2609,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "lm_quenching_factor": 0.88,
+                        "batch_size": 100000000
+                    }
+                }
+            ],
             "eff": {
                 "fit_limits": [
                     0.5,
@@ -113,15 +130,6 @@
                     }
                 },
                 {
-                    "bkg_name": "xe124",
-                    "rate_nominal": 10.168,
-                    "rate_uncertainty": 0.2683,
-                    "rate_relative_uncertainty": true,
-                    "args": {
-                        "batch_size": 100000000
-                    }
-                },
-                {
                     "bkg_name": "neutron",
                     "rate_nominal": 2.728,
                     "rate_uncertainty": 0.5455,
@@ -150,7 +158,32 @@
                     }
                 }
             ],
-            "shaped_bkgs": [],
+            "shaped_bkgs": [
+                {
+                    "shaped_bkg_name": "xe124",
+                    "shape_parameters": [
+                        {
+                            "shape_parameter_name": "ll_quenching_factor",
+                            "shape_parameter_shared": true,
+                            "shape_parameter_fittable": true,
+                            "shape_parameter_range": "np.arange(0.65, 0.88, 0.02)",
+                            "shape_parameter_nominal": 0.71,
+                            "formatter": ".2f",
+                            "shape_parameter_fit_limits": [
+                                0.65,
+                                0.87
+                            ]
+                        }
+                    ],
+                    "rate_nominal": 16.0373,
+                    "rate_uncertainty": 0.2683,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "lm_quenching_factor": 0.88,
+                        "batch_size": 100000000
+                    }
+                }
+            ],
             "eff": {
                 "fit_limits": [
                     0.5,
