@@ -116,7 +116,7 @@ Note:
 
 #### PandaX-4T Micro-physics
 
-PandaX-4T uses its own NEST-based signal-response model, detailed in [[16]](#pandax_prd). Unlike for XENONnT and LZ, this model is not distributed as a ready-to-use parametrization, so `diamx.appletree` re-implements it as a set of custom plugins (`p4_nest`). The mean yields follow [[16]](#pandax_prd): NR light and charge yields from Eq. (A2), and ER yields from Appendix A1. The ER mean yields *as printed* in Appendix A1 contain several apparent misprints (e.g. the $Y_1$ exponential argument, the $Q_y$ energy exponent, and the $1{+}\alpha$ in $\langle N_i\rangle$) that make $Q_y$ roughly a factor of two too high; we instead implement the NEST v2.0 source [[6]](#nest_paper) that A1 is based on, with a fixed work function $W$. The recombination fluctuation $\Delta r$ uses the skew-Gaussian in the quenched electron fraction $\zeta=\langle N_e\rangle/\langle N_q\rangle$ from Appendix A1/A2.
+PandaX-4T uses its own NEST-based signal-response model, detailed in [[16]](#pandax_prd). Unlike for XENONnT and LZ, this model is not distributed as a ready-to-use parametrization, so `diamx.appletree` re-implements it as a set of custom plugins (`p4_nest`). The mean yields follow [[16]](#pandax_prd): NR light and charge yields from Eq. (A2), and ER yields from Appendix A1, which is the PandaX transcription of the NEST v2.0 beta model [[6]](#nest_paper). Checked against that source, the A1 ER charge yield is correct as printed except for one typo in the Doke-Birks term, where the numerator $1.145935\times10^{10}$ should read $1.415935\times10^{10}$ (a $\lesssim 0.5\%$ effect on $Q_y$ near 25 keV), which we correct. A1 additionally writes the exciton-to-ion coefficient and $\langle N_i\rangle = 1000\,\xi/(W\alpha)$ differently from the source, but these affect only the ion/exciton split, not the mean charge yield. We use a fixed work function $W$, following A1. The recombination fluctuation $\Delta r$ uses the skew-Gaussian in the quenched electron fraction $\zeta=\langle N_e\rangle/\langle N_q\rangle$ from Appendix A1/A2.
 
 On top of the mean recombination, PandaX applies an energy-dependent correction (Eq. (17) of [[16]](#pandax_prd)):
 $$
@@ -136,7 +136,7 @@ The micro-physics parameters used in `appletree` are listed in Table 1.4.
 | $\rho_{\mathrm{Xe}}$ (`liquid_xe_density`)   | $2.8619$                                | g/cm³ |
 | $\xi_{\mathrm{norm}}^{\mathrm{ER}}$ (`xi_norm_er`) | $30$                              | keV   |
 | $\xi_{\mathrm{norm}}^{\mathrm{NR}}$ (`xi_norm_nr`) | $150$                             | keV   |
-| ER $p_0\ldots p_3$ (`p{0..3}_er`)            | $[0.237, -0.419, 0.377, -0.097]$        | --    |
+| ER $p_0\ldots p_3$ (`p{0..3}_er`)            | $[0.237, -0.422, 0.377, -0.099]$        | --    |
 | ER $d$ (`d_er`), Run0 / Run1                 | $0$ / $-0.029$                          | --    |
 | ER $a$ (`a_er`)                              | $1.11$                                  | --    |
 | NR $p_0\ldots p_3$ (`p{0..3}_nr`), Run0      | $[0.690, -1.495, 1.230, -0.589]$        | --    |
