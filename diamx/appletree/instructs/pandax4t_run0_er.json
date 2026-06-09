@@ -28,5 +28,6 @@
     "quality_residual": "pandax4t_run0_eff_er_quality_residual.json",
     "recon_eff": "pandax4t_run0_eff_er_rec.json",
     "z_min": -120.0,
-    "z_max": -10.0
+    "z_max": -10.0,
+    "xi_norm_er": 30.0
 }
