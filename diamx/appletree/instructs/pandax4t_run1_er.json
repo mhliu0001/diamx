@@ -24,7 +24,7 @@
         "s2_cut_acc_sigma"
     ],
     "lower_energy": 0.1,
-    "upper_energy": 30.0,
+    "upper_energy": 40.0,
     "quality_residual": "pandax4t_run1_eff_er_quality_residual.json",
     "recon_eff": "pandax4t_run1_eff_er_rec.json",
     "z_min": -120.0,
