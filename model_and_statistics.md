@@ -659,6 +659,14 @@ Tables 4.5a–b compare the nominal and best-fit expected number of events. The 
 | :----------------------------------------------------------: |
 | **Fig. 4.11:** Upper limit on the spin-independent WIMP-nucleon cross section at 90% confidence level as a function of the WIMP mass from the combined PandaX-4T Run0 & Run1 results. The orange line shows the literature value [[15]](#pandax_prl) without applying power constraints, and the blue line shows the upper limit from `diamx`. The two agree to within $\sim 5\%$ above $\sim 100$ GeV/c$^2$. |
 
+#### ${}^{124}$Xe Double Electron Capture (Alternative Model)
+
+As an alternative to the single mono-energetic ${}^{124}$Xe line used in the baseline fit, `diamx` also models its double-electron-capture (DEC) structure explicitly, mirroring the XENONnT and LZ treatment. The capture proceeds through the LL shell ($10.0$ keV) and the LM shell ($5.98$ keV), split by their relative branching, and the DEC charge yield is *quenched* relative to a $\beta$ decay of the same energy. Following LZ WS2024 [[4]](#lz_ws2024), the LM shell uses $Q_{LM}/Q_\beta = 0.88$ (the same value as the ${}^{127}$Xe L-shell electron capture), while the deeper LL shell has a still-lower charge yield $Q_{LL}/Q_\beta$ left as a **free shape parameter**. The quench is applied exactly as for the other experiments: the bottom-S2 gain is scaled $g_{2b}\to g_{2b}\,(Q/Q_\beta)$ and the freed quanta are returned to light via $g_1\to g_1\cdot\mathrm{ly\_scalar}$, conserving the total number of quanta (and hence the deposited energy). Because PandaX's drift field ($84$ V/cm in Run1) is close to LZ WS2024, $Q_{LL}/Q_\beta$ is **shared with LZ** in a combined fit; a PandaX-only fit gives $Q_{LL}/Q_\beta = 0.79^{+0.08}_{-0.10}$ (profile likelihood), consistent with the LZ value $0.70 \pm 0.04$ at $0.9\sigma$, which justifies sharing it. Fig. 4.12 shows the resulting ${}^{124}$Xe (LM + LL) and ${}^{127}$Xe contours, which sit below the ER band because of their reduced charge yield.
+
+| <img src="plots/pandax4t_run0_dec_xe_contours.png" style="zoom:12.5%;" /> <img src="plots/pandax4t_run1_dec_xe_contours.png" style="zoom:12.5%;" /> |
+| :----------------------------------------------------------: |
+| **Fig. 4.12:** ${}^{124}$Xe DEC and ${}^{127}$Xe best-fit contours (with the other-ER and neutron + ${}^8$B backgrounds) in the $(cS1, \log_{10}(cS2_b/cS1))$ space for Run0 (left) and Run1 (right). The ${}^{124}$Xe DEC produces two quenched peaks (LM at $5.98$ keV, LL at $10$ keV); Run1 has no ${}^{127}$Xe. Grey points are the digitized candidate events of [[15]](#pandax_prl). The quenched Xe lines lie below the ER band owing to their reduced charge yield $Q/Q_\beta < 1$. |
+
 ## References
 
 <a id="xenonnt_sr0">[1]</a> E. Aprile et al., First Dark Matter Search with Nuclear Recoils from the XENONnT Experiment, [Phys. Rev. Lett. **131**, 041003 (2023)](https://doi.org/10.1103/PhysRevLett.131.041003).
