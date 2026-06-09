@@ -58,6 +58,7 @@ If not specified, all XENONnT SR0 related files come from [[1]](#xenonnt_sr0), a
 | `appletree/maps/pandax4t_run{0,1}_s{1,2}_cut_acc_median.csv` | S1/S2 selection-cut acceptance vs reconstructed area, digitized from Fig. 12 of [[16]](#pandax_prd). Units: area $Q_{S1}$/$Q_{S2b}$ [PE], acceptance [dimensionless]. |
 | `appletree/maps/pandax4t_hit_eff.csv`                       | Hit-clustering survival probability $1-\epsilon_{hit}$, digitized from Fig. 6 of [[16]](#pandax_prd); shared across runs. Units: number of detected photons, survival probability [dimensionless]. |
 | `appletree/maps/pandax4t_s{1,2}_bias_{lower,median,upper}.csv` | S1/S2 area reconstruction bias and smearing (median = bias, lower/upper band = smearing), shared across runs, digitized from the signal-reconstruction section of [[16]](#pandax_prd). Units: reconstructed area [PE], relative bias / smearing [dimensionless]. |
+| `appletree/model/pandax4t_run{0,1}_{er,nr}_model.json`, `appletree/parameters/pandax4t_{er,nr}_par.json` and `pandax4t_run{0,1}_{er,nr}_par.json` | Detector parameters, micro-physics parameters, and parameter priors for the PandaX-4T model. Structure adapted from appletree [[11]](#appletree); $g_1$, $g_{2b}$, drift velocity, electric field, and the P4-NEST recombination Legendre coefficients come from [[16]](#pandax_prd) (per run), and the background rates from Table I of [[15]](#pandax_prl). |
 
 ## Acknowledgements
 
