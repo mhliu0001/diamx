@@ -10,8 +10,8 @@ Mirrors ``diamx.experiments.xenonnt`` but with three PandaX-specific differences
    driven by the digitized Fig. 12 ``s1_cut_acc`` / ``s2_cut_acc`` maps), so there
    is no energy-based cut-acceptance back-calculation like XENONnT's
    ``calculate_cut_acceptance``.
-3. **P4-NEST components** (``diamx.appletree.components.pandax4t``) with the
-   hit-clustering photon detection (PRD Eq. 9).
+3. **P4-NEST components** (``diamx.appletree.components.{nr,er}_pandax4t``) with
+   the hit-clustering photon detection (PRD Eq. 9).
 
 Run1 differs from Run0 only by the drift field, the ``g1`` / ``g2_b`` scale
 factors, the Run1 recombination shifts ``d_er`` / ``d_nr``, and its data /
