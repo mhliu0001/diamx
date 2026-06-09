@@ -6,7 +6,6 @@
     "elife": "pandax4t_run1_elife.json",
     "posrec_reso": "_posrec_reso.json",
     "gas_gain_relative": "_gas_gain_relative.json",
-    "efield_map": "pandax4t_run1_efield.json",
     "s1_bias_3f": "pandax4t_s1_bias.json",
     "s1_smear_3f": "pandax4t_s1_smear.json",
     "s2_bias": "pandax4t_s2_bias.json",
