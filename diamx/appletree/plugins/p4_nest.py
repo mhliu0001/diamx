@@ -231,16 +231,17 @@ class PhotonElectronP4NEST(Plugin):
 # ---------------------------------------------------------------------------
 # Electronic-recoil (ER) yield model.
 #
-# IMPORTANT: the ER mean yields are implemented from the NESTv2.0 SOURCE
-# (NESTCollaboration/nest @ v2.0.0, NEST.cpp GetYields "beta/CH3T" branch +
-# GetQuanta), NOT from PRD 110 023029 Appendix A1, which has several apparent
-# misprints that make its Qy ~2x too high at 25 keV. A1 misprints three NESTv2.0
-# constants (written here as  NEST value  <-misprinted-as->  A1 print):
-#     exp(rho/0.33926)   <->   `rho*0.3393`        (Y1 exponential argument)
-#     1.415935e10        <->   `1.145935e10`       (Doke-Birks numerator)
-#     xi^2.1393          <->   `xi^1.1393`         ((Y0-Y1) energy exponent)
-# We use the NESTv2.0 (left-hand) values, which reproduce Fig. 17 (N_e/xi ~62->20,
-# N_ph/xi ~11->53 over 1-25 keV); the A1-as-printed version does not.
+# IMPORTANT: the ER mean yields implement PRD 110 023029 Appendix A1 -- the PandaX
+# transcription of the NESTv2.0 beta/CH3T charge yield -- cross-checked against the
+# NESTv2.0 source (NESTCollaboration/nest @ v2.0.0, NEST.cpp). A1's printed Qy
+# expression is correct EXCEPT for ONE typo: the Doke-Birks numerator, printed
+# `1.145935e10`, should be 1.415935e10 (NESTv2.0). That typo only shifts ER Qy by
+# ~0.5% near 25 keV (<0.1% below 10 keV). Note A1 prints the Y1 exponential as a
+# DIVISION, e^(rho/0.3393), and the (Y0-Y1) energy exponent as xi^2.1393 -- both
+# correct (an earlier version of this comment wrongly flagged these as misprints).
+# The code uses the NESTv2.0 constants, which match A1 up to rounding (A1 prints
+# 0.3393, 0.02672, 0.02673, 32.99 for NEST's 0.33926, 0.026715, 0.02673144,
+# 32.988). The result reproduces Fig. 17 (N_e/xi ~62->20, N_ph/xi ~11->53, 1-25 keV).
 #
 # The recombination FLUCTUATION dr_0 is taken from the PRD A1 functional form
 # (a skew-Gaussian in the quenched electron fraction), since NESTv2.0's dr is a
@@ -251,23 +252,22 @@ class PhotonElectronP4NEST(Plugin):
 
 @export
 class ERYieldParamsP4NEST(Plugin):
-    """PRD Appendix A1 ER mean yields -> Lindhard L(=1), ion fraction, baseline
-    mean recombination <r>_0 and baseline recombination fluctuation dr_0.
+    """PRD Appendix A1 ER mean yields (= the NESTv2.0 beta model) -> Lindhard
+    L(=1), ion fraction, baseline mean recombination <r>_0 and baseline
+    recombination fluctuation dr_0.
 
-    Implements Eq. (A1) as printed, with three corrections:
-      * a FIXED work function W (= the `w` parameter); A1 uses a constant W
-        throughout (1000/W in Y0, <N_i>=1000 xi/(W alpha), zeta=<N_e>W/(1000 xi))
-        and has NO density-dependent Wq -- unlike the NESTv2 source.
-      * three Qy constants restored to the NESTv2 source values A1 is taken from
-        (A1 misprints each, in parentheses): the Y1 exponential argument
-        rho/0.33926 (A1 `rho*0.3393`), the Doke-Birks numerator 1.415935e10 (A1
-        `1.145935e10`), and the (Y0-Y1) energy exponent xi^2.1393 (A1 `xi^1.1393`).
-        Each A1 form pushes Qy too high (literal A1 -> Qy=44 at 25 keV vs Fig.17 ~18).
-      * the `1+` in <N_i> = 1000 xi / (W (1+alpha)); A1 prints 1000 xi/(W alpha),
-        which gives N_i > N_q (impossible for the Eq.1-2 binomial).
-    alpha's rho-coefficient is the NESTv2 value 0.039693 ("taken from NESTv2",
-    main text); the printed 0.093963 is a digit transposition (it only shifts the
-    ionization binomial width -- the refit-absorbed mean yields are unchanged).
+    Implements the A1 Qy expression, with:
+      * a FIXED work function W (= the `w` parameter): A1 uses a constant W
+        (1000/W in Y0, zeta=<N_e>W/(1000 xi)) with no density-dependent Wq --
+        unlike the NESTv2 source; ER Lindhard = 1 exactly.
+      * A1's one Qy typo corrected: the Doke-Birks numerator `1.145935e10` ->
+        1.415935e10 (NESTv2.0). The Y1 exponential rho/0.33926 (a DIVISION) and the
+        energy exponent xi^2.1393 are printed CORRECTLY in A1 -- not misprints; the
+        code just uses NESTv2.0's slightly finer rounding of the constants.
+      * <N_i> = N_q/(1+alpha) and the exciton-ratio coefficient 0.039693 follow the
+        NESTv2.0 / physically-consistent form (A1 prints <N_i>=1000 xi/(W alpha) and
+        0.093963); both set only the ion/exciton split and the refit-absorbed
+        recombination baseline, not the mean N_e = xi*Qy.
     dr_0 uses the A1 skew-Gaussian in zeta = <N_e>/<N_q> with amplitude A(F).
     """
 
