@@ -1,7 +1,7 @@
-"""Self-contained P4-NEST nuclear-recoil yield model for PandaX-4T.
+"""Self-contained P4-NEST electronic- and nuclear-recoil yield model for PandaX-4T.
 
 Faithful to the PandaX-4T signal-response paper (Phys. Rev. D 110, 023029
-(2024)): the quanta are sampled with the *unified* ER/NR scheme of Eqs. (1)-(2),
+(2024)): ER and NR share the *unified* quanta-sampling scheme of Eqs. (1)-(2),
 
     N_q  = B(xi / W, L)                      (Eq. 1; L = Lindhard factor)
     N_i  = B(N_q, 1 / (1 + alpha))           (Eq. 2; alpha = <N_ex>/<N_i>)
@@ -29,29 +29,34 @@ which reproduces the Fig. 17 dr scale. Eq. A2 literally writes
 zeta = <N_e>*W/(1000*xi) (~0.04-0.09 for NR), but that gives dr ~0.01, ~10x
 below Fig. 17, so it appears to be a misprint in the paper; we follow the figure.
 
-The P4-NEST modifications (Eq. 17) are applied to the recombination only:
+The ER mean yields (with Lindhard L = 1) come instead from the NESTv2.0 source --
+see the ER section and ``ERYieldParamsP4NEST`` below.
 
-    <r>  = clip(<r>_0 + P3(xi/xi_norm; p0,p1,p2,p3) * exp(-xi/xi_norm) + d_nr, 0, 1)
-    dr   = dr_0 * A^NR
+The P4-NEST modifications (Eq. 17) are applied to the recombination only, for both
+recoils:
 
-with xi_norm = 150 keV (NR), P3 a 3rd-order Legendre polynomial, d_nr a per-run
-shift (0 for Run0). The recombination fraction r is then drawn from a plain
-Gaussian (truncated to [0, 1]), i.e. the NESTv2 skew-normal with skewness 0.
+    <r>  = clip(<r>_0 + P3(xi/xi_norm; p0,p1,p2,p3) * exp(-xi/xi_norm) + d, 0, 1)
+    dr   = dr_0 * A
 
-NOTE (xi_norm): Eq. 17 lists xi_norm^NR = 30 keV and xi_norm^ER = 150 keV. With
-30 keV the degree-3 Legendre term overshoots exp(-xi/30) and drives <r> -> 0
-(NR by ~50 keV; ER reverses LY/QY by ~20 keV), contradicting Fig. 17 where the
-P4-NEST correction is small everywhere. 150 keV keeps the correction small and
-matches Fig. 17 for BOTH recoils. So both ER and NR use 150 keV; the paper's NR
-entry (30) is simply a typo -- this is NOT an ER<->NR swap (we initially
-suspected one, but the ER curves need 150 too, not 30). Tried and ruled out:
-shifted / domain-mapped / orthonormal Legendre conventions, which all break the
-low-energy correction. Standard Legendre with the raw argument is correct; only
-the NR xi_norm value needed fixing.
+P3 is a 3rd-order Legendre polynomial; ``d`` is a per-run shift (0 for Run0) and
+``A`` a fluctuation scale -- the parameters are (p0..p3_nr, d_nr, a_nr) for NR and
+(p0..p3_er, d_er, a_er) for ER. The recombination fraction r is then drawn from a
+plain Gaussian (truncated to [0, 1]), i.e. the NESTv2 skew-normal with skewness 0.
 
-The drift field and work function are scalar parameters (uniform field;
-position-dependent corrections are disabled in diamx, as for the other
-experiments).
+NOTE (xi_norm): diamx uses xi_norm = 30 keV for ER and 150 keV for NR. xi_norm is
+only a reparametrization -- the same <r>(xi) curve is fit at any xi_norm given
+suitable coefficients -- so p0..p3 are fit to the digitized Fig. 17 yield curves
+at these values (the NR coefficients are additionally anchored to the published
+high-cS1 NR median; see notebooks/pandax4t_yields.ipynb). The per-recoil values
+are chosen so the fit is well-conditioned: at xi_norm=30 the NR Legendre term
+overshoots exp(-xi/30) and drives <r> -> 0, so NR uses 150, while ER is
+well-conditioned at 30. (The paper's Eq. 17 lists xi_norm^NR=30 / xi_norm^ER=150,
+but since we refit the coefficients the exact assignment is immaterial.)
+
+The drift field is a uniform scalar -- the ``field`` parameter from the model JSON
+(diamx does not use an appletree ``efield_map``) -- and the work function is the
+scalar ``w``; position-dependent corrections are disabled, as for the other
+experiments.
 """
 
 from functools import partial
@@ -163,9 +168,10 @@ class IonizationP4NEST(Plugin):
         name="xi_norm_nr",
         type=float,
         default=150.0,
-        help="NR recombination-correction normalization energy [keV]. Eq. 17 lists "
-        "30 for NR, but 30 overshoots; both ER and NR use 150 (the NR=30 entry is a "
-        "typo, not a swap -- see module docstring).",
+        help="NR recombination-correction normalization energy [keV]. The paper's "
+        "Eq. 17 lists 30, but the degree-3 Legendre term overshoots exp(-xi/30) and "
+        "drives <r> -> 0, so diamx uses 150; p0..p3_nr are refit to the Fig. 17 LY/QY "
+        "and the high-cS1 NR median at this xi_norm. ER uses xi_norm_er=30.",
     ),
 )
 class NRRecombParamsP4NEST(Plugin):
@@ -327,8 +333,8 @@ class ERYieldParamsP4NEST(Plugin):
         "degeneracy there allows) instead leaves a ~1% mid-energy (5-15 keV) wobble, "
         "because PandaX's Table II ER coefficients are themselves ~1% inconsistent with "
         "their own Fig. 17 curve. We match the curve (it feeds the templates). NR uses "
-        "xi_norm_nr=150, where its Table II coefficients reproduce the curve directly "
-        "(the paper's Eq. 17 NR=30 entry is a typo -- those coeffs blow up at 30).",
+        "xi_norm_nr=150 (its Legendre term overshoots at 30); its p0..p3_nr are likewise "
+        "refit to the Fig. 17 curve, additionally anchored to the high-cS1 NR median.",
     ),
 )
 class ERRecombParamsP4NEST(Plugin):
