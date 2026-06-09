@@ -1,9 +1,9 @@
 """PandaX-4T reconstruction-chain additions on top of appletree's detector /
 reconstruction / efficiency plugins.
 
-Only two pieces are PandaX-specific; everything else in the chain (S1/S2
-reconstruction bias and smearing, S1/S2 cut acceptance) is handled by the stock
-appletree plugins (``appletree.plugins.reconstruction.S1`` / ``.S2`` and
+A few pieces are PandaX-specific; everything else in the chain (S1/S2
+reconstruction bias and smearing, the S1/S2 cut acceptances) is handled by the
+stock appletree plugins (``appletree.plugins.reconstruction.S1`` / ``.S2`` and
 ``appletree.plugins.efficiency.S1CutAccept`` / ``.S2CutAccept``) configured with
 PandaX maps.
 
@@ -19,12 +19,18 @@ PandaX maps.
    ``PhotonDetection`` (same ``provides = num_s1_phd``); the rest of the S1 chain
    (``S1PE`` -> ``S1`` bias -> ``cS1``) is unchanged.
 
-2. ``EffPandaX4T`` -- the per-event acceptance weight is the product of the S1
-   and S2 cut acceptances only, ``eff = cut_acc_s1 * cut_acc_s2`` (PandaX's
-   selection efficiency, PRD Fig. 12, enters through appletree's ``S1CutAccept`` /
-   ``S2CutAccept``). Overrides ``appletree.plugins.efficiency.Eff`` (whose default
-   also multiplies an S2 threshold and a 3-fold S1 recon efficiency that PandaX
-   folds into its measured selection curves).
+2. ``QualityResidualPandaX4T`` and ``ReconEffPandaX4T`` -- the energy-dependent
+   residual quality acceptance ``r(xi)`` and the reconstruction efficiency
+   ``eps_recon(xi)`` (PRD Eq. 16 / Fig. 15). The S1/S2 cut acceptances (Fig. 12)
+   alone reproduce only the high-energy plateau, so ``r(xi)`` carries the
+   low-energy quality turn-on.
+
+3. ``EffPandaX4T`` -- combines them into the per-event acceptance weight (PRD
+   Eq. 16): ``eff = cut_acc_s1 * cut_acc_s2 * r(xi) * eps_recon(xi)`` (the ROI and
+   single-scatter factors are applied elsewhere). Overrides
+   ``appletree.plugins.efficiency.Eff``, whose default instead multiplies an S2
+   threshold and a 3-fold S1 recon efficiency that PandaX folds into its measured
+   selection curves.
 """
 
 from functools import partial

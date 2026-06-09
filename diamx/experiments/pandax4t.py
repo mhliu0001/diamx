@@ -6,16 +6,18 @@ Mirrors ``diamx.experiments.xenonnt`` but with three PandaX-specific differences
    (named ``logcs2_s1``), with ``cs2`` the **bottom** S2 (the detector ``g2``
    parameter is PandaX's ``g2_b``). XENONnT uses ``(cs1, log10(cs2))``.
 2. **In-chain selection efficiency.** The per-event ``eff`` weight comes directly
-   from the appletree chain (``S1CutAccept`` x ``S2CutAccept`` -> ``EffPandaX4T``,
-   driven by the digitized Fig. 12 ``s1_cut_acc`` / ``s2_cut_acc`` maps), so there
-   is no energy-based cut-acceptance back-calculation like XENONnT's
+   from the appletree chain -- ``eff = cut_acc_s1 * cut_acc_s2 * r(xi) * recon(xi)``
+   via ``S1CutAccept`` / ``S2CutAccept`` (Fig. 12) + ``QualityResidualPandaX4T`` /
+   ``ReconEffPandaX4T`` (Fig. 15) -> ``EffPandaX4T`` (PRD Eq. 16) -- so there is no
+   energy-based cut-acceptance back-calculation like XENONnT's
    ``calculate_cut_acceptance``.
 3. **P4-NEST components** (``diamx.appletree.components.{nr,er}_pandax4t``) with
    the hit-clustering photon detection (PRD Eq. 9).
 
-Run1 differs from Run0 only by the drift field, the ``g1`` / ``g2_b`` scale
-factors, the Run1 recombination shifts ``d_er`` / ``d_nr``, and its data /
-maps -- all carried in the Run1 instruct / model / param JSONs.
+Run1 differs from Run0 by the drift field and drift velocity, the ``g1`` / ``g2_b``
+scale factors, the Run1 recombination parameters (the NR Legendre coefficients
+``p0..p3_nr`` and the shifts ``d_er`` / ``d_nr``), and its data / maps -- all
+carried in the Run1 instruct / model / param JSONs.
 """
 
 import copy
@@ -514,7 +516,8 @@ class PandaX4TRun0(PandaX4T):
                 energy_spectrum=spectrum_path, **kwargs,
             )
         elif name in ("b8", "8b"):
-            # solar 8B CEvNS NR background -- digitized recoil spectrum (PRD Fig.)
+            # solar 8B CEvNS NR background -- recoil spectrum digitized from the
+            # PandaX-4T 8B CEvNS measurement (Phys. Rev. Lett. 133, 191001)
             spectrum_path = importlib.resources.files("diamx") / "data" / "pandax4t_b8_spectrum.csv"
             self._generate_template(
                 "neutron", rate, template_file_path, name,
