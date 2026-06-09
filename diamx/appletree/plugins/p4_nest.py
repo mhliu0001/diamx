@@ -234,10 +234,13 @@ class PhotonElectronP4NEST(Plugin):
 # IMPORTANT: the ER mean yields are implemented from the NESTv2.0 SOURCE
 # (NESTCollaboration/nest @ v2.0.0, NEST.cpp GetYields "beta/CH3T" branch +
 # GetQuanta), NOT from PRD 110 023029 Appendix A1, which has several apparent
-# misprints that make its Qy ~2x too high at 25 keV (e.g. exp(rho/0.33926) ->
-# "rho*0.3393"; 1.415935e10 -> "1.145935e10"; xi^2.1393 -> "xi^1.1393"). The
-# NESTv2.0 ER Qy reproduces Fig. 17 (N_e/xi ~62->20, N_ph/xi ~11->53 over
-# 1-25 keV); the A1-as-printed version does not.
+# misprints that make its Qy ~2x too high at 25 keV. A1 misprints three NESTv2.0
+# constants (written here as  NEST value  <-misprinted-as->  A1 print):
+#     exp(rho/0.33926)   <->   `rho*0.3393`        (Y1 exponential argument)
+#     1.415935e10        <->   `1.145935e10`       (Doke-Birks numerator)
+#     xi^2.1393          <->   `xi^1.1393`         ((Y0-Y1) energy exponent)
+# We use the NESTv2.0 (left-hand) values, which reproduce Fig. 17 (N_e/xi ~62->20,
+# N_ph/xi ~11->53 over 1-25 keV); the A1-as-printed version does not.
 #
 # The recombination FLUCTUATION dr_0 is taken from the PRD A1 functional form
 # (a skew-Gaussian in the quenched electron fraction), since NESTv2.0's dr is a
@@ -255,10 +258,11 @@ class ERYieldParamsP4NEST(Plugin):
       * a FIXED work function W (= the `w` parameter); A1 uses a constant W
         throughout (1000/W in Y0, <N_i>=1000 xi/(W alpha), zeta=<N_e>W/(1000 xi))
         and has NO density-dependent Wq -- unlike the NESTv2 source.
-      * two obvious Qy misprints fixed against the NESTv2 model A1 is taken from:
-        the Y1 exponential argument rho/0.33926 (printed `rho*0.3393` gives Qy ~2x
-        too high) and the (Y0-Y1) energy exponent xi^2.1393 (printed `xi^1.1393`
-        gives Qy ~2x too high at 25 keV; literal A1 -> Qy=44 vs Fig.17 ~18).
+      * three Qy constants restored to the NESTv2 source values A1 is taken from
+        (A1 misprints each, in parentheses): the Y1 exponential argument
+        rho/0.33926 (A1 `rho*0.3393`), the Doke-Birks numerator 1.415935e10 (A1
+        `1.145935e10`), and the (Y0-Y1) energy exponent xi^2.1393 (A1 `xi^1.1393`).
+        Each A1 form pushes Qy too high (literal A1 -> Qy=44 at 25 keV vs Fig.17 ~18).
       * the `1+` in <N_i> = 1000 xi / (W (1+alpha)); A1 prints 1000 xi/(W alpha),
         which gives N_i > N_q (impossible for the Eq.1-2 binomial).
     alpha's rho-coefficient is the NESTv2 value 0.039693 ("taken from NESTv2",
@@ -283,11 +287,11 @@ class ERYieldParamsP4NEST(Plugin):
         # charge yield Qy = <N_e>/xi (A1, drift field F; the two misprints fixed)
         eta = 1.0 + 0.4607 / (1.0 + (F / 621.74) ** (-2.2717)) ** 53.502
         Y0 = 1000.0 / W_eV + 6.5 * (1.0 - 1.0 / (1.0 + (F / 47.408) ** 1.9851))
-        Y1 = 32.99 * eta * (
-            1.0 - 1.0 / (1.0 + (F / (0.026712 * jnp.exp(rho / 0.33926))) ** 0.6705)
+        Y1 = 32.988 * eta * (
+            1.0 - 1.0 / (1.0 + (F / (0.026715 * jnp.exp(rho / 0.33926))) ** 0.6705)
         )
         tau = (
-            1652.264 + (1.145935e10 - 1652.264) / (1.0 + (F / 0.02673) ** 1.564691)
+            1652.264 + (1.415935e10 - 1652.264) / (1.0 + (F / 0.02673144) ** 1.564691)
         ) * energy ** (-2.0)
         qy = (
             Y1
