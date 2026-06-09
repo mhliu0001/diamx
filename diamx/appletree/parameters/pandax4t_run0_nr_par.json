@@ -145,13 +145,13 @@
     "drift_velocity": {
         "prior_type": "fixed",
         "prior_args": {
-            "val": 0.0677
+            "val": 0.14634
         },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
         "unit": "cm/us",
-        "doc": "drift velocity [cm/us]. IRRELEVANT: electron-lifetime loss is disabled (pandax4t_elife.json ~ 1e9 us -> survival~1), and there is no position dependence. Kept only because appletree's DriftLoss requires it."
+        "doc": "drift velocity [cm/us]; with the per-run electron-lifetime map (pandax4t_run0_elife.json) it sets the drift time |z|/drift_velocity that drives the charge-loss correction."
     },
     "elife_sigma": {
         "prior_type": "fixed",
