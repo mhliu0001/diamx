@@ -1,7 +1,9 @@
 {
     "w": {
         "prior_type": "fixed",
-        "prior_args": {"val": 0.0137},
+        "prior_args": {
+            "val": 0.0137
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
@@ -10,7 +12,9 @@
     },
     "field": {
         "prior_type": "fixed",
-        "prior_args": {"val": 93.0},
+        "prior_args": {
+            "val": 93.0
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
@@ -19,7 +23,9 @@
     },
     "liquid_xe_density": {
         "prior_type": "fixed",
-        "prior_args": {"val": 2.8619},
+        "prior_args": {
+            "val": 2.8619
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
@@ -28,7 +34,9 @@
     },
     "p0_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": 0.237},
+        "prior_args": {
+            "val": 0.237
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
@@ -37,7 +45,9 @@
     },
     "p1_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": -0.419},
+        "prior_args": {
+            "val": -0.422
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
@@ -46,7 +56,9 @@
     },
     "p2_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": 0.377},
+        "prior_args": {
+            "val": 0.377
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
@@ -55,7 +67,9 @@
     },
     "p3_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": -0.097},
+        "prior_args": {
+            "val": -0.099
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
@@ -64,7 +78,9 @@
     },
     "a_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": 1.11},
+        "prior_args": {
+            "val": 1.11
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,
@@ -73,7 +89,9 @@
     },
     "d_er": {
         "prior_type": "fixed",
-        "prior_args": {"val": 0.0},
+        "prior_args": {
+            "val": 0.0
+        },
         "allowed_range": null,
         "init_mean": null,
         "init_std": null,

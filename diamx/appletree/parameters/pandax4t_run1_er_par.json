@@ -46,7 +46,7 @@
     "p1_er": {
         "prior_type": "fixed",
         "prior_args": {
-            "val": -0.419
+            "val": -0.422
         },
         "allowed_range": null,
         "init_mean": null,
@@ -68,7 +68,7 @@
     "p3_er": {
         "prior_type": "fixed",
         "prior_args": {
-            "val": -0.097
+            "val": -0.099
         },
         "allowed_range": null,
         "init_mean": null,
