@@ -622,7 +622,7 @@ Fig. 4.9 shows the contour / pie-chart comparison for the two runs. Because the 
 
 | <img src="plots/pandax4t_run0_cs1_logcs2s1_contours.png" style="zoom:12.5%;" /> <img src="plots/pandax4t_run1_cs1_logcs2s1_contours.png" style="zoom:12.5%;" /> |
 | :----------------------------------------------------------: |
-| **Fig. 4.9:** The contours for the backgrounds / signal modeled in `diamx` for PandaX-4T Run0 (left) and Run1 (right), in the $(cS1, \log_{10}(cS2_b/cS1))$ space. Pie charts show the digitized candidate events from [[15]](#pandax_prl) and the fractions of different components in the best-fit model. Blue, orange, purple, and red contours show the ER (other ER + tritium + Xe), neutron + ${}^8$B, AC, and 40 GeV/c$^2$ WIMP components from `diamx`; the AC and WIMP literature $1\sigma/2\sigma$ contours and the published ER $5\%/95\%$ band edges (black dotted) are overlaid for comparison. |
+| **Fig. 4.9:** The contours for the backgrounds / signal modeled in `diamx` for PandaX-4T Run0 (left) and Run1 (right), in the $(cS1, \log_{10}(cS2_b/cS1))$ space. Pie charts show the digitized candidate events from [[15]](#pandax_prl) and the fractions of different components in the best-fit model. Blue, orange, purple, and red contours show the ER (other ER + tritium + Xe), neutron, AC, and 40 GeV/c$^2$ WIMP components from `diamx`; the AC and WIMP literature $1\sigma/2\sigma$ contours and the published ER $5\%/95\%$ band edges (black dotted) are overlaid for comparison. |
 
 | <img src="plots/pandax4t_run0_nr_median_er_band_validation_logcs2.png" style="zoom:12.5%;" /> <img src="plots/pandax4t_run1_nr_median_er_band_validation_logcs2.png" style="zoom:12.5%;" /> |
 | :----------------------------------------------------------: |
@@ -665,7 +665,7 @@ As an alternative to the single mono-energetic ${}^{124}$Xe line used in the bas
 
 | <img src="plots/pandax4t_run0_dec_xe_contours.png" style="zoom:12.5%;" /> <img src="plots/pandax4t_run1_dec_xe_contours.png" style="zoom:12.5%;" /> |
 | :----------------------------------------------------------: |
-| **Fig. 4.12:** ${}^{124}$Xe DEC and ${}^{127}$Xe best-fit contours (with the other-ER and neutron + ${}^8$B backgrounds) in the $(cS1, \log_{10}(cS2_b/cS1))$ space for Run0 (left) and Run1 (right). The ${}^{124}$Xe DEC produces two quenched peaks (LM at $5.98$ keV, LL at $10$ keV); Run1 has no ${}^{127}$Xe. Grey points are the digitized candidate events of [[15]](#pandax_prl). The quenched Xe lines lie below the ER band owing to their reduced charge yield $Q/Q_\beta < 1$. |
+| **Fig. 4.12:** ${}^{124}$Xe DEC and ${}^{127}$Xe best-fit contours (with the other-ER and neutron backgrounds; the ER contour excludes tritium) in the $(cS1, \log_{10}(cS2_b/cS1))$ space for Run0 (left) and Run1 (right). The ${}^{124}$Xe DEC produces two quenched peaks (LM at $5.98$ keV, LL at $10$ keV); Run1 has no ${}^{127}$Xe. Grey points are the digitized candidate events of [[15]](#pandax_prl). The quenched Xe lines lie below the ER band owing to their reduced charge yield $Q/Q_\beta < 1$. |
 
 ## References
 
