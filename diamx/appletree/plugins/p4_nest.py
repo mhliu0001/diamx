@@ -173,12 +173,25 @@ class IonizationP4NEST(Plugin):
         "drives <r> -> 0, so diamx uses 150; p0..p3_nr are refit to the Fig. 17 LY/QY "
         "and the high-cS1 NR median at this xi_norm. ER uses xi_norm_er=30.",
     ),
+    Constant(
+        name="energy_clip_nr",
+        type=float,
+        default=150.0,
+        help="Clip energy [keV] for the Eq. 17 NR recombination correction: above "
+        "this the correction is frozen at its clip-energy value. The degree-3 "
+        "Legendre fit is only calibrated up to ~100 keV; extrapolated to "
+        "few-hundred-keV recoils it dives to corrections of -0.7..-1.3, clipping "
+        "<r> to 0 so the events come out S1-less and S2-rich and fold back into "
+        "the WIMP ROI at high log10(cS2_b/cS1). Hard recoil spectra (heavy EFT "
+        "signals) are the ones affected; the clip keeps such events on a "
+        "band-like trajectory that exits the ROI at high cS1 instead.",
+    ),
 )
 class NRRecombParamsP4NEST(Plugin):
     """Corrected mean recombination <r> and fluctuation dr (PRD Eq. 17).
 
-    <r>  = clip(<r>_0 + P3(xi/xi_norm)*exp(-xi/xi_norm) + d_nr, 0, 1)
-    dr   = dr_0 * a_nr
+    <r>  = clip(<r>_0 + P3(xi_c/xi_norm)*exp(-xi_c/xi_norm) + d_nr, 0, 1)
+    with xi_c = min(xi, energy_clip_nr), and dr = dr_0 * a_nr.
 
     Provides ``recomb_mean`` and ``recomb_std`` as data names so they can be
     inspected / deduced directly (the recombination-fluctuation comparison vs
@@ -191,14 +204,15 @@ class NRRecombParamsP4NEST(Plugin):
 
     @partial(jit, static_argnums=(0,))
     def simulate(self, key, parameters, recomb_mean0, recomb_std0, energy):
-        u = energy / self.xi_norm_nr.value
+        energy_clipped = jnp.clip(energy, 0.0, self.energy_clip_nr.value)
+        u = energy_clipped / self.xi_norm_nr.value
         correction = _legendre_p3(
             u,
             parameters["p0_nr"],
             parameters["p1_nr"],
             parameters["p2_nr"],
             parameters["p3_nr"],
-        ) * jnp.exp(-energy / self.xi_norm_nr.value)
+        ) * jnp.exp(-energy_clipped / self.xi_norm_nr.value)
         recomb_mean = jnp.clip(
             recomb_mean0 + correction + parameters["d_nr"], 0.0, 1.0
         )
