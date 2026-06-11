@@ -157,7 +157,11 @@ def extended_poisson_logpmf(observed, expected, atol=0.0):
 
 
 def get_asimov_sigma(
-    alea_model, poi_name, poi_value, fit_strategy={"minuit_strategy": 2}
+    alea_model,
+    poi_name,
+    poi_value,
+    fit_strategy={"minuit_strategy": 2},
+    conditional_best_fit=None,
 ):
     """
     Given the signal strength parameter value, calculate the standard deviation sigma
@@ -173,6 +177,11 @@ def get_asimov_sigma(
         Value of the parameter of interest (signal strength).
     fit_strategy : dict
         Fit strategy to use for the Asimov fit. Default is {"minuit_strategy": 2}.
+    conditional_best_fit : dict, optional
+        Best-fit parameters of a fit with poi_name fixed to poi_value. If given,
+        the conditional fit here is skipped and the Asimov dataset is built from
+        these parameters (the caller typically just performed this fit for the
+        test statistic).
 
     Returns
     -------
@@ -180,7 +189,10 @@ def get_asimov_sigma(
         Estimated standard deviation of the signal strength estimator.
     """
     # Get the best-fit shape / rate parameters for the Asimov dataset
-    best_fit_parameters, _ = alea_model.fit(**{poi_name: poi_value})
+    if conditional_best_fit is None:
+        best_fit_parameters, _ = alea_model.fit(**{poi_name: poi_value})
+    else:
+        best_fit_parameters = conditional_best_fit
 
     # Generate the Asimov model
     asimov_model = copy(alea_model)

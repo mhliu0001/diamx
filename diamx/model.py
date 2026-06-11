@@ -59,6 +59,10 @@ class DiamxModel(BlueiceExtendedModel):
         parameter_interval_bounds: Optional[Tuple[float, float]] = None,
         confidence_level: Optional[float] = 0.9,
         fit_strategy: Optional[dict] = {"minuit_strategy": 2},
+        best_fit: Optional[dict] = None,
+        best_ll: Optional[float] = None,
+        brentq_rtol: float = 1e-3,
+        extra_results: Optional[dict] = None,
     ) -> Tuple[float, float]:
         """Compute asymptotic confidence intervals for a certain named parameter.
 
@@ -71,10 +75,25 @@ class DiamxModel(BlueiceExtendedModel):
                 If None, the default confidence level of the model is used.
             fit_strategy (dict, optional (default=None)): strategy for the fit,
                 see _DEFAULT_FIT_STRATEGY for possible settings.
+            best_fit (dict, optional (default=None)): unconditional best-fit parameters.
+                Pass together with best_ll to reuse a fit the caller already performed
+                instead of refitting here.
+            best_ll (float, optional (default=None)): log-likelihood at best_fit.
+            brentq_rtol (float, optional (default=1e-3)): relative tolerance of the
+                brentq root search for the interval edges. The Asimov sigma entering
+                the p-value fluctuates at the per-mille level between Minuit/Hesse
+                evaluations, so the root cannot be resolved much more finely anyway;
+                the scipy default (machine precision) wastes about half of the
+                p-value evaluations after the root has converged.
+            extra_results (dict, optional (default=None)): if a dict is passed,
+                intermediate results are stored into it. Currently: "ll_zero", the
+                conditional log-likelihood with the poi fixed to 0 (reusable for the
+                discovery significance without an extra fit).
         """
-        best_fit, best_ll = self.fit(
-            stabilized_parameter=stabilized_parameter, fit_strategy=fit_strategy
-        )
+        if best_fit is None or best_ll is None:
+            best_fit, best_ll = self.fit(
+                stabilized_parameter=stabilized_parameter, fit_strategy=fit_strategy
+            )
         parameter_of_interest = self.parameters[poi_name]
         if not parameter_of_interest.fittable:
             raise ValueError("The parameter of interest must be fittable")
@@ -86,19 +105,34 @@ class DiamxModel(BlueiceExtendedModel):
             parameter_interval_bounds[0] == 0
         ), "Asymptotic CI only implemented for lower bound at 0."
 
+        # Each p-value evaluation needs the conditional fit twice (test statistic
+        # and Asimov dataset) and brentq re-evaluates its bracket endpoints, so
+        # memoize conditional fits and p-values by hypothesis value.
+        conditional_fit_cache = {}
+
+        def conditional_fit(hypothesis_value):
+            if hypothesis_value not in conditional_fit_cache:
+                conditional_fit_cache[hypothesis_value] = self.fit(
+                    **{poi_name: hypothesis_value},
+                    stabilized_parameter=stabilized_parameter,
+                    fit_strategy=fit_strategy,
+                )
+            return conditional_fit_cache[hypothesis_value]
+
         def t_tilde(hypothesis_value):
-            _, ll = self.fit(
-                **{poi_name: hypothesis_value},
-                stabilized_parameter=stabilized_parameter,
-                fit_strategy=fit_strategy,
-            )
+            _, ll = conditional_fit(hypothesis_value)
             # Clip the test statistic to be non-negative
             return np.clip(2.0 * (best_ll - ll), 0, None)
 
         def cumulative_t_tilde(hypothesis_value):
             t_tilde_value = t_tilde(hypothesis_value)
+            conditional_best_fit, _ = conditional_fit(hypothesis_value)
             sigma = get_asimov_sigma(
-                self, poi_name, hypothesis_value, fit_strategy=fit_strategy
+                self,
+                poi_name,
+                hypothesis_value,
+                fit_strategy=fit_strategy,
+                conditional_best_fit=conditional_best_fit,
             )
             if (
                 hypothesis_value == 0
@@ -116,8 +150,14 @@ class DiamxModel(BlueiceExtendedModel):
                     - 1
                 )
 
+        p_value_cache = {}
+
         def p_value(hypothesis_value):
-            return 1 - cumulative_t_tilde(hypothesis_value)
+            if hypothesis_value not in p_value_cache:
+                p_value_cache[hypothesis_value] = 1 - cumulative_t_tilde(
+                    hypothesis_value
+                )
+            return p_value_cache[hypothesis_value]
 
         best_p_value = p_value(best_fit[poi_name])
         if best_p_value < 1 - confidence_level:
@@ -129,12 +169,17 @@ class DiamxModel(BlueiceExtendedModel):
             return np.nan, np.nan
         lower_p_value = p_value(parameter_interval_bounds[0])
         upper_p_value = p_value(parameter_interval_bounds[1])
+        if extra_results is not None:
+            extra_results["ll_zero"] = conditional_fit_cache[
+                parameter_interval_bounds[0]
+            ][1]
 
         if lower_p_value < 1 - confidence_level:
             dl = brentq(
                 lambda x: p_value(x) - (1 - confidence_level),
                 parameter_interval_bounds[0],
                 best_fit[poi_name],
+                rtol=brentq_rtol,
             )
         else:
             dl = -1 * np.inf
@@ -143,6 +188,7 @@ class DiamxModel(BlueiceExtendedModel):
                 lambda x: p_value(x) - (1 - confidence_level),
                 best_fit[poi_name],
                 parameter_interval_bounds[1],
+                rtol=brentq_rtol,
             )
         else:
             ul = np.inf

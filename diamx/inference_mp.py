@@ -99,17 +99,24 @@ def _pool_task(pool_parameters):
                 exact_asymptotic,
             ):
                 best_fit, max_ll = alea_model.fit(
-                    stabilized_parameter=stabilized_parameter
+                    stabilized_parameter=stabilized_parameter,
+                    fit_strategy=fit_strategy,
                 )
                 best_fit_value = best_fit[poi_name]
 
+                ll_zero = None
                 if exact_asymptotic:
+                    extra_results = {}
                     lower, upper = alea_model.confidence_interval_asymptotic(
                         poi_name=poi_name,
                         stabilized_parameter=stabilized_parameter,
                         confidence_level=confidence_level,
                         fit_strategy=fit_strategy,
+                        best_fit=best_fit,
+                        best_ll=max_ll,
+                        extra_results=extra_results,
                     )
+                    ll_zero = extra_results.get("ll_zero")
                 else:
                     lower, upper = alea_model.confidence_interval(
                         poi_name=poi_name,
@@ -119,7 +126,12 @@ def _pool_task(pool_parameters):
                         fit_strategy=fit_strategy,
                     )
 
-                _, ll_zero = alea_model.fit(**{poi_name: 0})
+                if ll_zero is None:
+                    _, ll_zero = alea_model.fit(
+                        **{poi_name: 0},
+                        stabilized_parameter=stabilized_parameter,
+                        fit_strategy=fit_strategy,
+                    )
                 significance = float(
                     np.sqrt(2.0 * (np.clip(max_ll - ll_zero, 0, None)))
                 )
