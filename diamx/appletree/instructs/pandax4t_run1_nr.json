@@ -1,0 +1,31 @@
+{
+    "s1_lce": "_s1_correction.json",
+    "s1_correction": "_s1_correction.json",
+    "s2_lce": "_s2_correction.json",
+    "s2_correction": "_s2_correction.json",
+    "elife": "pandax4t_run1_elife.json",
+    "posrec_reso": "_posrec_reso.json",
+    "gas_gain_relative": "_gas_gain_relative.json",
+    "s1_bias_3f": "pandax4t_s1_bias.json",
+    "s1_smear_3f": "pandax4t_s1_smear.json",
+    "s2_bias": "pandax4t_s2_bias.json",
+    "s2_smear": "pandax4t_s2_smear.json",
+    "hit_eff": "pandax4t_hit_eff.json",
+    "s1_cut_acc": [
+        "pandax4t_run1_s1_cut_acc_median.json",
+        "pandax4t_run1_s1_cut_acc_lower.json",
+        "pandax4t_run1_s1_cut_acc_upper.json",
+        "s1_cut_acc_sigma"
+    ],
+    "s2_cut_acc": [
+        "pandax4t_run1_s2_cut_acc_median.json",
+        "pandax4t_run1_s2_cut_acc_lower.json",
+        "pandax4t_run1_s2_cut_acc_upper.json",
+        "s2_cut_acc_sigma"
+    ],
+    "quality_residual": "pandax4t_run1_eff_nr_quality_residual.json",
+    "recon_eff": "pandax4t_run1_eff_nr_rec.json",
+    "z_min": -120.0,
+    "z_max": -10.0,
+    "xi_norm_nr": 150.0
+}

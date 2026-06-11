@@ -3,3 +3,28 @@ __pycache__
 .vscode
 .pytest_cache
 pdf_cache
+
+# build artifacts
+/build/
+
+# coverage output
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# copyrighted reference papers (kept local, not redistributed)
+PhysRevD.110.023029.pdf
+PhysRevLett.134.011805.pdf
+
+# local-only working files
+CLAUDE.md
+pandax4t_integration_plan.md
+run0_DM_candidate_qS1S2.csv
+run1_DM_candidate_qS1S2.csv
+
+# Generated WIMP spectra. The 6/40/200/1000 GeV masses are committed for the
+# test suite; the full benchmark mass grid and the .json form are (re)generated
+# by the "Finer WIMP mass sampling" cell of notebooks/benchmark.ipynb.
+diamx/data/wimp_*GeV.csv
+diamx/data/wimp_*GeV.json

@@ -46,15 +46,21 @@
             ],
             "shaped_bkgs": [],
             "eff": {
-                "fit_limits": [0.5, 1.5],
-                "parameter_interval_bounds": [0.5, 1.5],
+                "fit_limits": [
+                    0.5,
+                    1.5
+                ],
+                "parameter_interval_bounds": [
+                    0.5,
+                    1.5
+                ],
                 "args": {}
             }
         },
         {
             "experiment_name": "xenonnt_sr1a",
             "livetime": 0.1824657534246575,
-            "fiducial_mass": 4.00,
+            "fiducial_mass": 4.0,
             "data": "xenonnt_sr1a_wimp_data.csv",
             "roi": {
                 "cs1": "np.linspace(0, 100, 101)",
@@ -106,15 +112,21 @@
             ],
             "shaped_bkgs": [],
             "eff": {
-                "fit_limits": [0.5, 1.5],
-                "parameter_interval_bounds": [0.5, 1.5],
+                "fit_limits": [
+                    0.5,
+                    1.5
+                ],
+                "parameter_interval_bounds": [
+                    0.5,
+                    1.5
+                ],
                 "args": {}
             }
         },
         {
             "experiment_name": "xenonnt_sr1b",
             "livetime": 0.3284931506849315,
-            "fiducial_mass": 4.00,
+            "fiducial_mass": 4.0,
             "data": "xenonnt_sr1b_wimp_data.csv",
             "roi": {
                 "cs1": "np.linspace(0, 100, 101)",
@@ -160,8 +172,14 @@
             ],
             "shaped_bkgs": [],
             "eff": {
-                "fit_limits": [0.5, 1.5],
-                "parameter_interval_bounds": [0.5, 1.5],
+                "fit_limits": [
+                    0.5,
+                    1.5
+                ],
+                "parameter_interval_bounds": [
+                    0.5,
+                    1.5
+                ],
                 "args": {}
             }
         },
@@ -219,14 +237,23 @@
                 {
                     "bkg_name": "ar37",
                     "rate_nominal": 304.1666666666667,
-                    "rate_fit_limits": [0, 1752.0],
+                    "rate_fit_limits": [
+                        0,
+                        1752.0
+                    ],
                     "args": {}
                 }
             ],
             "shaped_bkgs": [],
             "eff": {
-                "fit_limits": [0.5, 1.5],
-                "parameter_interval_bounds": [0.5, 1.5],
+                "fit_limits": [
+                    0.5,
+                    1.5
+                ],
+                "parameter_interval_bounds": [
+                    0.5,
+                    1.5
+                ],
                 "args": {}
             }
         },
@@ -314,7 +341,10 @@
                             "shape_parameter_range": "np.arange(0.65, 0.88, 0.02)",
                             "shape_parameter_nominal": 0.71,
                             "formatter": ".2f",
-                            "shape_parameter_fit_limits": [0.65, 0.87]
+                            "shape_parameter_fit_limits": [
+                                0.65,
+                                0.87
+                            ]
                         }
                     ],
                     "rate_nominal": 32.18636363636364,
@@ -323,16 +353,191 @@
                 }
             ],
             "eff": {
-                "fit_limits": [0.5, 1.5],
-                "parameter_interval_bounds": [0.5, 1.5],
+                "fit_limits": [
+                    0.5,
+                    1.5
+                ],
+                "parameter_interval_bounds": [
+                    0.5,
+                    1.5
+                ],
+                "args": {}
+            }
+        },
+        {
+            "experiment_name": "pandax4t_run0",
+            "livetime": 0.2268907563,
+            "fiducial_mass": 2.38,
+            "data": "pandax4t_run0_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(2, 135, 134)",
+                "logcs2_s1": "np.linspace(0.5, 3.5, 101)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "other_er",
+                    "rate_nominal": 2221.333,
+                    "rate_uncertainty": 0.0317,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "tritium",
+                    "rate_nominal": 2450.519,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "xe124",
+                    "rate_nominal": 10.137,
+                    "rate_uncertainty": 0.2609,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "xe127",
+                    "rate_nominal": 33.937,
+                    "rate_uncertainty": 0.0519,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "neutron",
+                    "rate_nominal": 2.6444,
+                    "rate_uncertainty": 0.5,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "b8",
+                    "rate_nominal": 1.3222,
+                    "rate_uncertainty": 0.3333,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "ac",
+                    "rate_nominal": 48.4815,
+                    "rate_uncertainty": 0.2727,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "template_path": "pandax4t_run0_ac_template.h5",
+                        "hist_name": "cs1-logcs2_s1"
+                    }
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [
+                    0.5,
+                    1.5
+                ],
+                "parameter_interval_bounds": [
+                    0.5,
+                    1.5
+                ],
+                "args": {}
+            }
+        },
+        {
+            "experiment_name": "pandax4t_run1",
+            "livetime": 0.4032258065,
+            "fiducial_mass": 2.48,
+            "data": "pandax4t_run1_wimp_data.csv",
+            "roi": {
+                "cs1": "np.linspace(2, 135, 134)",
+                "logcs2_s1": "np.linspace(0.5, 3.5, 101)"
+            },
+            "bkgs": [
+                {
+                    "bkg_name": "other_er",
+                    "rate_nominal": 3040.48,
+                    "rate_uncertainty": 0.0228,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "tritium",
+                    "rate_nominal": 282.72,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "xe124",
+                    "rate_nominal": 10.168,
+                    "rate_uncertainty": 0.2683,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "neutron",
+                    "rate_nominal": 2.728,
+                    "rate_uncertainty": 0.5455,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "b8",
+                    "rate_nominal": 1.736,
+                    "rate_uncertainty": 0.2857,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "batch_size": 100000000
+                    }
+                },
+                {
+                    "bkg_name": "ac",
+                    "rate_nominal": 32.24,
+                    "rate_uncertainty": 0.3077,
+                    "rate_relative_uncertainty": true,
+                    "args": {
+                        "template_path": "pandax4t_run1_ac_template.h5",
+                        "hist_name": "cs1-logcs2_s1"
+                    }
+                }
+            ],
+            "shaped_bkgs": [],
+            "eff": {
+                "fit_limits": [
+                    0.5,
+                    1.5
+                ],
+                "parameter_interval_bounds": [
+                    0.5,
+                    1.5
+                ],
                 "args": {}
             }
         }
     ],
     "signal": {
         "signal_name": "wimp",
-        "rate_fit_limits": [0, 3000],
-        "rate_parameter_interval_bounds": [0, 3000],
+        "rate_fit_limits": [
+            0,
+            3000
+        ],
+        "rate_parameter_interval_bounds": [
+            0,
+            3000
+        ],
         "parameter_name": "mass",
         "parameter_range": "list(range(10, 100, 2)) + list(range(100, 1000, 50)) + [1000, 2500, 5000, 10000]",
         "args": {

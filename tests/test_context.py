@@ -194,3 +194,67 @@ def test_lz_ws2024_shape_par_context(tmp_path):
         histogram_kwargs={"norm": LogNorm()},
         contour_kwargs={"colors": ["blue", "blue"], "linestyles": ["--", "-"]},
     )
+
+
+def test_pandax4t_run01_context(tmp_path):
+    # Combined PandaX-4T Run0 + Run1. Use a coarse roi (so the templates are
+    # well-populated at a small batch) and drop the contour-driven AC template
+    # (whose binning is tied to the fine analysis roi). The AC template load and
+    # the fine-roi generation of every background are exercised in
+    # tests/test_experiment.py::test_pandax4t_run{0,1}.
+    config = config_preprocess(
+        "pandax4t_run01_wimp_config.json", parameter_range=[40, 200]
+    )
+    for experiment_config in config["experiments"]:
+        experiment_config["roi"] = {
+            "cs1": "np.linspace(2, 135, 28)",
+            "logcs2_s1": "np.linspace(0.5, 3.5, 31)",
+        }
+        experiment_config["bkgs"] = [
+            bkg for bkg in experiment_config["bkgs"] if bkg["bkg_name"] != "ac"
+        ]
+    st = diamx.Context(config, tmp_path)
+    st.register_experiment(diamx.experiments.PandaX4TRun0)
+    st.register_experiment(diamx.experiments.PandaX4TRun1)
+    st.generate_templates()
+    st.run_inference(stabilize_fit=False, exact_asymptotic=False)
+    st.print_best_fit(40)
+    st.plot_best_fit_bkg_mh(
+        "pandax4t_run0",
+        40,
+        bkg_to_include=[
+            "other_er",
+            "tritium",
+            "xe124",
+            "xe127",
+            "neutron",
+            "b8",
+        ],
+        histogram_kwargs={"norm": LogNorm()},
+        contour_kwargs={"colors": ["blue", "blue"], "linestyles": ["--", "-"]},
+    )
+
+
+def test_pandax4t_run01_dec_context(tmp_path):
+    # DEC variant of the combined PandaX-4T fit: Xe124 modelled as a shaped
+    # background with the free, run0/run1-shared Q_LL/Q_beta (ll_quenching_factor)
+    # and a quenched Xe127 L-shell line. Coarse roi + AC dropped as in
+    # test_pandax4t_run01_context; config_preprocess reduces the shape grid to
+    # [lower, nominal, upper].
+    config = config_preprocess(
+        "pandax4t_run01_wimp_config_dec.json", parameter_range=[40, 200]
+    )
+    for experiment_config in config["experiments"]:
+        experiment_config["roi"] = {
+            "cs1": "np.linspace(2, 135, 28)",
+            "logcs2_s1": "np.linspace(0.5, 3.5, 31)",
+        }
+        experiment_config["bkgs"] = [
+            bkg for bkg in experiment_config["bkgs"] if bkg["bkg_name"] != "ac"
+        ]
+    st = diamx.Context(config, tmp_path)
+    st.register_experiment(diamx.experiments.PandaX4TRun0)
+    st.register_experiment(diamx.experiments.PandaX4TRun1)
+    st.generate_templates()
+    st.run_inference(stabilize_fit=False, exact_asymptotic=False)
+    st.print_best_fit(40)

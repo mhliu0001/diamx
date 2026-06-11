@@ -1,0 +1,101 @@
+{
+    "w": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0137
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "keV",
+        "doc": "Mean energy per quantum W (PRD Eq. 1); 13.7 eV"
+    },
+    "field": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 93.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "V/cm",
+        "doc": "PandaX-4T drift field. Run0 ~93 V/cm (this default); Run1 ~84 V/cm (override per run)."
+    },
+    "liquid_xe_density": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 2.8619
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "g/cm^3",
+        "doc": "Liquid xenon density (NESTv2.0 ER Wq / Qy / alpha)"
+    },
+    "p0_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.237
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Legendre coefficient p0, FIT to the digitized Fig.17 yield curve at xi_norm_er=30 (free LS, no Table-II prior). Reproduces LY/QY to ~0.2% with no residual structure. NOT the published Table II value 1.1: Table II at xi_norm=150 leaves a ~1% mid-energy wobble (PandaX's degenerate ER coeffs are ~1% inconsistent with their own Fig.17 curve). See [[project_pandax_4t]]."
+    },
+    "p1_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": -0.422
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Legendre coefficient p1, fit to Fig.17 at xi_norm_er=30 (Table II value -3.1 is for xi_norm=150)"
+    },
+    "p2_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.377
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Legendre coefficient p2, fit to Fig.17 at xi_norm_er=30 (Table II value 2.2 is for xi_norm=150)"
+    },
+    "p3_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": -0.099
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Legendre coefficient p3, fit to Fig.17 at xi_norm_er=30 (Table II value -1.7 is for xi_norm=150)"
+    },
+    "a_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 1.11
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER recombination-fluctuation scaling A^ER (PRD Table II)"
+    },
+    "d_er": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST ER Run1 recombination shift. 0 for Run0; fitting the digitized Run1 LY+QY at xi_norm_er=30 gives ~-0.029 (close to Table II's d_ER=-0.032). Both ER and NR Run1 prefer d~-0.03; the listed d_NR=-0.043 matches neither."
+    }
+}

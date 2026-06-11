@@ -4,3 +4,7 @@ from . import nr_xenonnt
 from .nr_xenonnt import *
 from . import cut_acceptance_xenonnt
 from .cut_acceptance_xenonnt import *
+from . import nr_pandax4t
+from .nr_pandax4t import *
+from . import er_pandax4t
+from .er_pandax4t import *

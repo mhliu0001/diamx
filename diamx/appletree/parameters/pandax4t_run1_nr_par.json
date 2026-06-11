@@ -1,0 +1,189 @@
+{
+    "w": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0137
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "keV",
+        "doc": "Mean energy per quantum W"
+    },
+    "liquid_xe_density": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 2.8619
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "g/cm^3",
+        "doc": "LXe density"
+    },
+    "field": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 84.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "V/cm",
+        "doc": "PandaX-4T run1 drift field"
+    },
+    "p0_nr": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.725
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST NR parameter p0_nr"
+    },
+    "p1_nr": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": -1.576
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST NR parameter p1_nr"
+    },
+    "p2_nr": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 1.297
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST NR parameter p2_nr"
+    },
+    "p3_nr": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": -0.629
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST NR parameter p3_nr"
+    },
+    "a_nr": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 1.06
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "P4-NEST NR parameter a_nr"
+    },
+    "d_nr": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": -0.031
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "NR Run1 recomb shift"
+    },
+    "g1": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.09071
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "PE/photon",
+        "doc": "S1 gain"
+    },
+    "g2": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 5.0292
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "PE/e",
+        "doc": "S2 bottom gain g2_b"
+    },
+    "p_dpe": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.22
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "double-PE probability"
+    },
+    "gas_gain": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 5.5
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "PE/e",
+        "doc": "single-electron gain [PE/e]. PLACEHOLDER ~5-6 (refine from Fig.2). MUST be >= max g2_b (run1 g2_b=5.03) so extraction_eff=g2_b/gas_gain<=1; only affects S2 resolution, not the mean S2 (=g2_b)."
+    },
+    "drift_velocity": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.13333
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "cm/us",
+        "doc": "drift velocity [cm/us]; with the per-run electron-lifetime map (pandax4t_run1_elife.json) it sets the drift time |z|/drift_velocity that drives the charge-loss correction."
+    },
+    "elife_sigma": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "elife_sigma (nominal 0 for templates)"
+    },
+    "s1_cut_acc_sigma": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "s1_cut_acc_sigma (nominal 0 for templates)"
+    },
+    "s2_cut_acc_sigma": {
+        "prior_type": "fixed",
+        "prior_args": {
+            "val": 0.0
+        },
+        "allowed_range": null,
+        "init_mean": null,
+        "init_std": null,
+        "unit": "1",
+        "doc": "s2_cut_acc_sigma (nominal 0 for templates)"
+    }
+}
