@@ -197,30 +197,48 @@ def get_asimov_sigma(
     # Generate the Asimov model
     asimov_model = copy(alea_model)
     old_lls = asimov_model._likelihood.likelihood_list
+
+    # Building the binned likelihoods (base model, anchor models, pmf-grid
+    # interpolators) depends only on the model structure, not on the data or
+    # the hypothesis, so build them once per model and cache. Only the Asimov
+    # dataset computed below changes between calls.
+    binned_lls = getattr(alea_model, "_asimov_binned_lls", None)
+    if binned_lls is None:
+        binned_lls = {}
+        for ll_idx, ll in enumerate(old_lls):
+            if isinstance(ll, UnbinnedLogLikelihood):
+                extended_binned_llh = ExtendedBinnedLogLikelihood(
+                    pdf_base_config=ll.pdf_base_config,
+                    likelihood_config=ll.config,
+                    source_wise_interpolation=ll.source_wise_interpolation,
+                )
+                for rate_parameter_name, log_prior in ll.rate_parameters.items():
+                    extended_binned_llh.add_rate_parameter(
+                        rate_parameter_name, log_prior=log_prior
+                    )
+                for shape_parameter_name, (
+                    anchors,
+                    log_prior,
+                    base_value,
+                ) in ll.shape_parameters.items():
+                    extended_binned_llh.add_shape_parameter(
+                        shape_parameter_name,
+                        anchors=anchors,
+                        log_prior=log_prior,
+                        base_value=base_value,
+                    )
+                extended_binned_llh.prepare()
+                binned_lls[ll_idx] = extended_binned_llh
+            else:
+                assert isinstance(
+                    ll, CustomAncillaryLikelihood
+                ), f"Unrecognized likelihood {type(ll)} in alea_model.likelihood_list."
+        alea_model._asimov_binned_lls = binned_lls
+
     new_lls = []
     for ll_idx, ll in enumerate(old_lls):
-        if isinstance(ll, UnbinnedLogLikelihood):
-            extended_binned_llh = ExtendedBinnedLogLikelihood(
-                pdf_base_config=ll.pdf_base_config,
-                likelihood_config=ll.config,
-                source_wise_interpolation=ll.source_wise_interpolation,
-            )
-            for rate_parameter_name, log_prior in ll.rate_parameters.items():
-                extended_binned_llh.add_rate_parameter(
-                    rate_parameter_name, log_prior=log_prior
-                )
-            for shape_parameter_name, (
-                anchors,
-                log_prior,
-                base_value,
-            ) in ll.shape_parameters.items():
-                extended_binned_llh.add_shape_parameter(
-                    shape_parameter_name,
-                    anchors=anchors,
-                    log_prior=log_prior,
-                    base_value=base_value,
-                )
-            extended_binned_llh.prepare()
+        if ll_idx in binned_lls:
+            extended_binned_llh = binned_lls[ll_idx]
 
             # Translate kwargs to rate_multipliers and shape_parameter_settings
             all_parameters = asimov_model._likelihood.likelihood_parameters[ll_idx]
@@ -254,7 +272,7 @@ def get_asimov_sigma(
                 mus = extended_binned_llh.base_model.expected_events()
                 ps = extended_binned_llh.ps
 
-            mus *= rate_multipliers
+            mus = mus * rate_multipliers
             asimov_dataset = np.sum(
                 mus.reshape((-1,) + (1,) * (len(ps.shape) - 1)) * ps, axis=0
             )
@@ -262,9 +280,6 @@ def get_asimov_sigma(
             extended_binned_llh.set_data(asimov_dataset)
             new_lls.append(extended_binned_llh)
         else:
-            assert isinstance(
-                ll, CustomAncillaryLikelihood
-            ), f"Unrecognized likelihood {type(ll)} in alea_model.likelihood_list."
             new_lls.append(ll)
     asimov_model._likelihood = LogLikelihoodSum(
         new_lls, likelihood_weights=asimov_model._likelihood.likelihood_weights
