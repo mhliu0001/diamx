@@ -1,3 +1,5 @@
+from . import blueice_patches
+
 from . import context
 from .context import *
 
