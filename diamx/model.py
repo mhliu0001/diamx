@@ -9,6 +9,7 @@ from scipy.optimize import minimize
 from scipy.stats import norm
 import warnings
 from alea.models.blueice_extended_model import CustomAncillaryLikelihood
+from alea.parameters import ConditionalParameter
 from diamx.asimov import get_asimov_sigma
 from diamx.ancillary import FastAncillaryLikelihood
 
@@ -65,7 +66,7 @@ class DiamxModel(BlueiceExtendedModel):
 
         fit_args = kwargs.copy()
         fit_args[stabilized_parameter] = re.x[0]
-        return super().fit(**fit_args)
+        return super().fit(verbose=verbose, fit_strategy=fit_strategy, **fit_args)
 
     def confidence_interval_asymptotic(
         self,
@@ -73,7 +74,7 @@ class DiamxModel(BlueiceExtendedModel):
         stabilized_parameter: Optional[str] = None,
         parameter_interval_bounds: Optional[Tuple[float, float]] = None,
         confidence_level: Optional[float] = 0.9,
-        fit_strategy: Optional[dict] = {"minuit_strategy": 2},
+        fit_strategy: Optional[dict] = None,
         best_fit: Optional[dict] = None,
         best_ll: Optional[float] = None,
         brentq_rtol: float = 1e-3,
@@ -89,7 +90,11 @@ class DiamxModel(BlueiceExtendedModel):
                 confidence level for confidence intervals.
                 If None, the default confidence level of the model is used.
             fit_strategy (dict, optional (default=None)): strategy for the fit,
-                see _DEFAULT_FIT_STRATEGY for possible settings.
+                see _DEFAULT_FIT_STRATEGY for possible settings. The default
+                (None) uses the alea default, Minuit strategy 1 with an
+                automatic strategy-2 simplex+migrad refit if the optimization
+                does not converge; the uncertainties entering the Asimov sigma
+                are computed by an explicit Hesse call either way.
             best_fit (dict, optional (default=None)): unconditional best-fit parameters.
                 Pass together with best_ll to reuse a fit the caller already performed
                 instead of refitting here.
@@ -120,6 +125,30 @@ class DiamxModel(BlueiceExtendedModel):
             parameter_interval_bounds[0] == 0
         ), "Asymptotic CI only implemented for lower bound at 0."
 
+        # Warm-start the sequence of similar fits below (including the Asimov
+        # fits in get_asimov_sigma, which share self.parameters) from the most
+        # recent optimum: brentq visits a converging sequence of hypotheses, so
+        # the previous best fit is a much better initial guess than the nominal
+        # values. ConditionalParameter fit guesses are read-only in alea, so
+        # those keep their defaults. The original guesses are restored on exit.
+        warm_names = [
+            name
+            for name in self.parameters.names
+            if self.parameters[name].fittable
+            and not isinstance(self.parameters[name], ConditionalParameter)
+        ]
+        original_fit_guesses = {
+            name: self.parameters[name].fit_guess for name in warm_names
+        }
+
+        def set_warm_guesses(fit_result):
+            for name in warm_names:
+                value = fit_result.get(name)
+                if value is not None and self.parameters[name].value_in_fit_limits(
+                    value
+                ):
+                    self.parameters[name].fit_guess = value
+
         # Each p-value evaluation needs the conditional fit twice (test statistic
         # and Asimov dataset) and brentq re-evaluates its bracket endpoints, so
         # memoize conditional fits and p-values by hypothesis value.
@@ -127,11 +156,13 @@ class DiamxModel(BlueiceExtendedModel):
 
         def conditional_fit(hypothesis_value):
             if hypothesis_value not in conditional_fit_cache:
-                conditional_fit_cache[hypothesis_value] = self.fit(
+                result = self.fit(
                     **{poi_name: hypothesis_value},
                     stabilized_parameter=stabilized_parameter,
                     fit_strategy=fit_strategy,
                 )
+                conditional_fit_cache[hypothesis_value] = result
+                set_warm_guesses(result[0])
             return conditional_fit_cache[hypothesis_value]
 
         def t_tilde(hypothesis_value):
@@ -174,40 +205,45 @@ class DiamxModel(BlueiceExtendedModel):
                 )
             return p_value_cache[hypothesis_value]
 
-        best_p_value = p_value(best_fit[poi_name])
-        if best_p_value < 1 - confidence_level:
-            warnings.warn(
-                f"The best-fit {best_fit[poi_name]} has a p-value {best_p_value} "
-                f"lower than 1-confidence_level {1-confidence_level}. Cannot compute "
-                f"confidence interval."
-            )
-            return np.nan, np.nan
-        lower_p_value = p_value(parameter_interval_bounds[0])
-        upper_p_value = p_value(parameter_interval_bounds[1])
-        if extra_results is not None:
-            extra_results["ll_zero"] = conditional_fit_cache[
-                parameter_interval_bounds[0]
-            ][1]
+        try:
+            set_warm_guesses(best_fit)
+            best_p_value = p_value(best_fit[poi_name])
+            if best_p_value < 1 - confidence_level:
+                warnings.warn(
+                    f"The best-fit {best_fit[poi_name]} has a p-value {best_p_value} "
+                    f"lower than 1-confidence_level {1-confidence_level}. Cannot compute "
+                    f"confidence interval."
+                )
+                return np.nan, np.nan
+            lower_p_value = p_value(parameter_interval_bounds[0])
+            upper_p_value = p_value(parameter_interval_bounds[1])
+            if extra_results is not None:
+                extra_results["ll_zero"] = conditional_fit_cache[
+                    parameter_interval_bounds[0]
+                ][1]
 
-        if lower_p_value < 1 - confidence_level:
-            dl = brentq(
-                lambda x: p_value(x) - (1 - confidence_level),
-                parameter_interval_bounds[0],
-                best_fit[poi_name],
-                rtol=brentq_rtol,
-            )
-        else:
-            dl = -1 * np.inf
-        if upper_p_value < 1 - confidence_level:
-            ul = brentq(
-                lambda x: p_value(x) - (1 - confidence_level),
-                best_fit[poi_name],
-                parameter_interval_bounds[1],
-                rtol=brentq_rtol,
-            )
-        else:
-            ul = np.inf
-        return dl, ul
+            if lower_p_value < 1 - confidence_level:
+                dl = brentq(
+                    lambda x: p_value(x) - (1 - confidence_level),
+                    parameter_interval_bounds[0],
+                    best_fit[poi_name],
+                    rtol=brentq_rtol,
+                )
+            else:
+                dl = -1 * np.inf
+            if upper_p_value < 1 - confidence_level:
+                ul = brentq(
+                    lambda x: p_value(x) - (1 - confidence_level),
+                    best_fit[poi_name],
+                    parameter_interval_bounds[1],
+                    rtol=brentq_rtol,
+                )
+            else:
+                ul = np.inf
+            return dl, ul
+        finally:
+            for name, value in original_fit_guesses.items():
+                self.parameters[name].fit_guess = value
 
     def confidence_interval(
         self,

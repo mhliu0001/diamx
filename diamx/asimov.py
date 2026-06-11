@@ -160,7 +160,7 @@ def get_asimov_sigma(
     alea_model,
     poi_name,
     poi_value,
-    fit_strategy={"minuit_strategy": 2},
+    fit_strategy=None,
     conditional_best_fit=None,
 ):
     """
@@ -175,8 +175,10 @@ def get_asimov_sigma(
         Name of the parameter of interest (signal strength).
     poi_value : float
         Value of the parameter of interest (signal strength).
-    fit_strategy : dict
-        Fit strategy to use for the Asimov fit. Default is {"minuit_strategy": 2}.
+    fit_strategy : dict, optional
+        Fit strategy to use for the Asimov fit. The default (None) uses the
+        alea default, Minuit strategy 1 with an automatic strategy-2 refit on
+        non-convergence; sigma is computed by an explicit Hesse call either way.
     conditional_best_fit : dict, optional
         Best-fit parameters of a fit with poi_name fixed to poi_value. If given,
         the conditional fit here is skipped and the Asimov dataset is built from

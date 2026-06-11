@@ -604,7 +604,7 @@ class Context(object):
         self,
         confidence_level=0.9,
         confidence_interval_kind="central",
-        fit_strategy={"minuit_strategy": 2},
+        fit_strategy=None,
         exact_asymptotic=True,
         stabilize_fit=False,
         output_file_name=None,

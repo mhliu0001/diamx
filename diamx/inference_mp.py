@@ -164,7 +164,7 @@ def run_inference_pool(
     context,
     confidence_level=0.9,
     confidence_interval_kind="central",
-    fit_strategy={"minuit_strategy": 2},
+    fit_strategy=None,
     exact_asymptotic=True,
     stabilize_fit=False,
     output_file_name=None,
@@ -187,7 +187,9 @@ def run_inference_pool(
     confidence_interval_kind : str, optional
         Kind of confidence interval: "central", "upper" or "lower" (default: "central").
     fit_strategy : dict, optional
-        Fit strategy options passed to DiamxModel.fit() (default: {"minuit_strategy": 2}).
+        Fit strategy options passed to DiamxModel.fit(). The default (None) uses
+        the alea default: Minuit strategy 1 with an automatic strategy-2
+        simplex+migrad refit if the optimization does not converge.
     exact_asymptotic : bool, optional
         Whether to use exact asymptotic formulae for confidence intervals
         (default: True). If False, uses a naive chi-squared approximation.
