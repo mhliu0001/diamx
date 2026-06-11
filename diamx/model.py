@@ -8,7 +8,9 @@ from blueice.likelihood import _needs_data
 from scipy.optimize import minimize
 from scipy.stats import norm
 import warnings
+from alea.models.blueice_extended_model import CustomAncillaryLikelihood
 from diamx.asimov import get_asimov_sigma
+from diamx.ancillary import FastAncillaryLikelihood
 
 
 class DiamxModel(BlueiceExtendedModel):
@@ -17,6 +19,19 @@ class DiamxModel(BlueiceExtendedModel):
     fitting interface to stabilize the fit, and the exact asymptotic confidence interval calculation
     from Cowan et al. (2011) (https://arxiv.org/abs/1007.1727).
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Replace the ancillary (constraint) term, which _build_ll_from_config
+        # appends as the last likelihood, with the closed-form Gaussian
+        # implementation. Safe to swap in place: LogLikelihoodSum only records
+        # the parameter names at construction and they are identical.
+        if isinstance(
+            self._likelihood.likelihood_list[-1], CustomAncillaryLikelihood
+        ):
+            self._likelihood.likelihood_list[-1] = FastAncillaryLikelihood(
+                self.parameters.with_uncertainty
+            )
 
     @_needs_data
     def fit(
