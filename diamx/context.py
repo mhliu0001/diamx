@@ -604,7 +604,7 @@ class Context(object):
         self,
         confidence_level=0.9,
         confidence_interval_kind="central",
-        fit_strategy={"minuit_strategy": 2},
+        fit_strategy=None,
         exact_asymptotic=True,
         stabilize_fit=False,
         output_file_name=None,
@@ -646,20 +646,26 @@ class Context(object):
             best_fit_value = best_fit[
                 f"{self.config['signal']['signal_name']}_rate_multiplier"
             ]
+            ll_zero = None
             if exact_asymptotic:
                 assert (
                     confidence_interval_kind == "central"
                 ), "Non-central asymptotic confidence interval is not implemented."
 
                 with HiddenTqdm():
+                    extra_results = {}
                     lower_limit, upper_limit = (
                         alea_model.confidence_interval_asymptotic(
                             poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
                             stabilized_parameter=stabilized_parameter,
                             confidence_level=confidence_level,
                             fit_strategy=fit_strategy,
+                            best_fit=best_fit,
+                            best_ll=max_ll,
+                            extra_results=extra_results,
                         )
                     )
+                    ll_zero = extra_results.get("ll_zero")
             else:
                 lower_limit, upper_limit = alea_model.confidence_interval(
                     poi_name=f"{self.config['signal']['signal_name']}_rate_multiplier",
@@ -668,11 +674,12 @@ class Context(object):
                     confidence_interval_kind=confidence_interval_kind,
                     fit_strategy=fit_strategy,
                 )
-            _, ll_zero = alea_model.fit(
-                **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0},
-                stabilized_parameter=stabilized_parameter,
-                fit_strategy=fit_strategy,
-            )
+            if ll_zero is None:
+                _, ll_zero = alea_model.fit(
+                    **{f"{self.config['signal']['signal_name']}_rate_multiplier": 0},
+                    stabilized_parameter=stabilized_parameter,
+                    fit_strategy=fit_strategy,
+                )
             # Cowan et al. 2011, Eq. 52
             # Clipping to avoid nan significance due to numerical issues
             significance = np.sqrt(2 * np.clip(max_ll - ll_zero, 0, None))
