@@ -160,6 +160,25 @@ def _pool_task(pool_parameters):
         return ("__ERR__", signal_parameter_value, tb)
 
 
+# Environment for inference worker processes, applied (for variables not
+# already set) while the Pool is alive and removed afterwards. Workers only
+# run Minuit/numpy fits; JAX is imported in each worker merely as a side
+# effect of importing diamx, yet its CPU backend creates O(n_cores) threads
+# per worker. On many-core shared nodes that multiplies to thousands of
+# threads and exhausts the per-user thread limit (pthread_create EAGAIN
+# crashes). Keep workers off the GPU and cap the XLA/BLAS thread pools.
+_DEFAULT_WORKER_ENV = {
+    "JAX_PLATFORMS": "cpu",
+    "XLA_FLAGS": (
+        "--xla_cpu_multi_thread_eigen=false "
+        "intra_op_parallelism_threads=1 inter_op_parallelism_threads=1"
+    ),
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+}
+
+
 def run_inference_pool(
     context,
     confidence_level=0.9,
@@ -174,6 +193,7 @@ def run_inference_pool(
     show_progress=True,
     start_method="spawn",
     timeout_seconds=3600,
+    worker_env=None,
 ):
     """
     Multiprocessing (Pool) version of diamx.Context.run_inference.
@@ -216,6 +236,19 @@ def run_inference_pool(
         Multiprocessing start method (default: "spawn"). If None, uses the default for the platform.
     timeout_seconds : int, optional
         Timeout in seconds for each worker fit (default: 3600).
+    worker_env : dict or None, optional
+        Environment variables for the worker processes (default: None, which
+        uses _DEFAULT_WORKER_ENV: workers stay off the GPU and the XLA/BLAS
+        thread pools are capped, since each worker otherwise creates
+        O(n_cores) idle threads and many-core nodes can hit the per-user
+        thread limit). Variables already set in the environment are left
+        untouched, so exported values take precedence. The variables are only
+        set while the pool is alive and removed afterwards: template
+        generation for other signal models in the same process can still use
+        the GPU. Pass {} to disable. On Linux the parent's CPU affinity is
+        additionally restricted to one core per worker for the lifetime of
+        the pool (and restored afterwards), which is what actually bounds the
+        XLA pool sizes the workers create.
 
     Returns
     -------
@@ -270,14 +303,39 @@ def run_inference_pool(
     # Choose a context if requested (spawn is safest cross-platform)
     mp_ctx = mp.get_context(start_method) if start_method else mp
 
-    pool_kwargs = dict(
-        processes=processes or mp_ctx.cpu_count(),
-    )
+    n_processes = processes or mp_ctx.cpu_count()
+    pool_kwargs = dict(processes=n_processes)
     if maxtasksperchild is not None:
         pool_kwargs["maxtasksperchild"] = maxtasksperchild
 
     results = []
     n_total = len(pool_parameters)
+
+    # Apply the worker environment (only variables not already set, so
+    # exported values win) and restrict the CPU affinity to one core per
+    # worker while the pool is alive. Spawned workers inherit both. XLA sizes
+    # its thread pools by the number of schedulable CPUs and ignores the
+    # thread-count flags for some pools, so the affinity restriction is what
+    # caps the per-worker thread count at O(processes) instead of O(n_cores);
+    # the workers are single-threaded Minuit/numpy fits and lose nothing.
+    # Everything is restored afterwards so that later work in this process
+    # (e.g. template generation for another signal model) can use the GPU and
+    # all cores again.
+    if worker_env is None:
+        worker_env = _DEFAULT_WORKER_ENV
+    saved_env = {}
+    for key, value in worker_env.items():
+        # Treat set-but-empty the same as unset; only a non-empty exported
+        # value takes precedence over the defaults.
+        if not os.environ.get(key):
+            saved_env[key] = os.environ.get(key)
+            os.environ[key] = value
+    original_affinity = None
+    if hasattr(os, "sched_getaffinity"):
+        available_cpus = os.sched_getaffinity(0)
+        if n_processes < len(available_cpus):
+            original_affinity = available_cpus
+            os.sched_setaffinity(0, sorted(available_cpus)[:n_processes])
 
     # Optional progress
     progress_iter = None
@@ -288,24 +346,33 @@ def run_inference_pool(
             progress_iter = None  # fall back to prints
 
     error = False
-    with mp_ctx.Pool(**pool_kwargs) as pool:
-        # Stream results as they complete; imap_unordered yields as tasks finish
-        for res in pool.imap_unordered(
-            _pool_task, pool_parameters, chunksize=chunksize
-        ):
-            if isinstance(res, tuple) and len(res) == 3 and res[0] == "__ERR__":
-                # Soft error from worker
-                _, spv, tb = res
-                print(f"\n[worker error] signal={spv}\n{tb}")
-                error = True
-            elif res is None:
-                # Skipped parameter (e.g. invalid template)
-                pass
-            else:
-                results.append(res)
+    try:
+        with mp_ctx.Pool(**pool_kwargs) as pool:
+            # Stream results as they complete; imap_unordered yields as tasks finish
+            for res in pool.imap_unordered(
+                _pool_task, pool_parameters, chunksize=chunksize
+            ):
+                if isinstance(res, tuple) and len(res) == 3 and res[0] == "__ERR__":
+                    # Soft error from worker
+                    _, spv, tb = res
+                    print(f"\n[worker error] signal={spv}\n{tb}")
+                    error = True
+                elif res is None:
+                    # Skipped parameter (e.g. invalid template)
+                    pass
+                else:
+                    results.append(res)
 
-            if progress_iter is not None:
-                progress_iter.update(1)
+                if progress_iter is not None:
+                    progress_iter.update(1)
+    finally:
+        for key, previous in saved_env.items():
+            if previous is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = previous
+        if original_affinity is not None:
+            os.sched_setaffinity(0, original_affinity)
 
     if progress_iter is not None:
         progress_iter.close()
