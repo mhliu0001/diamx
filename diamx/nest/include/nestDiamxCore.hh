@@ -27,5 +27,6 @@ InferenceObservableArray LZModel(
     uint64_t seed,
     string spectrumFileName,
     uint64_t numEvts,
-    double dec_quenching_factor=1.0
+    double dec_quenching_factor=1.0,
+    bool high_energy=false
 );

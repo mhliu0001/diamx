@@ -24,11 +24,22 @@ InferenceObservableArray LZModel(
     uint64_t seed,
     string spectrumFileName,
     uint64_t numEvts,
-    double dec_quenching_factor
+    double dec_quenching_factor,
+    bool high_energy
 ) {
     // Overriding default verbosity and maxS2
     int verbosity_lzmodel = -1;
     maxS2 = 4e4;
+
+    // Opt-in high-energy mode: extend the S1/S2 acceptance so that high-energy NR
+    // (above the NEST AmBe calibration endpoint, ~300 keV) is not clipped to the
+    // -999 sentinel by the validation cut below. The LZ model is only used to decide
+    // whether an event falls inside or outside the WIMP-search ROI, so extrapolating
+    // beyond the model's validation range is acceptable for that purpose.
+    if (high_energy) {
+        maxS1 = 1500;
+        maxS2 = 1e6;
+    }
 
     InferenceObservableArray InferenceObservable;
 
