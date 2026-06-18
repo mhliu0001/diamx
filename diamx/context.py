@@ -115,6 +115,137 @@ class Context(object):
                 )
             return f"{experiment_name}_{shape_parameter_config['shape_parameter_name']}"
 
+    @staticmethod
+    def _slice_edges(roi_edges, low, high):
+        """Bin edges that ``multihist``'s ``slice(low, high)`` keeps, computed
+        without building a histogram. Mirrors ``Histdd.slice`` /
+        ``get_axis_bin_index`` exactly: both limits are inclusive and snap
+        outward to the bin containing them, so the returned edges are identical
+        to what alea's ``apply_slice_args`` produces (and thus pass
+        ``_check_binning``). Limits outside the roi clamp to its ends."""
+        roi_edges = np.asarray(roi_edges, dtype=float)
+        n_edges = len(roi_edges)
+
+        def bin_index(value):
+            if value == roi_edges[-1]:
+                return n_edges - 2  # right edge is inclusive
+            return int(np.searchsorted(roi_edges, value, side="right")) - 1
+
+        start_bin = max(0, bin_index(low))
+        stop_bin = min(n_edges - 2, bin_index(high))
+        return roi_edges[start_bin : stop_bin + 2]
+
+    @classmethod
+    def _compute_fit_windows(cls, experiment_config):
+        """Resolve ``fit_roi`` into ``{axis_name: (limits, windowed_edges)}`` --
+        the single source of truth for windowing.
+
+        Templates are always generated and cached over the full ``roi``. An
+        optional per-experiment ``fit_roi``, given as ``{axis_name: [low,
+        high]}``, restricts the inference to a sub-window of ``roi`` along one or
+        more axes. ``limits`` is ``(low, high)`` clamped to the roi range -- the
+        exact values handed to ``slice``/``slice_args`` -- and ``windowed_edges``
+        are the bin edges that ``slice(low, high)`` then keeps. Passing the same
+        ``limits`` everywhere makes the declared ``analysis_space`` identical to
+        what alea's per-source slicing produces (so ``_check_binning`` passes),
+        while ``windowed_edges`` give the data-mask bounds. Limits that do not
+        land on a ``roi`` bin edge are snapped outward (to the enclosing bins)
+        with a warning. Returns ``{}`` when ``fit_roi`` is absent.
+        """
+        roi = experiment_config["roi"]
+        fit_roi = experiment_config.get("fit_roi", {})
+        if not fit_roi:
+            return {}
+        if not isinstance(fit_roi, dict):
+            raise ValueError("fit_roi must be a dict mapping axis name -> [low, high].")
+
+        windows = {}
+        for axis_name, window in fit_roi.items():
+            if axis_name not in roi:
+                raise ValueError(
+                    f"fit_roi axis '{axis_name}' is not a roi axis {list(roi.keys())}."
+                )
+            if not isinstance(window, (list, tuple)) or len(window) != 2:
+                raise ValueError(
+                    f"fit_roi['{axis_name}'] must be a [low, high] pair, got {window}."
+                )
+            low, high = float(window[0]), float(window[1])
+            if not low < high:
+                raise ValueError(
+                    f"fit_roi['{axis_name}'] requires low < high, got {window}."
+                )
+            roi_edges = generate_bin_array(roi[axis_name])
+            atol = 1e-9 * max(1.0, abs(roi_edges[-1] - roi_edges[0]))
+            if not (
+                np.isclose(roi_edges, low, atol=atol).any()
+                and np.isclose(roi_edges, high, atol=atol).any()
+            ):
+                warnings.warn(
+                    f"fit_roi['{axis_name}'] limits {window} do not coincide with roi "
+                    f"bin edges; the window is snapped outward to the enclosing bins."
+                )
+            # Clamp the limits into the roi so multihist's slice (which raises on
+            # out-of-range values) is safe; _slice_edges clamps identically.
+            low = max(low, float(roi_edges[0]))
+            high = min(high, float(roi_edges[-1]))
+            windows[axis_name] = ((low, high), cls._slice_edges(roi_edges, low, high))
+        return windows
+
+    @classmethod
+    def _get_analysis_space_and_slice_args(cls, experiment_config):
+        """Build the alea ``analysis_space`` and ``slice_args`` for one experiment.
+
+        Windowed axes declare the ``analysis_space`` over their windowed bin
+        edges and emit a ``slice_args`` entry so every ``TemplateSource`` slices
+        its full-roi histogram down to the window at load time. Because alea
+        derives a source's expected event count from the sliced histogram's own
+        sum (``events_per_day = h.n``) and renormalizes its pdf over the
+        surviving bins, this restricts every source's normalization to the
+        window exactly -- the per-bin intensity inside the window is unchanged,
+        so the rate parameters and their constraints need no rescaling.
+        ``slice_args`` is an empty ``{}`` (alea's no-op default) when no axis is
+        windowed.
+        """
+        windows = cls._compute_fit_windows(experiment_config)
+        analysis_space = []
+        slice_args = []
+        for axis_name, roi_spec in experiment_config["roi"].items():
+            if axis_name not in windows:
+                analysis_space.append({axis_name: roi_spec})
+                continue
+            (low, high), windowed_edges = windows[axis_name]
+            analysis_space.append({axis_name: windowed_edges.tolist()})
+            slice_args.append(
+                {"slice_axis": axis_name, "slice_axis_limits": [low, high]}
+            )
+        return analysis_space, (slice_args if slice_args else {})
+
+    @classmethod
+    def _mask_data_to_fit_roi(cls, data, experiment_config):
+        """Drop events outside ``fit_roi`` so the fitted data matches the windowed
+        analysis_space and the model's (sliced) normalization term. Masks to the
+        snapped window bounds (the windowed bin edges). No-op when ``fit_roi`` is
+        absent."""
+        windows = cls._compute_fit_windows(experiment_config)
+        if not windows:
+            return data
+        mask = np.ones(len(data), dtype=bool)
+        for axis_name, (_, windowed_edges) in windows.items():
+            mask &= (data[axis_name] >= windowed_edges[0]) & (
+                data[axis_name] <= windowed_edges[-1]
+            )
+        return data[mask]
+
+    @classmethod
+    def _slice_multihist_to_fit_roi(cls, multihist_obj, experiment_config):
+        """Slice a template multihist to the ``fit_roi`` window, mirroring the
+        per-source slicing alea applies at fit time. Used by the signal-rate
+        estimator so its bkg/signal/data histograms stay on the windowed bins."""
+        windows = cls._compute_fit_windows(experiment_config)
+        for axis_name, ((low, high), _) in windows.items():
+            multihist_obj = multihist_obj.slice(low, high, axis=axis_name)
+        return multihist_obj
+
     def generate_alea_config(self):
         """Generate configuration file for combined fit with placeholder signal."""
         alea_config = {}
@@ -289,18 +420,20 @@ class Context(object):
                 "description": f"Efficiency uncertainty for signal given a cross-section for {experiment_name}",
             }
 
-            # Likelihood
+            # Likelihood. Templates are generated over the full roi; an optional
+            # fit_roi windows the analysis_space and emits slice_args so each
+            # source is restricted to the window without rescaling rates.
+            analysis_space, slice_args = self._get_analysis_space_and_slice_args(
+                experiment_instance.config
+            )
             experiment_likelihood = {
                 "name": experiment_name,
                 "default_source_class": "alea.template_source.TemplateSource",
                 "likelihood_type": "blueice.likelihood.UnbinnedLogLikelihood",
-                "analysis_space": [
-                    {key: value}
-                    for key, value in experiment_instance.config["roi"].items()
-                ],
+                "analysis_space": analysis_space,
                 "in_events_per_bin": True,
                 "livetime_parameter": f"{experiment_name}_livetime",
-                "slice_args": {},
+                "slice_args": slice_args,
                 "sources": [],
             }
             experiment_sources = []
@@ -460,8 +593,11 @@ class Context(object):
                     bkg_template_file_name = bkg_template_file_name.format(
                         **nominal_named_parameter_dict
                     )
-                bkg_mh = template_to_multihist(
-                    bkg_template_file_name, hist_name=bkg_terms["histname"]
+                bkg_mh = self._slice_multihist_to_fit_roi(
+                    template_to_multihist(
+                        bkg_template_file_name, hist_name=bkg_terms["histname"]
+                    ),
+                    experiment_instance.config,
                 )
                 if summed_bkg_mh is None:
                     summed_bkg_mh = (
@@ -485,7 +621,10 @@ class Context(object):
                     )
 
             signal_mh = (
-                template_to_multihist(template_file_path, hist_name=signal_name)
+                self._slice_multihist_to_fit_roi(
+                    template_to_multihist(template_file_path, hist_name=signal_name),
+                    experiment_instance.config,
+                )
                 * experiment_instance.config["livetime"]
             )
             expected_events = np.sum(signal_mh.histogram)
@@ -513,7 +652,9 @@ class Context(object):
                     "by a small factor."
                 )
 
-            data = experiment_instance.get_data()
+            data = self._mask_data_to_fit_roi(
+                experiment_instance.get_data(), experiment_instance.config
+            )
             data_names = list(experiment_instance.config["roi"].keys())
             data_mh = mh.Histdd(
                 data[data_names[0]], data[data_names[1]], bins=bkg_mh.bin_edges
@@ -568,8 +709,8 @@ class Context(object):
 
         data_dict = {}
         for experiment_instance in self.experiment_instances:
-            data_dict[experiment_instance.experiment_name] = (
-                experiment_instance.get_data()
+            data_dict[experiment_instance.experiment_name] = self._mask_data_to_fit_roi(
+                experiment_instance.get_data(), experiment_instance.config
             )
         data_dict["ancillary"] = toy_data["ancillary"]
         if len(data_dict["ancillary"]) > 0:  # Avoid empty ancillary data
