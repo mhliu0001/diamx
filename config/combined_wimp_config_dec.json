@@ -480,6 +480,9 @@
                 "cs1": "np.linspace(2, 135, 134)",
                 "logcs2_s1": "np.linspace(0.5, 3.5, 101)"
             },
+            "fit_roi": {
+                "cs1": [30, 135]
+            },
             "bkgs": [
                 {
                     "bkg_name": "other_er",
@@ -583,6 +586,9 @@
             "roi": {
                 "cs1": "np.linspace(2, 135, 134)",
                 "logcs2_s1": "np.linspace(0.5, 3.5, 101)"
+            },
+            "fit_roi": {
+                "cs1": [30, 135]
             },
             "bkgs": [
                 {
